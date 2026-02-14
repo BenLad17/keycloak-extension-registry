@@ -1,0 +1,31 @@
+# Example Keycloak Extensions Configuration
+# ============================================
+# This file defines which extensions to install in your Keycloak instance.
+# Similar to package.json for npm or requirements.txt for Python.
+#
+# Place this file in your project and build a custom Keycloak image:
+#   docker build -t my-keycloak .
+#
+# The extension-manager will:
+#   1. Query the registry for each extension
+#   2. Find the best compatible version for your Keycloak version
+#   3. Download and verify the JAR files
+#   4. Place them in /opt/keycloak/providers/
+
+# Registry URL (optional, defaults to official registry)
+registry: https://registry.keycloak-extensions.org
+
+# Extensions to install
+extensions:
+  # Prometheus metrics for Keycloak
+  - name: keycloak-metrics-spi
+    version: 5.0.0
+
+  # Event listener for MQTT
+  - name: keycloak-event-listener-mqtt
+    version: latest  # Installs highest compatible version
+
+  # Custom authentication provider
+  - name: my-company/custom-auth-provider
+    version: 2.1.0
+

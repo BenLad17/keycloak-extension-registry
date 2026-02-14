@@ -1,0 +1,53 @@
+{
+	"$schema": "./node_modules/wrangler/config-schema.json",
+	"name": "keycloak-extension-registry",
+	"compatibility_date": "2026-02-13",
+	"compatibility_flags": ["nodejs_compat"],
+	"main": ".svelte-kit/cloudflare/_worker.js",
+	"assets": {
+		"binding": "ASSETS",
+		"directory": ".svelte-kit/cloudflare"
+	},
+	"workers_dev": true,
+	"preview_urls": true,
+
+
+	// KV namespace for caching (GitHub profiles, etc.)
+	// Create with: wrangler kv namespace create CACHE
+	"kv_namespaces": [
+		{
+			"binding": "CACHE",
+			"id": "local-cache-dev"
+		}
+	],
+
+	// Hyperdrive for Postgres connection pooling
+	// Create with: wrangler hyperdrive create keycloak-registry-db --connection-string="postgres://..."
+	"hyperdrive": [
+		{
+			"binding": "HYPERDRIVE",
+			"id": "your-hyperdrive-id",
+			"localConnectionString": "postgres://root:mysecretpassword@localhost:5432/local"
+		}
+	],
+
+	// R2 bucket for JAR storage
+	// Create with: wrangler r2 bucket create keycloak-extensions
+	"r2_buckets": [
+		{
+			"binding": "BUCKET",
+			"bucket_name": "keycloak-extensions"
+		}
+	],
+
+	// Environment variables (set secrets with: wrangler secret put SECRET_NAME)
+	"vars": {
+		"REGISTRY_URL": "http://localhost:8787"
+	}
+
+	// Secrets (don't commit these, use wrangler secret put):
+	// - GITHUB_CLIENT_ID
+	// - GITHUB_CLIENT_SECRET
+	// - GITHUB_WEBHOOK_SECRET
+	// - JWT_SECRET
+}

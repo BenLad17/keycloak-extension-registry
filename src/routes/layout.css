@@ -1,0 +1,51 @@
+/* Base styles - no Tailwind needed for MVP */
+
+:root {
+	--color-bg: #0f0f1a;
+	--color-bg-secondary: #1a1a2e;
+	--color-border: #2a2a4a;
+	--color-text: #ffffff;
+	--color-text-secondary: #a0a0c0;
+	--color-primary: #6366f1;
+	--color-primary-hover: #4f46e5;
+}
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+	background: var(--color-bg);
+	color: var(--color-text);
+	font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+		sans-serif;
+	line-height: 1.6;
+}
+
+a {
+	color: var(--color-primary);
+}
+
+a:hover {
+	color: var(--color-primary-hover);
+}
+
+.container {
+	max-width: 1200px;
+	margin: 0 auto;
+	padding: 0 1rem;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	line-height: 1.3;
+}
