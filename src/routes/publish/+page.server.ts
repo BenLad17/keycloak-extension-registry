@@ -3,17 +3,16 @@ import { fail, redirect } from '@sveltejs/kit';
 import { getDatabase, extensions, versions } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
 import {
-	getUserInstallationsWithRepos,
-	getRepoDetails,
 	fetchRepoFile,
 	getRepoReleases,
+	getRepoDetails,
 	downloadReleaseAsset,
 	getRepoInstallation,
 	getInstallationAccessToken,
 	getAppInstallURL,
 	type GitHubRelease
 } from '$lib/server/github';
-import { registerExtensionSchema, extensionManifestSchema } from '$lib/server/validation';
+import { extensionManifestSchema, registerExtensionSchema } from '$lib/server/validation';
 import { parse as parseYaml } from 'yaml';
 import type { KeycloakCompatibility } from '$lib/shared/types';
 import { getEnv } from '$lib/server/env';
@@ -28,127 +27,21 @@ export const load: PageServerLoad = async ({ locals, platform, url }) => {
 	// Check if user just completed installation
 	const justInstalled = url.searchParams.get('installed') === 'true';
 
-	// Fetch user's GitHub repos via App installations (always live, no caching)
-	let repos: Array<{ fullName: string; name: string; htmlUrl: string; isPrivate: boolean }> = [];
-	let needsInstallation = false;
-
-	try {
-		const installationsWithRepos = await getUserInstallationsWithRepos(
-			env.GITHUB_APP_ID,
-			env.GITHUB_PRIVATE_KEY,
-			locals.user.githubId
-		);
-
-		// Flatten all repos from all installations
-		repos = installationsWithRepos.flatMap(installation =>
-			installation.repos.map(r => ({
-				fullName: r.full_name,
-				name: r.name,
-				htmlUrl: r.html_url,
-				isPrivate: r.private
-			}))
-		);
-
-		// Sort alphabetically
-		repos.sort((a, b) => a.fullName.localeCompare(b.fullName));
-
-		// If no repos at all, user needs to install app
-		if (repos.length === 0) {
-			needsInstallation = true;
-		}
-	} catch (e) {
-		needsInstallation = true;
-		console.error('Error fetching repos:', e);
-	}
-
 	// Build the installation URL with redirect back to this page
 	const origin = url.origin;
 	const callbackUrl = `${origin}/api/github/installation/callback`;
 	const installUrl = getAppInstallURL(env.GITHUB_APP_SLUG, callbackUrl);
 
+	// Return immediately - repos will be loaded client-side via API
 	return {
-		repos,
-		needsInstallation,
 		justInstalled,
-		installUrl
+		installUrl,
+		userId: locals.user.githubId
 	};
 };
 
 export const actions: Actions = {
-	// Validate a repo before registration (check for manifest)
-	validate: async ({ request, locals, platform }) => {
-		if (!locals.user) {
-			return fail(401, { error: 'Authentication required' });
-		}
-
-		const formData = await request.formData();
-		const githubRepo = formData.get('githubRepo')?.toString();
-
-		if (!githubRepo) {
-			return fail(400, { error: 'No repository selected' });
-		}
-
-		const env = getEnv(platform);
-
-		// Get installation token for this repo
-		const [owner, repo] = githubRepo.split('/');
-		const installationId = await getRepoInstallation(
-			env.GITHUB_APP_ID,
-			env.GITHUB_PRIVATE_KEY,
-			owner,
-			repo
-		);
-
-		if (!installationId) {
-			return fail(403, {
-				error: 'GitHub App is not installed on this repository.',
-				validated: false
-			});
-		}
-
-		const installationToken = await getInstallationAccessToken(
-			env.GITHUB_APP_ID,
-			env.GITHUB_PRIVATE_KEY,
-			installationId
-		);
-
-		// Check for manifest
-		const manifestContent = await fetchRepoFile(
-			installationToken,
-			githubRepo,
-			'keycloak-extension.yaml'
-		);
-
-		if (!manifestContent) {
-			return {
-				validated: false,
-				error: 'keycloak-extension.yaml not found in repository root.',
-				githubRepo
-			};
-		}
-
-		// Parse and validate manifest
-		try {
-			const parsedYaml = parseYaml(manifestContent);
-			const manifest = extensionManifestSchema.parse(parsedYaml);
-
-			return {
-				validated: true,
-				githubRepo,
-				manifest: {
-					name: manifest.name,
-					description: manifest.description
-				}
-			};
-		} catch (e) {
-			return {
-				validated: false,
-				error: `Invalid manifest: ${e instanceof Error ? e.message : 'Parse error'}`,
-				githubRepo
-			};
-		}
-	},
-
+	// Register action - uses form submission for the actual registration
 	register: async ({ request, locals, platform }) => {
 		if (!locals.user) {
 			return fail(401, { error: 'Authentication required' });

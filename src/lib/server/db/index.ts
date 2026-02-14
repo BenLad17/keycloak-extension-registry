@@ -1,61 +1,44 @@
 /**
  * Database connection for Cloudflare Workers
- *
- * IMPORTANT: In Cloudflare Workers, we can't use global database connections.
- * Each request must create its own connection using platform.env bindings.
- *
- * For production: Uses Hyperdrive (connection pooling)
- * For local dev: Uses DATABASE_URL from process.env
  */
 
-import { drizzle } from 'drizzle-orm/postgres-js';
+import {drizzle} from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as schema from './schema';
-import { env } from '$env/dynamic/private';
+import {env} from '$env/dynamic/private';
 
-export type Database = ReturnType<typeof createDatabase>;
+export type Database = ReturnType<typeof drizzle<typeof schema>>;
 
-/**
- * Create a database connection
- */
-export function createDatabase(connectionString: string) {
-	const client = postgres(connectionString, {
-		prepare: false,
-		max: 1
-	});
 
-	return drizzle(client, { schema });
-}
-
-// Cached connection for local dev (not in Workers!)
-let localDb: Database | null = null;
+let client: ReturnType<typeof postgres> | null = null;
+let db: Database | null = null;
 
 /**
- * Helper to get database in request handlers
- *
- * @example
- * export const GET: RequestHandler = async ({ platform }) => {
- *   const db = getDatabase(platform);
- *   const extensions = await db.select().from(schema.extensions);
- *   return json(extensions);
- * };
+ * Get or create the database connection (singleton)
  */
-export function getDatabase(platform: App.Platform | undefined) {
-	// Production: Use Hyperdrive
-	if (platform?.env?.HYPERDRIVE?.connectionString) {
-		return createDatabase(platform.env.HYPERDRIVE.connectionString);
-	}
+export function getDatabase(platform: App.Platform | undefined): Database {
+    // Return cached instance if available
+    if (db && client) {
+        return db;
+    }
 
-	// Local development: Use DATABASE_URL from .env
-	const dbUrl = env.DATABASE_URL;
-	if (dbUrl) {
-		if (!localDb) {
-			localDb = createDatabase(dbUrl);
-		}
-		return localDb;
-	}
+    // Determine connection string
+    const connectionString = platform?.env?.HYPERDRIVE?.connectionString ?? env.DATABASE_URL;
 
-	throw new Error('No database connection available. Set DATABASE_URL in .env');
+    if (!connectionString) {
+        throw new Error('No database connection available. Set DATABASE_URL in .env or configure Hyperdrive');
+    }
+
+    client = postgres(connectionString, {
+        prepare: false,
+        max: 10,
+        idle_timeout: 30,
+        connect_timeout: 10
+    });
+
+    db = drizzle(client, {schema});
+
+    return db;
 }
 
 // Re-export schema for convenience

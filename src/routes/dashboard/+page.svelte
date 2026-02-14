@@ -12,145 +12,56 @@
 	<title>Dashboard - Keycloak Extension Registry</title>
 </svelte:head>
 
-<div class="container">
-	<header class="page-header">
-		<h1>My Extensions</h1>
-		<a href="/publish" class="btn btn-primary">+ Register Extension</a>
-	</header>
-
-	{#if data.extensions.length === 0}
-		<div class="empty-state">
-			<h2>No extensions yet</h2>
-			<p>You haven't registered any extensions yet.</p>
-			<a href="/publish" class="btn btn-primary">Register your first extension</a>
-		</div>
-	{:else}
-		<div class="extensions-list">
-			{#each data.extensions as ext}
-				<div class="extension-card">
-					<div class="extension-info">
-						<h3>
-							<a href="/extensions/{ext.slug}">{ext.name}</a>
-						</h3>
-						<p>{ext.description}</p>
-						<div class="meta">
-							<span>📦 {ext.downloadCount?.toLocaleString() ?? 0} downloads</span>
-							<span>🔗 {ext.githubRepo}</span>
-							{#if ext.lastSyncedAt}
-								<span>🔄 Last synced: {new Date(ext.lastSyncedAt).toLocaleDateString()}</span>
-							{/if}
-						</div>
-					</div>
-
-					<div class="extension-actions">
-						{#if ext.lastSyncError}
-							<span class="sync-error" title={ext.lastSyncError}>⚠️ Sync error</span>
-						{/if}
-						<a href="/extensions/{ext.slug}" class="btn">View</a>
-						<button class="btn" onclick={() => syncExtension(ext.id)}>🔄 Sync</button>
-					</div>
-				</div>
-			{/each}
-		</div>
-	{/if}
+<div class="flex justify-between items-center mb-8">
+	<h1 class="text-3xl font-bold">My Extensions</h1>
+	<a href="/publish" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-white no-underline transition-colors">
+		+ Register Extension
+	</a>
 </div>
 
+{#if data.extensions.length === 0}
+	<div class="text-center py-16 bg-bg-secondary rounded-xl">
+		<h2 class="text-xl font-semibold mb-2">No extensions yet</h2>
+		<p class="text-gray-400 mb-6">You haven't registered any extensions yet.</p>
+		<a href="/publish" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-white no-underline transition-colors">
+			Register your first extension
+		</a>
+	</div>
+{:else}
+	<div class="flex flex-col gap-4">
+		{#each data.extensions as ext}
+			<div class="flex justify-between items-start gap-4 p-6 bg-bg-secondary border border-border rounded-xl">
+				<div class="flex-1">
+					<h3 class="text-lg font-semibold mb-2">
+						<a href="/extensions/{ext.slug}" class="text-white no-underline hover:text-indigo-400 transition-colors">
+							{ext.name}
+						</a>
+					</h3>
+					<p class="text-gray-400 mb-3">{ext.description}</p>
+					<div class="flex flex-wrap gap-4 text-xs text-gray-500">
+						<span>📦 {ext.downloadCount?.toLocaleString() ?? 0} downloads</span>
+						<span>🔗 {ext.githubRepo}</span>
+						{#if ext.lastSyncedAt}
+							<span>🔄 Last synced: {new Date(ext.lastSyncedAt).toLocaleDateString()}</span>
+						{/if}
+					</div>
+				</div>
 
-<style>
-	.page-header {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		margin-bottom: 2rem;
-	}
-
-	.btn {
-		padding: 0.5rem 1rem;
-		border: 1px solid var(--color-border, #2a2a4a);
-		border-radius: 0.5rem;
-		background: transparent;
-		color: inherit;
-		text-decoration: none;
-		cursor: pointer;
-		transition: border-color 0.2s;
-	}
-
-	.btn:hover {
-		border-color: var(--color-primary, #6366f1);
-	}
-
-	.btn-primary {
-		background: var(--color-primary, #6366f1);
-		border-color: var(--color-primary, #6366f1);
-	}
-
-	.empty-state {
-		text-align: center;
-		padding: 4rem 2rem;
-		background: var(--color-bg-secondary, #1a1a2e);
-		border-radius: 0.75rem;
-	}
-
-	.empty-state h2 {
-		margin-bottom: 0.5rem;
-	}
-
-	.empty-state p {
-		color: var(--color-text-secondary, #a0a0c0);
-		margin-bottom: 1.5rem;
-	}
-
-	.extensions-list {
-		display: flex;
-		flex-direction: column;
-		gap: 1rem;
-	}
-
-	.extension-card {
-		display: flex;
-		justify-content: space-between;
-		align-items: flex-start;
-		gap: 1rem;
-		padding: 1.5rem;
-		background: var(--color-bg-secondary, #1a1a2e);
-		border: 1px solid var(--color-border, #2a2a4a);
-		border-radius: 0.75rem;
-	}
-
-	.extension-info h3 {
-		margin: 0 0 0.5rem;
-	}
-
-	.extension-info h3 a {
-		color: inherit;
-		text-decoration: none;
-	}
-
-	.extension-info h3 a:hover {
-		color: var(--color-primary, #6366f1);
-	}
-
-	.extension-info p {
-		color: var(--color-text-secondary, #a0a0c0);
-		margin: 0 0 0.75rem;
-	}
-
-	.meta {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 1rem;
-		font-size: 0.75rem;
-		color: var(--color-text-secondary, #a0a0c0);
-	}
-
-	.extension-actions {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-	}
-
-	.sync-error {
-		color: #ff6b6b;
-		cursor: help;
-	}
-</style>
+				<div class="flex items-center gap-2">
+					{#if ext.lastSyncError}
+						<span class="text-yellow-500" title={ext.lastSyncError}>⚠️ Sync error</span>
+					{/if}
+					<a href="/extensions/{ext.slug}" class="px-3 py-1.5 border border-border rounded-lg text-white no-underline hover:border-indigo-500 transition-colors">
+						View
+					</a>
+					<button
+						onclick={() => syncExtension(ext.id)}
+						class="px-3 py-1.5 border border-border rounded-lg text-white hover:border-indigo-500 transition-colors cursor-pointer bg-transparent"
+					>
+						🔄 Sync
+					</button>
+				</div>
+			</div>
+		{/each}
+	</div>
+{/if}

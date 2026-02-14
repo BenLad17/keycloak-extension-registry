@@ -1,8 +1,16 @@
 <!-- Publish/Register Extension Page -->
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { onMount } from 'svelte';
 
 	let { data, form } = $props();
+
+	// Repo data - loaded async via API
+	type Repo = { fullName: string; name: string; htmlUrl: string; isPrivate: boolean };
+	let repos = $state<Repo[]>([]);
+	let reposLoading = $state(true);
+	let reposError = $state<string | null>(null);
+	let needsInstallation = $state(false);
 
 	let selectedRepo = $state('');
 	let searchQuery = $state('');
@@ -11,18 +19,43 @@
 	let validating = $state(false);
 	let validationResult = $state<{ validated: boolean; error?: string; manifest?: { name: string; description: string } } | null>(null);
 
+	// Load repos on mount
+	onMount(() => {
+		loadRepos();
+	});
+
+	async function loadRepos() {
+		reposLoading = true;
+		reposError = null;
+
+		try {
+			const res = await fetch('/api/repos');
+			const json = await res.json() as { repos?: Repo[]; needsInstallation?: boolean; error?: string };
+
+			repos = json.repos ?? [];
+			needsInstallation = json.needsInstallation ?? false;
+			reposError = json.error ?? null;
+		} catch (e) {
+			console.error('Error loading repos:', e);
+			reposError = 'Failed to load repositories';
+			needsInstallation = true;
+		} finally {
+			reposLoading = false;
+		}
+	}
+
 	// Filter repos based on search query
 	const filteredRepos = $derived(
 		searchQuery.trim() === ''
-			? data.repos
-			: data.repos.filter(repo =>
+			? repos
+			: repos.filter(repo =>
 				repo.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
 				repo.name.toLowerCase().includes(searchQuery.toLowerCase())
 			)
 	);
 
 	// Select a repo from dropdown
-	function selectRepo(repo: typeof data.repos[0]) {
+	function selectRepo(repo: Repo) {
 		selectedRepo = repo.fullName;
 		searchQuery = repo.fullName;
 		isDropdownOpen = false;
@@ -39,19 +72,13 @@
 		validationResult = null;
 
 		try {
-			const formData = new FormData();
-			formData.append('githubRepo', selectedRepo);
-
-			const response = await fetch('?/validate', {
+			const res = await fetch('/api/repos/validate', {
 				method: 'POST',
-				body: formData
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ repo: selectedRepo })
 			});
 
-			const result = await response.json() as { data?: string; type?: string };
-			if (result.data) {
-				const parsed = JSON.parse(result.data);
-				validationResult = Array.isArray(parsed) ? parsed[0] : parsed;
-			}
+			validationResult = await res.json();
 		} catch (e) {
 			validationResult = { validated: false, error: 'Failed to validate repository' };
 		} finally {
@@ -140,11 +167,11 @@
 		>
 			<div class="space-y-6">
 				<!-- Step 1: Manifest -->
-				<section class="p-6 bg-gray-800/50 border border-gray-700 rounded-xl">
+				<section class="p-6 bg-bg-secondary border border-border rounded-xl">
 					<h2 class="text-lg font-semibold mb-4">Step 1: Add manifest to your repo</h2>
-					<p class="text-gray-400 mb-4">Create a <code class="bg-black/30 px-1.5 py-0.5 rounded text-sm">keycloak-extension.yaml</code> file in your repository root:</p>
+					<p class="text-gray-400 mb-4">Create a <code class="bg-bg px-1.5 py-0.5 rounded text-sm">keycloak-extension.yaml</code> file in your repository root:</p>
 
-					<pre class="p-4 bg-gray-900 rounded-lg overflow-x-auto text-sm font-mono"><code>{`name: my-extension
+					<pre class="p-4 bg-bg rounded-lg overflow-x-auto text-sm font-mono"><code>{`name: my-extension
 description: My awesome Keycloak extension
 
 build:
@@ -168,10 +195,10 @@ tags:
 				</section>
 
 				<!-- Step 2: Select Repo -->
-				<section class="p-6 bg-gray-800/50 border border-gray-700 rounded-xl">
+				<section class="p-6 bg-bg-secondary border border-border rounded-xl">
 					<h2 class="text-lg font-semibold mb-4">Step 2: Select your repository</h2>
 
-					{#if data.justInstalled && data.needsInstallation}
+					{#if data.justInstalled && needsInstallation}
 						<div class="p-4 bg-yellow-500/10 border border-yellow-500 rounded-lg mb-4 text-yellow-500">
 							<p>
 								<strong>Almost there!</strong> You installed the app, but didn't select any repositories.
@@ -180,14 +207,20 @@ tags:
 						</div>
 					{/if}
 
-					{#if data.needsInstallation}
+					{#if reposLoading}
+						<!-- Loading State -->
+						<div class="p-6 text-center">
+							<div class="inline-block w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+							<p class="text-gray-400">Loading your repositories...</p>
+						</div>
+					{:else if needsInstallation}
 						<div class="p-6 bg-indigo-500/10 border border-indigo-500 rounded-xl text-center">
 							<h3 class="text-xl font-semibold mb-4">🔗 Connect Your Repositories</h3>
 							<p class="text-gray-400 mb-6">
 								To register extensions, grant this app access to your repositories.
 								You'll be redirected to GitHub to select which repos to connect.
 							</p>
-							<a href={data.installUrl} class="inline-block px-6 py-3 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-lg transition-colors">
+							<a href={data.installUrl} class="inline-block px-6 py-3 text-gray-200 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-lg transition-colors">
 								Connect GitHub Repositories →
 							</a>
 							<p class="text-sm text-gray-500 mt-4">
@@ -204,14 +237,14 @@ tags:
 								onfocus={handleInputFocus}
 								oninput={() => { isDropdownOpen = true; selectedRepo = ''; }}
 								disabled={loading}
-								class="w-full px-4 py-3 bg-gray-900 border border-gray-600 rounded-lg focus:outline-none focus:border-indigo-500 transition-colors"
+								class="w-full px-4 py-3 bg-bg border border-border rounded-lg focus:outline-none focus:border-indigo-500 transition-colors"
 							/>
 
 							<!-- Hidden input for form submission -->
 							<input type="hidden" name="githubRepo" value={selectedRepo} />
 
 							{#if isDropdownOpen && filteredRepos.length > 0}
-								<div class="absolute z-10 w-full mt-1 max-h-64 overflow-y-auto bg-gray-900 border border-gray-600 rounded-lg shadow-xl">
+								<div class="absolute z-10 w-full mt-1 max-h-64 overflow-y-auto bg-bg border border-border rounded-lg shadow-xl">
 									{#each filteredRepos as repo}
 										<button
 											type="button"
@@ -228,14 +261,15 @@ tags:
 							{/if}
 
 							{#if isDropdownOpen && filteredRepos.length === 0 && searchQuery}
-								<div class="absolute z-10 w-full mt-1 p-4 bg-gray-900 border border-gray-600 rounded-lg text-gray-500 text-center">
+								<div class="absolute z-10 w-full mt-1 p-4 bg-bg border border-border rounded-lg text-gray-500 text-center">
 									No repositories match "{searchQuery}"
 								</div>
 							{/if}
 						</div>
 
 						<p class="text-sm text-gray-500 mt-2">
-							{data.repos.length} repositories available
+							{repos.length} repositories available
+							<button type="button" onclick={loadRepos} class="ml-2 text-indigo-400 hover:underline">↻ Refresh</button>
 						</p>
 
 						<!-- Validation result -->
@@ -258,7 +292,7 @@ tags:
 									<p class="text-gray-400 mt-2">{validationResult.error}</p>
 									{#if validationResult.error?.includes('not found')}
 										<p class="text-sm text-gray-500 mt-2">
-											Add a <code class="bg-black/30 px-1.5 py-0.5 rounded text-xs">keycloak-extension.yaml</code> file to your repository root.
+											Add a <code class="bg-bg px-1.5 py-0.5 rounded text-xs">keycloak-extension.yaml</code> file to your repository root.
 											<a href="/docs/manifest" target="_blank" class="text-indigo-400 hover:underline">See documentation →</a>
 										</p>
 									{/if}
@@ -266,7 +300,7 @@ tags:
 							{/if}
 						{/if}
 
-						{#if data.repos.length === 0}
+						{#if repos.length === 0 && !reposLoading}
 							<p class="text-yellow-500 mt-4">
 								No repositories found. Make sure you have installed the GitHub App on your repositories.
 							</p>
@@ -279,7 +313,7 @@ tags:
 				</section>
 
 				<!-- Step 3: Register -->
-				<section class="p-6 bg-gray-800/50 border border-gray-700 rounded-xl">
+				<section class="p-6 bg-bg-secondary border border-border rounded-xl">
 					<h2 class="text-lg font-semibold mb-4">Step 3: Register</h2>
 
 					{#if form?.error}
@@ -296,7 +330,7 @@ tags:
 					<button
 						type="submit"
 						disabled={!selectedRepo || loading || validating || !validationResult?.validated}
-						class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg text-lg transition-colors"
+						class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg text-lg transition-colors cursor-pointer"
 					>
 						{#if loading}
 							Registering...
@@ -310,8 +344,8 @@ tags:
 					<div class="mt-4 text-sm text-gray-500">
 						<p class="font-medium mb-2">Requirements:</p>
 						<ul class="space-y-1">
-							<li>✅ Repository must have a <code class="bg-black/30 px-1.5 py-0.5 rounded text-xs">keycloak-extension.yaml</code> manifest</li>
-							<li>✅ At least one GitHub Release with a <code class="bg-black/30 px-1.5 py-0.5 rounded text-xs">.jar</code> file attached</li>
+							<li>✅ Repository must have a <code class="bg-bg px-1.5 py-0.5 rounded text-xs">keycloak-extension.yaml</code> manifest</li>
+							<li>✅ At least one GitHub Release with a <code class="bg-bg px-1.5 py-0.5 rounded text-xs">.jar</code> file attached</li>
 						</ul>
 					</div>
 				</section>
@@ -319,4 +353,3 @@ tags:
 		</form>
 	{/if}
 </div>
-
