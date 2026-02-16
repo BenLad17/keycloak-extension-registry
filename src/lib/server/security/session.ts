@@ -3,7 +3,7 @@ import { clearSessionCookie, setSessionCookie } from '$lib/server/security/sessi
 import type { Cookies } from '@sveltejs/kit';
 
 export const SESSION_TTL_SECONDS = 60 * 60 * 24 * 7; // 7 days
-const SLIDING_THRESHOLD_SECONDS = 60 * 60 * 24; // 1 day
+const SLIDING_THRESHOLD_SECONDS = Math.floor(SESSION_TTL_SECONDS / 2);
 
 export interface SessionData {
 	id: string;
