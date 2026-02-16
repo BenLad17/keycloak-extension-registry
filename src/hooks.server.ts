@@ -1,7 +1,7 @@
 import { error, type Handle } from '@sveltejs/kit';
 import { clearSessionCookie, getSessionIdFromCookie } from '$lib/server/security/session-cookie';
 import { getSessionData } from '$lib/server/security/session-store';
-import { applySlidingExpiration, destroySession } from '$lib/server/security/session';
+import { applySlidingExpiration } from '$lib/server/security/session';
 
 export const handle: Handle = async ({ event, resolve }) => {
 	const platform = event.platform;

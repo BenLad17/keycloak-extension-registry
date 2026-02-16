@@ -14,14 +14,10 @@ export async function getSessionData(
 	return null;
 }
 
-export async function setSessionData(
-	sessionId: string,
-	data: SessionData,
-	platform: App.Platform
-): Promise<void> {
+export async function setSessionData(data: SessionData, platform: App.Platform): Promise<void> {
 	const env = getEnv(platform);
 	const sessionStore = env.SESSIONS;
-	await sessionStore.put(sessionId, JSON.stringify(data), { expirationTtl: SESSION_TTL_SECONDS });
+	await sessionStore.put(data.id, JSON.stringify(data), { expiration: data.expiresAt });
 }
 
 export async function deleteSessionData(sessionId: string, platform: App.Platform): Promise<void> {

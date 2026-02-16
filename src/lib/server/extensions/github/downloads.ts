@@ -1,10 +1,10 @@
 import { extension, extensionVersion, getDatabase } from '$lib/server/db';
-import { eq, sql } from 'drizzle-orm';
-import { Octokit } from 'octokit';
+import { eq } from 'drizzle-orm';
+import { getOctokitInstance } from '$lib/server/github';
 
 export async function updateDownloadCounts(extensionId: number, platform: App.Platform) {
 	const db = getDatabase(platform);
-	const octokit = new Octokit();
+	const octokit = getOctokitInstance(platform);
 	const [extensionToUpdate] = await db
 		.select()
 		.from(extension)
@@ -15,7 +15,7 @@ export async function updateDownloadCounts(extensionId: number, platform: App.Pl
 		.from(extensionVersion)
 		.where(eq(extensionVersion.extensionId, extensionId));
 
-	let totalDownloads =  0;
+	let totalDownloads = 0;
 	for (const version of versions) {
 		const githubRelease = await octokit.request('GET /repos/{owner}/{repo}/releases/tags/{tag}', {
 			owner: extensionToUpdate.githubRepoOwner,
@@ -38,5 +38,8 @@ export async function updateDownloadCounts(extensionId: number, platform: App.Pl
 		}
 	}
 	console.log(`Updating total download count for extension ${extensionId} to ${totalDownloads}`);
-	await db.update(extension).set({ downloadCount: totalDownloads }).where(eq(extension.id, extensionId));
+	await db
+		.update(extension)
+		.set({ downloadCount: totalDownloads })
+		.where(eq(extension.id, extensionId));
 }

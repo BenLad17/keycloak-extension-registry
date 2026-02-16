@@ -1,5 +1,6 @@
 import { Octokit } from 'octokit';
 import { getEnv } from '$lib/server/env';
+import { createAppAuth } from '@octokit/auth-app';
 
 const CACHE_TTL_SECONDS = 7 * 24 * 60 * 60; // 1 Week
 
@@ -9,6 +10,18 @@ export interface GitHubUser {
 	email: string | null;
 	avatarUrl: string;
 	name: string | null;
+}
+
+export function getOctokitInstance(platform: App.Platform): Octokit {
+	const env = getEnv(platform);
+	return new Octokit({
+		authStrategy: createAppAuth,
+		auth: {
+			appId: env.GITHUB_APP_ID,
+			privateKey: env.GITHUB_PRIVATE_KEY,
+			installationId: env.GITHUB_INSTALLATION_ID
+		}
+	});
 }
 
 export async function getCachedGitHubUser(
@@ -29,7 +42,7 @@ export async function getCachedGitHubUser(
 		}
 	}
 
-	const user = await getGitHubUserById(githubId);
+	const user = await getGitHubUserById(githubId, platform);
 	if (user) {
 		await cache.put(cacheKey, JSON.stringify(user), { expirationTtl: CACHE_TTL_SECONDS });
 		return mapGitHubUser(user);
@@ -38,8 +51,8 @@ export async function getCachedGitHubUser(
 	return null;
 }
 
-export async function getGitHubUserById(githubId: number) {
-	const octokit = new Octokit();
+export async function getGitHubUserById(githubId: number, platform: App.Platform): Promise<any> {
+	const octokit = getOctokitInstance(platform);
 	try {
 		const response = await octokit.request('GET /user/{account_id}', { account_id: githubId });
 		return response.data;

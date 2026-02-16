@@ -6,6 +6,7 @@ import {
 } from '$lib/server/db';
 import { Octokit } from 'octokit';
 import { and, eq } from 'drizzle-orm';
+import { getOctokitInstance } from '$lib/server/github';
 
 export async function checkForNewReleases(
 	extension: Extension,
@@ -26,7 +27,7 @@ async function getNewReleases(
 	extension: Extension,
 	platform: App.Platform
 ): Promise<NewExtensionVersion[]> {
-	const releases = await getReleases(extension);
+	const releases = await getReleases(extension, platform);
 
 	const result: NewExtensionVersion[] = [];
 	for (const release of releases) {
@@ -74,8 +75,8 @@ async function getNewReleases(
 	return result;
 }
 
-async function getReleases(extension: Extension) {
-	const octokit = new Octokit();
+async function getReleases(extension: Extension, platform: App.Platform) {
+	const octokit = getOctokitInstance(platform);
 	const response = await octokit.request('GET /repos/{owner}/{repo}/releases', {
 		owner: extension.githubRepoOwner,
 		repo: extension.githubRepoName
