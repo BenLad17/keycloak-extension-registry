@@ -1,5 +1,5 @@
 import type { PageServerLoad } from './$types';
-import { getDatabase, extensions } from '$lib/server/db';
+import { getDatabase, extension, type ExtensionCategory } from '$lib/server/db';
 import { eq, sql, and, desc } from 'drizzle-orm';
 
 export const load: PageServerLoad = async ({ url, platform }) => {
@@ -16,15 +16,15 @@ export const load: PageServerLoad = async ({ url, platform }) => {
 
 	if (query) {
 		conditions.push(
-			sql`(${extensions.name} ILIKE ${`%${query}%`} OR ${extensions.description} ILIKE ${`%${query}%`})`
+			sql`(${extension.name} ILIKE ${`%${query}%`} OR ${extension.description} ILIKE ${`%${query}%`})`
 		);
 	}
 
 	if (category) {
-		conditions.push(eq(extensions.category, category));
+		conditions.push(eq(extension.category, category as ExtensionCategory));
 	}
 
-	conditions.push(eq(extensions.status, 'active'));
+	conditions.push(eq(extension.status, 'active'));
 
 	const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
@@ -32,15 +32,15 @@ export const load: PageServerLoad = async ({ url, platform }) => {
 	const [results, countResult] = await Promise.all([
 		db
 			.select()
-			.from(extensions)
+			.from(extension)
 			.where(whereClause)
-			.orderBy(desc(extensions.downloadCount))
+			.orderBy(desc(extension.downloadCount))
 			.limit(limit)
 			.offset(offset),
 
 		db
 			.select({ count: sql<number>`count(*)` })
-			.from(extensions)
+			.from(extension)
 			.where(whereClause)
 	]);
 
@@ -55,4 +55,3 @@ export const load: PageServerLoad = async ({ url, platform }) => {
 		totalPages: Math.ceil(total / limit)
 	};
 };
-

@@ -23,9 +23,8 @@ extensions:
 
   # Event listener for MQTT
   - name: keycloak-event-listener-mqtt
-    version: latest  # Installs highest compatible version
+    version: latest # Installs highest compatible version
 
   # Custom authentication provider
   - name: my-company/custom-auth-provider
     version: 2.1.0
-

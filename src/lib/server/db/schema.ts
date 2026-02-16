@@ -1,90 +1,68 @@
 import {
-	pgTable,
-	serial,
+	bigint,
+	boolean,
+	index,
 	integer,
+	pgTable,
 	text,
 	timestamp,
-	boolean,
-	jsonb,
-	uniqueIndex,
-	index,
-	bigint
+	uniqueIndex
 } from 'drizzle-orm/pg-core';
 
-// ============================================================================
-// Users - GitHub authenticated users
-// ============================================================================
-// We only store the minimal data needed to identify users.
-// Profile data (username, email, avatar) is fetched from GitHub when needed.
-export const users = pgTable(
-	'users',
-	{
-		id: serial('id').primaryKey(),
-		githubId: integer('github_id').notNull().unique(),
-		createdAt: timestamp('created_at').defaultNow().notNull()
-	},
-	(table) => [uniqueIndex('github_id_idx').on(table.githubId)]
-);
+export const user = pgTable('user', {
+	id: integer('id').generatedAlwaysAsIdentity().primaryKey(),
+	githubId: integer('github_id').notNull().unique(),
+	createdAt: timestamp('created_at').defaultNow().notNull()
+});
 
-// ============================================================================
-// Extensions - Main extension metadata
-// ============================================================================
-export const extensions = pgTable(
-	'extensions',
+const extensionCategories = ['authentication', 'user_federation'] as const;
+
+export const extension = pgTable(
+	'extension',
 	{
-		id: serial('id').primaryKey(),
-		slug: text('slug').notNull().unique(), // Immutable after creation
-		name: text('name').notNull(), // From manifest, can change
+		id: integer('id').generatedAlwaysAsIdentity().primaryKey(),
+		slug: text('slug').notNull().unique(),
+		name: text('name').notNull().unique(),
 		description: text('description'),
+		category: text('category', { enum: extensionCategories }).notNull(),
 
-		// GitHub reference - use both ID (stable) and path (human readable)
-		githubRepoId: bigint('github_repo_id', { mode: 'number' }).notNull().unique(), // Stable GitHub repo ID
-		githubRepo: text('github_repo').notNull(), // Cached "owner/repo" path, updated on sync
+		// GitHub reference - use both ID (stable) and path (human-readable owner/name)
+		githubRepoId: bigint('github_repo_id', { mode: 'number' }).notNull().unique(),
+		githubRepoOwner: text('github_repo_owner').notNull(),
+		githubRepoName: text('github_repo_name').notNull(),
 
-		ownerId: integer('owner_id')
-			.references(() => users.id)
-			.notNull(),
-		homepage: text('homepage'),
-		license: text('license'),
-		category: text('category').default('Other'),
-		downloadCount: integer('download_count').default(0),
+		ownerId: integer('owner_id').references(() => user.id),
+
+		createdAt: timestamp('created_at').defaultNow().notNull(),
+		updatedAt: timestamp('updated_at').defaultNow().notNull(),
+
 		lastSyncedAt: timestamp('last_synced_at'),
 		lastSyncError: text('last_sync_error'),
 		status: text('status').default('active'), // 'pending', 'active', 'archived'
-		createdAt: timestamp('created_at').defaultNow().notNull(),
-		updatedAt: timestamp('updated_at').defaultNow().notNull()
+
+		downloadCount: integer('download_count').default(0)
 	},
 	(table) => [
-		uniqueIndex('slug_idx').on(table.slug),
 		uniqueIndex('github_repo_id_idx').on(table.githubRepoId),
-		index('github_repo_idx').on(table.githubRepo),
+		uniqueIndex('github_repo_owner_name_idx').on(table.githubRepoOwner, table.githubRepoName),
 		index('owner_idx').on(table.ownerId)
 	]
 );
 
-// ============================================================================
-// Versions - Extension versions with KC compatibility
-// ============================================================================
-export const versions = pgTable(
-	'versions',
+export const extensionVersion = pgTable(
+	'extension_version',
 	{
-		id: serial('id').primaryKey(),
+		id: integer('id').generatedAlwaysAsIdentity().primaryKey(),
 		extensionId: integer('extension_id')
-			.references(() => extensions.id, { onDelete: 'cascade' })
+			.references(() => extension.id, { onDelete: 'cascade' })
 			.notNull(),
 		version: text('version').notNull(),
-		keycloakCompatibility: jsonb('keycloak_compatibility').notNull(),
-		jarUrl: text('jar_url').notNull(),
-		jarSize: integer('jar_size'),
-		sha256: text('sha256').notNull(),
-		githubReleaseTag: text('github_release_tag'),
-		githubReleaseUrl: text('github_release_url'),
+		keycloakVersion: text(),
+		downloadUrl: text('download_url').notNull(),
 		releaseNotes: text('release_notes'),
 		deprecated: boolean('deprecated').default(false),
-		deprecationMessage: text('deprecation_message'),
 		downloadCount: integer('download_count').default(0),
-		publishedAt: timestamp('published_at').defaultNow().notNull(),
-		createdAt: timestamp('created_at').defaultNow().notNull()
+		publishedAt: timestamp('published_at').defaultNow().notNull()
 	},
 	(table) => [
 		uniqueIndex('version_idx').on(table.extensionId, table.version),
@@ -93,65 +71,17 @@ export const versions = pgTable(
 );
 
 // ============================================================================
-// Tags
-// ============================================================================
-export const tags = pgTable(
-	'tags',
-	{
-		id: serial('id').primaryKey(),
-		name: text('name').notNull().unique(),
-		description: text('description')
-	},
-	(table) => [uniqueIndex('tag_name_idx').on(table.name)]
-);
-
-// ============================================================================
-// Extension Tags - Many-to-many
-// ============================================================================
-export const extensionTags = pgTable(
-	'extension_tags',
-	{
-		extensionId: integer('extension_id')
-			.references(() => extensions.id, { onDelete: 'cascade' })
-			.notNull(),
-		tagId: integer('tag_id')
-			.references(() => tags.id, { onDelete: 'cascade' })
-			.notNull()
-	},
-	(table) => [uniqueIndex('extension_tag_pk').on(table.extensionId, table.tagId)]
-);
-
-// ============================================================================
-// Categories
-// ============================================================================
-export const CATEGORIES = [
-	'Authentication',
-	'Authorization',
-	'User Federation',
-	'Events & Logging',
-	'Themes',
-	'Metrics & Monitoring',
-	'Storage',
-	'Admin API',
-	'Other'
-] as const;
-
-export type Category = (typeof CATEGORIES)[number];
-
-// ============================================================================
 // Type exports
 // ============================================================================
-export type User = typeof users.$inferSelect;
-export type NewUser = typeof users.$inferInsert;
-export type Extension = typeof extensions.$inferSelect;
-export type NewExtension = typeof extensions.$inferInsert;
-export type Version = typeof versions.$inferSelect;
-export type NewVersion = typeof versions.$inferInsert;
-export type Tag = typeof tags.$inferSelect;
-export type NewTag = typeof tags.$inferInsert;
+export type User = typeof user.$inferSelect;
+export type NewUser = typeof user.$inferInsert;
+export type Extension = typeof extension.$inferSelect;
+export type NewExtension = typeof extension.$inferInsert;
+export type ExtensionVersion = typeof extensionVersion.$inferSelect;
+export type NewExtensionVersion = typeof extensionVersion.$inferInsert;
+export type ExtensionCategory = (typeof extensionCategories)[number];
 
-export interface KeycloakCompatibility {
-	min: string;
-	max: string;
-	tested?: string[];
-}
+export const ExtensionCategoryLabel: Record<ExtensionCategory, string> = {
+	authentication: 'Authentication',
+	user_federation: 'User Federation'
+};

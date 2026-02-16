@@ -1,14 +1,12 @@
-/**
- * API: POST /api/auth/logout
- * Clear session and logout user
- */
-
 import { redirect } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { clearSessionCookie } from '$lib/server/session';
+import { destroySession } from '$lib/server/security/session';
 
-export const POST: RequestHandler = async ({ cookies }) => {
-	clearSessionCookie(cookies);
-	throw redirect(302, '/');
+export const POST: RequestHandler = async ({ platform, locals, url, cookies }) => {
+	const redirectTo = url.searchParams.get('redirectTo') || '/';
+	if (!redirectTo.startsWith('/')) {
+		throw redirect(400, '/');
+	}
+	await destroySession(platform!, locals, cookies);
+	redirect(302, redirectTo);
 };
-

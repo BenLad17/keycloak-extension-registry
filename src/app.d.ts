@@ -4,6 +4,8 @@
 // Import types from wrangler-generated worker-configuration.d.ts
 /// <reference types="../worker-configuration.d.ts" />
 
+import type { SessionData } from '$lib/server/security/session';
+
 declare global {
 	namespace App {
 		interface Platform {
@@ -14,13 +16,7 @@ declare global {
 		}
 
 		interface Locals {
-			// Session data (populated in hooks.server.ts)
-			user?: {
-				id: number;
-				githubId: number;
-				username: string;
-				avatarUrl: string | null;
-			};
+			session: SessionData;
 		}
 
 		// interface Error {}
