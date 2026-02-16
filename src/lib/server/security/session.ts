@@ -50,7 +50,7 @@ export async function applySlidingExpiration(
 		console.log(`Applying sliding expiration for session ${sessionData.id}`);
 		const newSessionData = {
 			...sessionData,
-			expiresAt: Date.now() + SESSION_TTL_SECONDS
+			expiresAt: currentEpochSeconds + SESSION_TTL_SECONDS
 		};
 		await setSessionData(newSessionData, platform);
 		await setSessionCookie(newSessionData, cookies, platform);
