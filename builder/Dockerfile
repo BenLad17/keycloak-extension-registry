@@ -8,6 +8,7 @@
 # Extensions are defined in extensions.yaml (like package.json for npm)
 
 ARG KEYCLOAK_VERSION=26.0
+ARG REGISTRY_URL=https://registry.keycloak-extensions.org
 
 # =============================================================================
 # Stage 1: Builder - Downloads extensions and runs kc.sh build
@@ -28,7 +29,6 @@ RUN chmod +x /opt/keycloak/bin/extension-manager
 COPY --chown=keycloak:keycloak extensions.yaml /opt/keycloak/extensions.yaml
 
 # Set registry URL (can be overridden)
-ARG REGISTRY_URL=https://registry.keycloak-extensions.org
 ENV REGISTRY_URL=${REGISTRY_URL}
 
 # Run extension manager to download all extensions
@@ -41,16 +41,11 @@ RUN /opt/keycloak/bin/kc.sh build
 # Stage 2: Runtime - Optimized production image
 # =============================================================================
 FROM quay.io/keycloak/keycloak:${KEYCLOAK_VERSION}
+COPY --from=builder /opt/keycloak/ /opt/keycloak/
 
-# Copy built artifacts from builder stage
-COPY --from=builder /opt/keycloak/providers/ /opt/keycloak/providers/
-COPY --from=builder /opt/keycloak/lib/quarkus/ /opt/keycloak/lib/quarkus/
-
-# Copy extension manager for runtime info (optional)
-COPY --from=builder /opt/keycloak/bin/extension-manager /opt/keycloak/bin/extension-manager
-COPY --from=builder /opt/keycloak/extensions.yaml /opt/keycloak/extensions.yaml
-
-# Start optimized Keycloak
+ENV KC_DB=postgres
+ENV KC_DB_URL=<DBURL>
+ENV KC_DB_USERNAME=<DBUSERNAME>
+ENV KC_DB_PASSWORD=<DBPASSWORD>
+ENV KC_HOSTNAME=localhost
 ENTRYPOINT ["/opt/keycloak/bin/kc.sh"]
-CMD ["start", "--optimized"]
-

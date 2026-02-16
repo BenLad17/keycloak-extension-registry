@@ -59,10 +59,12 @@ export const extensionVersion = pgTable(
 		version: text('version').notNull(),
 		keycloakVersion: text(),
 		downloadUrl: text('download_url').notNull(),
+		downloadSize: bigint('download_size', { mode: 'number' }).notNull(),
 		releaseNotes: text('release_notes'),
 		deprecated: boolean('deprecated').default(false),
 		downloadCount: integer('download_count').default(0),
-		publishedAt: timestamp('published_at').defaultNow().notNull()
+		publishedAt: timestamp('published_at').defaultNow().notNull(),
+		digest: text('digest').notNull()
 	},
 	(table) => [
 		uniqueIndex('version_idx').on(table.extensionId, table.version),

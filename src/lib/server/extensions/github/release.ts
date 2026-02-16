@@ -14,9 +14,6 @@ export async function checkForNewReleases(
 	try {
 		const newReleases = await getNewReleases(extension, platform);
 		if (newReleases.length > 0) {
-			console.log(
-				`Found ${newReleases.length} new release(s) for extension ${extension.name} (${extension.id})`
-			);
 			const db = getDatabase(platform);
 			await db.insert(extensionVersion).values(newReleases);
 		}
@@ -30,19 +27,45 @@ async function getNewReleases(
 	platform: App.Platform
 ): Promise<NewExtensionVersion[]> {
 	const releases = await getReleases(extension);
-	const newReleases = releases.filter((release) =>
-		releaseExists(extension.id, release.tag_name, platform)
-	);
 
 	const result: NewExtensionVersion[] = [];
-	for (const release of newReleases) {
+	for (const release of releases) {
+		const exists = await releaseExists(extension.id, release.tag_name, platform);
+		if (exists) {
+			continue;
+		}
+		console.log(`Found new release ${release.tag_name} for extension ${extension.id}`);
+
 		const asset = findReleaseJarAsset(release);
+		const assetFileResponse = await fetch(asset.browser_download_url);
+
+		if (!assetFileResponse.ok || !assetFileResponse.body) {
+			console.error(
+				`Failed to fetch asset for release ${release.tag_name} of extension ${extension.id}`
+			);
+			continue;
+		}
+
+		const file = await assetFileResponse.body.getReader().read();
+		if (!file || !file.value) {
+			console.error(
+				`Failed to read asset file for release ${release.tag_name} of extension ${extension.id}`
+			);
+			continue;
+		}
+
+		const digest = await crypto.subtle.digest('SHA-256', file.value);
+		const digestHex = Array.from(new Uint8Array(digest))
+			.map((b) => b.toString(16).padStart(2, '0'))
+			.join('');
 
 		const insertRelease: NewExtensionVersion = {
 			extensionId: extension.id,
 			version: release.tag_name,
 			downloadUrl: asset.browser_download_url,
 			downloadCount: asset.download_count,
+			downloadSize: file.value.byteLength,
+			digest: digestHex,
 			releaseNotes: release.body,
 			publishedAt: release.published_at ? new Date(release.published_at) : new Date()
 		};
@@ -72,6 +95,7 @@ async function releaseExists(extensionId: number, version: string, platform: App
 		.from(extensionVersion)
 		.where(
 			and(eq(extensionVersion.extensionId, extensionId), eq(extensionVersion.version, version))
-		);
-	return existing.length === 0;
+		)
+		.limit(1);
+	return existing.length === 1;
 }

@@ -93,7 +93,7 @@
         <div class="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
             {#each data.extensions as ext}
                 <a
-                        href={`/extensions/${ext.slug}`}
+                        href={`/extension/${ext.slug}`}
                         class="group block rounded-2xl border border-border bg-bg-secondary p-6 text-white no-underline transition-all duration-200 hover:border-indigo-500/50 hover:bg-bg-secondary/80"
                 >
                     <div class="mb-3 flex items-start justify-between gap-3">
@@ -103,7 +103,7 @@
                         <span class="rounded-full bg-indigo-600/20 px-2.5 py-1 text-xs whitespace-nowrap text-indigo-400">{ExtensionCategoryLabel[ext.category]}</span>
                     </div>
                     <p class="mb-5 line-clamp-2 text-sm leading-relaxed text-gray-400">{ext.description}</p>
-                    <div class="flex items-center gap-4 text-xs text-gray-500">
+                    <div class="flex items-start justify-between gap-3 text-xs text-gray-500">
 						<span class="flex items-center gap-1.5">
 							<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path
