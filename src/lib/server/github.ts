@@ -3,6 +3,7 @@ import { getEnv } from '$lib/server/env';
 import { createAppAuth } from '@octokit/auth-app';
 
 const CACHE_TTL_SECONDS = 7 * 24 * 60 * 60; // 1 Week
+let octokitInstance: Octokit | null = null;
 
 export interface GitHubUser {
 	id: number;
@@ -13,15 +14,18 @@ export interface GitHubUser {
 }
 
 export function getOctokitInstance(platform: App.Platform): Octokit {
-	const env = getEnv(platform);
-	return new Octokit({
-		authStrategy: createAppAuth,
-		auth: {
-			appId: env.GITHUB_APP_ID,
-			privateKey: env.GITHUB_PRIVATE_KEY,
-			installationId: env.GITHUB_INSTALLATION_ID
-		}
-	});
+	if (!octokitInstance) {
+		const env = getEnv(platform);
+		octokitInstance = new Octokit({
+			authStrategy: createAppAuth,
+			auth: {
+				appId: env.GITHUB_APP_ID,
+				privateKey: env.GITHUB_PRIVATE_KEY,
+				installationId: env.GITHUB_INSTALLATION_ID
+			}
+		});
+	}
+	return octokitInstance;
 }
 
 export async function getCachedGitHubUser(
