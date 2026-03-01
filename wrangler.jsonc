@@ -34,18 +34,7 @@
       "id": "your-hyperdrive-id",
       "localConnectionString": "postgres://root:mysecretpassword@localhost:5432/local"
     }
-  ],
-  // R2 bucket for JAR storage
-  "r2_buckets": [
-    {
-      "binding": "EXTENSION_JAR_BUCKET",
-      "bucket_name": "keycloak-extensions"
-    }
-  ],
-  // Environment variables (set secrets with: wrangler secret put SECRET_NAME)
-  "vars": {
-    "REGISTRY_URL": "http://localhost:8787"
-  }
+  ]
 
   // Secrets (don't commit these, use wrangler secret put):
   // - GITHUB_CLIENT_ID
@@ -53,4 +42,5 @@
   // - GITHUB_INSTALLATION_ID
   // - GITHUB_WEBHOOK_SECRET
   // - JWT_SECRET
+  // - CRON_SECRET  (any random string, e.g. openssl rand -hex 32)
 }

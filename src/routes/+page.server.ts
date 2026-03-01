@@ -1,5 +1,5 @@
 import type { PageServerLoad } from './$types';
-import { getDatabase, extension, type ExtensionCategory } from '$lib/server/db';
+import { getDatabase, extension, githubCodeSource, type ExtensionCategory } from '$lib/server/db';
 import { eq, sql, and, desc } from 'drizzle-orm';
 
 export const load: PageServerLoad = async ({ url, platform }) => {
@@ -28,11 +28,16 @@ export const load: PageServerLoad = async ({ url, platform }) => {
 
 	const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
-	// Fetch extensions
+	// Fetch extensions with github code source for display
 	const [results, countResult] = await Promise.all([
 		db
-			.select()
+			.select({
+				extension,
+				githubOwner: githubCodeSource.owner,
+				githubRepo: githubCodeSource.repo
+			})
 			.from(extension)
+			.leftJoin(githubCodeSource, eq(githubCodeSource.extensionId, extension.id))
 			.where(whereClause)
 			.orderBy(desc(extension.downloadCount))
 			.limit(limit)

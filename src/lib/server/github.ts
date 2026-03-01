@@ -13,6 +13,14 @@ export interface GitHubUser {
 	name: string | null;
 }
 
+interface GitHubApiUser {
+	id: number;
+	login: string;
+	email: string | null;
+	avatar_url: string;
+	name: string | null;
+}
+
 export function getOctokitInstance(platform: App.Platform): Octokit {
 	if (!octokitInstance) {
 		const env = getEnv(platform);
@@ -38,7 +46,7 @@ export async function getCachedGitHubUser(
 	const cached = await cache.get(cacheKey);
 	if (cached) {
 		try {
-			const cacheObj = JSON.parse(cached);
+			const cacheObj = JSON.parse(cached) as GitHubApiUser;
 			return mapGitHubUser(cacheObj);
 		} catch {
 			// invalid cache
@@ -55,18 +63,23 @@ export async function getCachedGitHubUser(
 	return null;
 }
 
-export async function getGitHubUserById(githubId: number, platform: App.Platform): Promise<any> {
+export async function getGitHubUserById(
+	githubId: number,
+	platform: App.Platform
+): Promise<GitHubApiUser | null> {
 	const octokit = getOctokitInstance(platform);
 	try {
 		const response = await octokit.request('GET /user/{account_id}', { account_id: githubId });
-		return response.data;
-	} catch (err: any) {
-		if (err.status === 404) return null;
+		return response.data as GitHubApiUser;
+	} catch (err: unknown) {
+		if (err !== null && typeof err === 'object' && 'status' in err && err.status === 404) {
+			return null;
+		}
 		throw err;
 	}
 }
 
-function mapGitHubUser(apiUser: any): GitHubUser {
+function mapGitHubUser(apiUser: GitHubApiUser): GitHubUser {
 	return {
 		id: apiUser.id,
 		login: apiUser.login,

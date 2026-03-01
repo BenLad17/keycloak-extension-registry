@@ -1,17 +1,130 @@
 @import 'tailwindcss';
+@plugin "@tailwindcss/typography";
 
-/* Custom color theme */
+/* ── Color palette ── */
 @theme {
 	--color-bg: #0f0f1a;
 	--color-bg-secondary: #1a1a2e;
 	--color-border: #2a2a4a;
 	--color-text: #ffffff;
 	--color-text-secondary: #a0a0c0;
+	--color-text-muted: #6b6b8a;
 	--color-primary: #6366f1;
 	--color-primary-hover: #4f46e5;
 }
 
-/* Base layer overrides */
+/* ── Syntax highlighting theme ── */
+/*
+ * Custom hljs theme tuned to the page palette (replaces atom-one-dark).
+ * All token colors are drawn from the indigo/slate/emerald palette used
+ * throughout the UI. Import highlight.js/lib/core — do NOT import any
+ * highlight.js CSS file or it will override these rules.
+ */
+.hljs {
+	background: var(--color-bg-secondary);
+	color: #a0aec0; /* slate cool-gray default */
+}
+
+/* Comments */
+.hljs-comment,
+.hljs-quote {
+	color: #4a5568;
+	font-style: italic;
+}
+
+/* Keywords — indigo (matches --color-primary) */
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-subst {
+	color: #818cf8;
+}
+
+/* Strings — emerald */
+.hljs-string,
+.hljs-regexp,
+.hljs-meta .hljs-string {
+	color: #6ee7b7;
+}
+
+/* Numbers, literals */
+.hljs-number,
+.hljs-literal {
+	color: #f472b6;
+}
+
+/* YAML / HTML attribute names */
+.hljs-attr,
+.hljs-attribute {
+	color: #7dd3fc;
+}
+
+/* Tag names, built-ins */
+.hljs-name,
+.hljs-tag,
+.hljs-built_in,
+.hljs-builtin-name {
+	color: #93c5fd;
+}
+
+/* Type / class names */
+.hljs-type,
+.hljs-title,
+.hljs-class .hljs-title {
+	color: #c084fc;
+}
+
+/* Variables */
+.hljs-variable,
+.hljs-template-variable {
+	color: #e2e8f0;
+}
+
+/* Bullets, symbols (YAML list dashes, etc.) */
+.hljs-bullet,
+.hljs-symbol {
+	color: #818cf8;
+}
+
+/* Links */
+.hljs-link {
+	color: #7dd3fc;
+	text-decoration: underline;
+}
+
+/* Meta / preprocessor */
+.hljs-meta {
+	color: #64748b;
+}
+
+/* Section headings */
+.hljs-section {
+	color: #818cf8;
+	font-weight: bold;
+}
+
+/* Diff */
+.hljs-addition {
+	color: #6ee7b7;
+}
+.hljs-deletion {
+	color: #f87171;
+}
+
+/* Emphasis / strong */
+.hljs-emphasis {
+	font-style: italic;
+}
+.hljs-strong {
+	font-weight: bold;
+}
+
+/* ── Prose overrides ── */
+.prose img {
+	display: inline;
+	margin: 0;
+}
+
+/* ── Base ── */
 @layer base {
 	html {
 		background-color: var(--color-bg);
@@ -28,5 +141,40 @@
 
 	a:hover {
 		color: var(--color-primary-hover);
+	}
+}
+
+/* ── Component classes ── */
+@layer components {
+	/* Surface card */
+	.card {
+		@apply rounded-2xl border border-border bg-bg-secondary;
+	}
+
+	/* Card section heading — used at the top of a padded card */
+	.card-title {
+		@apply mb-3 text-xs font-semibold tracking-widest text-gray-500 uppercase;
+	}
+
+	/* Key–value row label (inside divided cards) */
+	.meta-label {
+		@apply mb-0.5 text-xs font-medium tracking-wide text-gray-500 uppercase;
+	}
+
+	/* Badge — combine with a variant class below */
+	.badge {
+		@apply inline-flex items-center rounded-full font-medium;
+	}
+
+	.badge-primary {
+		@apply bg-indigo-600/20 text-indigo-400;
+	}
+
+	.badge-danger {
+		@apply bg-red-600/20 text-red-400;
+	}
+
+	.badge-muted {
+		@apply bg-bg text-gray-500;
 	}
 }

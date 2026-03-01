@@ -1,19 +1,45 @@
 import type { PageServerLoad } from './$types';
-import { extension, getDatabase } from '$lib/server/db';
-import { eq } from 'drizzle-orm';
+import { extension, extensionVersion, githubCodeSource, getDatabase } from '$lib/server/db';
+import { desc, eq } from 'drizzle-orm';
 import { error, redirect } from '@sveltejs/kit';
+import { hasRepoWriteAccess, isRegistryAdmin } from '$lib/server/security/auth';
 
-export const load: PageServerLoad = async ({ platform, params }) => {
+export const load: PageServerLoad = async ({ platform, params, locals }) => {
 	const slug = params.slug;
 	if (!slug) {
 		throw redirect(301, '/');
 	}
 	const db = getDatabase(platform);
-	const result = await db.select().from(extension).where(eq(extension.slug, slug));
-	if (!result || result.length === 0) {
+
+	const [ext] = await db.select().from(extension).where(eq(extension.slug, slug));
+	if (!ext) {
 		throw error(404);
 	}
+
+	const [githubSource] = await db
+		.select()
+		.from(githubCodeSource)
+		.where(eq(githubCodeSource.extensionId, ext.id))
+		.limit(1);
+
+	const versions = await db
+		.select()
+		.from(extensionVersion)
+		.where(eq(extensionVersion.extensionId, ext.id))
+		.orderBy(desc(extensionVersion.publishedAt));
+
+	let canManage = false;
+	const token = locals.session?.githubToken;
+	if (token && githubSource) {
+		canManage =
+			(await hasRepoWriteAccess(token, githubSource.owner, githubSource.repo)) ||
+			(await isRegistryAdmin(token, platform!));
+	}
+
 	return {
-		extension: result[0]
+		extension: ext,
+		versions,
+		githubSource: githubSource ?? null,
+		canManage
 	};
 };

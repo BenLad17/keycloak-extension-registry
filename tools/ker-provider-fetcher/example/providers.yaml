@@ -1,0 +1,5 @@
+registry_url: http://host.docker.internal:5173
+providers:
+  - name: keycloak-home-idp-discovery
+    version: v26.1.1
+    sha256: "b6744e40032d573ae666f312a747c0d2e34f86db290218de614e0e45fee8a2eb"

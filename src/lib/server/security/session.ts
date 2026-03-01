@@ -8,6 +8,7 @@ const SLIDING_THRESHOLD_SECONDS = Math.floor(SESSION_TTL_SECONDS / 2);
 export interface SessionData {
 	id: string;
 	userId: number;
+	githubToken?: string;
 	createdAt: number;
 	expiresAt: number;
 }
@@ -15,13 +16,15 @@ export interface SessionData {
 export async function createSession(
 	userId: number,
 	platform: App.Platform,
-	cookies: Cookies
+	cookies: Cookies,
+	githubToken?: string
 ): Promise<void> {
 	const sessionId = crypto.randomUUID();
 	const timestampEpochSeconds = epochSecondsNow();
 	const data = {
 		userId: userId,
 		id: sessionId,
+		githubToken,
 		createdAt: timestampEpochSeconds,
 		expiresAt: timestampEpochSeconds + SESSION_TTL_SECONDS
 	} as SessionData;

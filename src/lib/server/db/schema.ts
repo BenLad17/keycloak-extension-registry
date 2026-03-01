@@ -26,15 +26,14 @@ export const extension = pgTable(
 		description: text('description'),
 		category: text('category', { enum: extensionCategories }).notNull(),
 
-		// GitHub reference - use both ID (stable) and path (human-readable owner/name)
-		githubRepoId: bigint('github_repo_id', { mode: 'number' }).notNull().unique(),
-		githubRepoOwner: text('github_repo_owner').notNull(),
-		githubRepoName: text('github_repo_name').notNull(),
+		codeSourceType: text('code_source_type', { enum: ['github'] }).notNull(),
 
 		ownerId: integer('owner_id').references(() => user.id),
 
 		createdAt: timestamp('created_at').defaultNow().notNull(),
 		updatedAt: timestamp('updated_at').defaultNow().notNull(),
+
+		readme: text('readme'),
 
 		lastSyncedAt: timestamp('last_synced_at'),
 		lastSyncError: text('last_sync_error'),
@@ -42,12 +41,33 @@ export const extension = pgTable(
 
 		downloadCount: integer('download_count').default(0)
 	},
-	(table) => [
-		uniqueIndex('github_repo_id_idx').on(table.githubRepoId),
-		uniqueIndex('github_repo_owner_name_idx').on(table.githubRepoOwner, table.githubRepoName),
-		index('owner_idx').on(table.ownerId)
-	]
+	(table) => [index('owner_idx').on(table.ownerId)]
 );
+
+export const githubCodeSource = pgTable('github_code_source', {
+	extensionId: integer('extension_id')
+		.primaryKey()
+		.references(() => extension.id, { onDelete: 'cascade' }),
+	repoId: bigint('repo_id', { mode: 'number' }).notNull().unique(),
+	owner: text('owner').notNull(),
+	repo: text('repo').notNull()
+});
+
+export const githubArtifactSource = pgTable('github_artifact_source', {
+	extensionId: integer('extension_id')
+		.primaryKey()
+		.references(() => extension.id, { onDelete: 'cascade' }),
+	owner: text('owner').notNull(),
+	repo: text('repo').notNull()
+});
+
+export const mavenArtifactSource = pgTable('maven_artifact_source', {
+	extensionId: integer('extension_id')
+		.primaryKey()
+		.references(() => extension.id, { onDelete: 'cascade' }),
+	groupId: text('group_id').notNull(),
+	artifactId: text('artifact_id').notNull()
+});
 
 export const extensionVersion = pgTable(
 	'extension_version',
@@ -72,6 +92,19 @@ export const extensionVersion = pgTable(
 	]
 );
 
+export const extensionVersionFile = pgTable(
+	'extension_version_file',
+	{
+		id: integer('id').generatedAlwaysAsIdentity().primaryKey(),
+		versionId: integer('version_id')
+			.references(() => extensionVersion.id, { onDelete: 'cascade' })
+			.notNull(),
+		path: text('path').notNull(),
+		content: text('content').notNull()
+	},
+	(table) => [index('file_version_idx').on(table.versionId)]
+);
+
 // ============================================================================
 // Type exports
 // ============================================================================
@@ -79,8 +112,16 @@ export type User = typeof user.$inferSelect;
 export type NewUser = typeof user.$inferInsert;
 export type Extension = typeof extension.$inferSelect;
 export type NewExtension = typeof extension.$inferInsert;
+export type GithubCodeSource = typeof githubCodeSource.$inferSelect;
+export type NewGithubCodeSource = typeof githubCodeSource.$inferInsert;
+export type GithubArtifactSource = typeof githubArtifactSource.$inferSelect;
+export type NewGithubArtifactSource = typeof githubArtifactSource.$inferInsert;
+export type MavenArtifactSource = typeof mavenArtifactSource.$inferSelect;
+export type NewMavenArtifactSource = typeof mavenArtifactSource.$inferInsert;
 export type ExtensionVersion = typeof extensionVersion.$inferSelect;
 export type NewExtensionVersion = typeof extensionVersion.$inferInsert;
+export type ExtensionVersionFile = typeof extensionVersionFile.$inferSelect;
+export type NewExtensionVersionFile = typeof extensionVersionFile.$inferInsert;
 export type ExtensionCategory = (typeof extensionCategories)[number];
 
 export const ExtensionCategoryLabel: Record<ExtensionCategory, string> = {

@@ -1,6 +1,6 @@
 import { type RequestHandler } from '@sveltejs/kit';
 import { extension, extensionVersion, getDatabase } from '$lib/server/db';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 
 export const GET: RequestHandler = async ({ platform, params }) => {
 	const slug = params.slug;
@@ -34,9 +34,26 @@ export const GET: RequestHandler = async ({ platform, params }) => {
 		return new Response('Version not found', { status: 404 });
 	}
 
-	return fetch(downloadVersion.downloadUrl, {
+	const response = await fetch(downloadVersion.downloadUrl, {
 		cf: {
 			cache: 'no-store'
 		}
 	});
+
+	if (response.ok) {
+		platform?.ctx.waitUntil(
+			Promise.all([
+				db
+					.update(extensionVersion)
+					.set({ downloadCount: sql`${extensionVersion.downloadCount} + 1` })
+					.where(eq(extensionVersion.id, downloadVersion.id)),
+				db
+					.update(extension)
+					.set({ downloadCount: sql`${extension.downloadCount} + 1` })
+					.where(eq(extension.id, downloadExtension.id))
+			])
+		);
+	}
+
+	return response;
 };

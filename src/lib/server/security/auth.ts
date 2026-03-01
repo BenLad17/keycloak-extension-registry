@@ -107,7 +107,7 @@ export async function processOAuthCallback(url: URL, cookies: Cookies, platform:
 		[localUser] = await db.insert(user).values({ githubId: githubUser.id }).returning();
 	}
 
-	await createSession(localUser.id, platform!, cookies);
+	await createSession(localUser.id, platform!, cookies, accessToken);
 
 	redirect(301, redirectTo);
 }
@@ -117,7 +117,7 @@ export function getGitHubOAuthURL(clientId: string, redirectUri: string, state: 
 		client_id: clientId,
 		redirect_uri: redirectUri,
 		state: state,
-		scope: 'read:user user:email'
+		scope: 'read:user user:email public_repo'
 	});
 	return `https://github.com/login/oauth/authorize?${params}`;
 }
@@ -149,4 +149,26 @@ export async function getGitHubUser(accessToken: string) {
 		error(500, 'Failed to fetch GitHub user');
 	}
 	return response.data;
+}
+
+export async function hasRepoWriteAccess(
+	token: string,
+	owner: string,
+	repo: string
+): Promise<boolean> {
+	try {
+		const octokit = new Octokit({ auth: token });
+		const { data } = await octokit.request('GET /repos/{owner}/{repo}', { owner, repo });
+		return data.permissions?.push === true;
+	} catch {
+		return false;
+	}
+}
+
+export async function isRegistryAdmin(token: string, platform: App.Platform): Promise<boolean> {
+	const registryRepo = getEnv(platform).REGISTRY_GITHUB_REPO;
+	if (!registryRepo) return false;
+	const [owner, repo] = registryRepo.split('/');
+	if (!owner || !repo) return false;
+	return hasRepoWriteAccess(token, owner, repo);
 }
