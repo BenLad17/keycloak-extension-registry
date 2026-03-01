@@ -72,11 +72,13 @@ export class GithubReleasesArtifactAdapter implements ArtifactSourceAdapter {
 			// Download binary JAR for resource files
 			const jarResponse = await fetch(asset.browser_download_url);
 			if (!jarResponse.ok) {
-				console.error(`Failed to fetch JAR for release ${release.tag_name} of extension ${extensionId}`);
+				console.error(
+					`Failed to fetch JAR for release ${release.tag_name} of extension ${extensionId}`
+				);
 				continue;
 			}
 			const jarBytes = new Uint8Array(await jarResponse.arrayBuffer());
-		const keycloakVersion = parseKeycloakVersion(extractPomXml(jarBytes) ?? '') ?? undefined;
+			const keycloakVersion = parseKeycloakVersion(extractPomXml(jarBytes) ?? '') ?? undefined;
 
 			// Download source zipball from GitHub
 			const zipballUrl = `https://github.com/${source.owner}/${source.repo}/archive/refs/tags/${release.tag_name}.zip`;
@@ -97,9 +99,11 @@ export class GithubReleasesArtifactAdapter implements ArtifactSourceAdapter {
 
 				if (allFiles.length > 0) {
 					console.log(`Backfilling files for ${release.tag_name} of extension ${extensionId}`);
-					await db.insert(extensionVersionFile).values(
-						allFiles.map((f) => ({ versionId: existing.id, path: f.path, content: f.content }))
-					);
+					await db
+						.insert(extensionVersionFile)
+						.values(
+							allFiles.map((f) => ({ versionId: existing.id, path: f.path, content: f.content }))
+						);
 				}
 				continue;
 			}
@@ -128,9 +132,11 @@ export class GithubReleasesArtifactAdapter implements ArtifactSourceAdapter {
 				.returning({ id: extensionVersion.id });
 
 			if (allFiles.length > 0) {
-				await db.insert(extensionVersionFile).values(
-					allFiles.map((f) => ({ versionId: inserted.id, path: f.path, content: f.content }))
-				);
+				await db
+					.insert(extensionVersionFile)
+					.values(
+						allFiles.map((f) => ({ versionId: inserted.id, path: f.path, content: f.content }))
+					);
 			}
 		}
 	}
@@ -156,10 +162,11 @@ export class GithubReleasesArtifactAdapter implements ArtifactSourceAdapter {
 
 		let totalDownloads = 0;
 		for (const version of versions) {
-			const githubRelease = await octokit.request(
-				'GET /repos/{owner}/{repo}/releases/tags/{tag}',
-				{ owner: source.owner, repo: source.repo, tag: version.version }
-			);
+			const githubRelease = await octokit.request('GET /repos/{owner}/{repo}/releases/tags/{tag}', {
+				owner: source.owner,
+				repo: source.repo,
+				tag: version.version
+			});
 			const githubReleaseAsset = githubRelease.data.assets.find(
 				(asset) => asset.browser_download_url === version.downloadUrl
 			);

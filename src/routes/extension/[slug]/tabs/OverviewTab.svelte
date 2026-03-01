@@ -59,11 +59,15 @@
 	<div class="space-y-4">
 		<!-- README -->
 		{#if readmeHtml}
-			<div class="prose prose-invert max-w-none rounded-2xl border border-border bg-bg-secondary p-8">
+			<div
+				class="prose max-w-none rounded-2xl border border-border bg-bg-secondary p-8 prose-invert"
+			>
 				{@html readmeHtml}
 			</div>
 		{:else}
-			<div class="rounded-2xl border border-border bg-bg-secondary/50 py-20 text-center text-gray-500">
+			<div
+				class="rounded-2xl border border-border bg-bg-secondary/50 py-20 text-center text-gray-500"
+			>
 				No README available.
 			</div>
 		{/if}
@@ -79,7 +83,11 @@
 						<Terminal class="h-4 w-4 text-indigo-400" />
 						Installation
 					</div>
-					<ChevronDown class="h-4 w-4 text-gray-500 transition-transform duration-200 {showInstall ? 'rotate-180' : ''}" />
+					<ChevronDown
+						class="h-4 w-4 text-gray-500 transition-transform duration-200 {showInstall
+							? 'rotate-180'
+							: ''}"
+					/>
 				</button>
 				{#if showInstall}
 					<div transition:slide={{ duration: 200 }} class="border-t border-border">
@@ -87,13 +95,17 @@
 						<div class="flex items-center border-b border-border px-6">
 							<button
 								onclick={() => (installTab = 'fetcher')}
-								class="py-3 pr-5 text-xs font-medium transition-colors {installTab === 'fetcher' ? 'border-b-2 border-indigo-500 text-white' : 'text-gray-500 hover:text-gray-300'}"
+								class="py-3 pr-5 text-xs font-medium transition-colors {installTab === 'fetcher'
+									? 'border-b-2 border-indigo-500 text-white'
+									: 'text-gray-500 hover:text-gray-300'}"
 							>
 								Docker
 							</button>
 							<button
 								onclick={() => (installTab = 'manual')}
-								class="py-3 pr-5 text-xs font-medium transition-colors {installTab === 'manual' ? 'border-b-2 border-indigo-500 text-white' : 'text-gray-500 hover:text-gray-300'}"
+								class="py-3 pr-5 text-xs font-medium transition-colors {installTab === 'manual'
+									? 'border-b-2 border-indigo-500 text-white'
+									: 'text-gray-500 hover:text-gray-300'}"
 							>
 								Manual
 							</button>
@@ -102,9 +114,17 @@
 
 						<!-- Docker tab -->
 						{#if installTab === 'fetcher'}
-							<div class="px-6 pb-6 pt-5">
-								<p class="mb-1 font-medium text-gray-300">Add to your <code class="rounded bg-bg px-1 py-0.5 font-mono text-xs text-indigo-300">providers.yaml</code></p>
-								<p class="mb-3 text-xs text-gray-600">Then reference this file in a multi-stage Dockerfile — the fetcher tool downloads and verifies the JAR at build time.</p>
+							<div class="px-6 pt-5 pb-6">
+								<p class="mb-1 font-medium text-gray-300">
+									Add to your <code
+										class="rounded bg-bg px-1 py-0.5 font-mono text-xs text-indigo-300"
+										>providers.yaml</code
+									>
+								</p>
+								<p class="mb-3 text-xs text-gray-600">
+									Then reference this file in a multi-stage Dockerfile — the fetcher tool downloads
+									and verifies the JAR at build time.
+								</p>
 								<CodeBlock code={yamlSnippet} lang="yaml" />
 								<p class="mt-3 text-xs text-gray-600">
 									New to this workflow?
@@ -115,7 +135,7 @@
 
 						<!-- Manual install tab -->
 						{#if installTab === 'manual'}
-							<div class="px-6 pb-6 pt-5">
+							<div class="px-6 pt-5 pb-6">
 								<ol class="space-y-5 text-sm">
 									<li>
 										<p class="mb-2 font-medium text-gray-300">1. Download the JAR</p>
@@ -129,16 +149,23 @@
 										</a>
 									</li>
 									<li>
-										<p class="mb-2 font-medium text-gray-300">2. Copy to Keycloak providers directory</p>
-										<pre class="rounded-lg bg-bg px-4 py-3 font-mono text-xs text-gray-400">cp {jarFilename(latestVersion.downloadUrl)} /opt/keycloak/providers/</pre>
+										<p class="mb-2 font-medium text-gray-300">
+											2. Copy to Keycloak providers directory
+										</p>
+										<pre
+											class="rounded-lg bg-bg px-4 py-3 font-mono text-xs text-gray-400">cp {jarFilename(
+												latestVersion.downloadUrl
+											)} /opt/keycloak/providers/</pre>
 									</li>
 									<li>
 										<p class="mb-2 font-medium text-gray-300">3. Rebuild Keycloak</p>
-										<pre class="rounded-lg bg-bg px-4 py-3 font-mono text-xs text-gray-400">./kc.sh build</pre>
+										<pre
+											class="rounded-lg bg-bg px-4 py-3 font-mono text-xs text-gray-400">./kc.sh build</pre>
 									</li>
 									<li>
 										<p class="mb-2 font-medium text-gray-300">4. Start Keycloak</p>
-										<pre class="rounded-lg bg-bg px-4 py-3 font-mono text-xs text-gray-400">./kc.sh start</pre>
+										<pre
+											class="rounded-lg bg-bg px-4 py-3 font-mono text-xs text-gray-400">./kc.sh start</pre>
 									</li>
 								</ol>
 							</div>
@@ -206,24 +233,31 @@
 			{#if ext.lastSyncError}
 				<div class="px-4 py-3">
 					<p class="meta-label" style="color: rgb(220 38 38 / 0.8)">Sync error</p>
-					<p class="break-all font-mono text-xs text-red-400">{ext.lastSyncError}</p>
+					<p class="font-mono text-xs break-all text-red-400">{ext.lastSyncError}</p>
 				</div>
 			{/if}
 		</Card>
 
 		{#if versions.length > 0}
 			<Card title="Downloads">
-				<p class="mb-3 text-xs text-gray-600">{(ext.downloadCount ?? 0).toLocaleString()} total across all versions</p>
+				<p class="mb-3 text-xs text-gray-600">
+					{(ext.downloadCount ?? 0).toLocaleString()} total across all versions
+				</p>
 				<div class="space-y-2.5">
 					{#each visibleDownloadVersions as v}
 						<div class="flex items-center gap-3">
-							<span class="w-20 shrink-0 truncate font-mono text-xs text-gray-500" title={v.version}>
+							<span
+								class="w-20 shrink-0 truncate font-mono text-xs text-gray-500"
+								title={v.version}
+							>
 								{v.version}
 							</span>
 							<div class="h-2 flex-1 overflow-hidden rounded-full bg-bg">
 								<div
 									class="h-2 rounded-full bg-indigo-500/60 transition-all"
-									style="width: {maxDownloads > 0 ? (((v.downloadCount ?? 0) / maxDownloads) * 100).toFixed(1) : 0}%"
+									style="width: {maxDownloads > 0
+										? (((v.downloadCount ?? 0) / maxDownloads) * 100).toFixed(1)
+										: 0}%"
 								></div>
 							</div>
 							<span class="w-10 shrink-0 text-right text-xs text-gray-600">
@@ -237,7 +271,9 @@
 						onclick={() => (downloadsExpanded = !downloadsExpanded)}
 						class="mt-3 w-full text-center text-xs text-gray-600 transition-colors hover:text-gray-400"
 					>
-						{downloadsExpanded ? 'Show less' : `Show ${versions.length - DOWNLOADS_COLLAPSED_COUNT} more…`}
+						{downloadsExpanded
+							? 'Show less'
+							: `Show ${versions.length - DOWNLOADS_COLLAPSED_COUNT} more…`}
 					</button>
 				{/if}
 			</Card>

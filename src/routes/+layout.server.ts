@@ -4,7 +4,7 @@ import { getCachedGitHubUser } from '$lib/server/github';
 
 export const load: LayoutServerLoad = async ({ locals, platform }) => {
 	const user = await getAuthenticatedUser(locals, platform!);
-	if(!user){
+	if (!user) {
 		return {
 			user: null
 		};

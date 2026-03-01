@@ -31,7 +31,9 @@ export class MavenCentralArtifactAdapter implements ArtifactSourceAdapter {
 
 		const metadataResponse = await fetch(metadataUrl);
 		if (!metadataResponse.ok) {
-			throw new Error(`Failed to fetch Maven metadata from ${metadataUrl}: ${metadataResponse.status}`);
+			throw new Error(
+				`Failed to fetch Maven metadata from ${metadataUrl}: ${metadataResponse.status}`
+			);
 		}
 
 		const versions = parseVersions(await metadataResponse.text());
@@ -41,10 +43,7 @@ export class MavenCentralArtifactAdapter implements ArtifactSourceAdapter {
 				.select()
 				.from(extensionVersion)
 				.where(
-					and(
-						eq(extensionVersion.extensionId, extensionId),
-						eq(extensionVersion.version, version)
-					)
+					and(eq(extensionVersion.extensionId, extensionId), eq(extensionVersion.version, version))
 				)
 				.limit(1);
 
@@ -63,11 +62,13 @@ export class MavenCentralArtifactAdapter implements ArtifactSourceAdapter {
 			// Download binary JAR
 			const jarResponse = await fetch(`${base}.jar`);
 			if (!jarResponse.ok) {
-				console.error(`Failed to fetch JAR for Maven ${source.groupId}:${source.artifactId}:${version}`);
+				console.error(
+					`Failed to fetch JAR for Maven ${source.groupId}:${source.artifactId}:${version}`
+				);
 				continue;
 			}
 			const jarBytes = new Uint8Array(await jarResponse.arrayBuffer());
-		const keycloakVersion = parseKeycloakVersion(extractPomXml(jarBytes) ?? '') ?? undefined;
+			const keycloakVersion = parseKeycloakVersion(extractPomXml(jarBytes) ?? '') ?? undefined;
 
 			// Download sources JAR (Sonatype requires this for Central publication)
 			const sourcesResponse = await fetch(`${base}-sources.jar`);
@@ -85,11 +86,15 @@ export class MavenCentralArtifactAdapter implements ArtifactSourceAdapter {
 					.set({ keycloakVersion })
 					.where(eq(extensionVersion.id, existing.id));
 
-				console.log(`Backfilling files for Maven ${source.artifactId}:${version} of extension ${extensionId}`);
+				console.log(
+					`Backfilling files for Maven ${source.artifactId}:${version} of extension ${extensionId}`
+				);
 				if (allFiles.length > 0) {
-					await db.insert(extensionVersionFile).values(
-						allFiles.map((f) => ({ versionId: existing.id, path: f.path, content: f.content }))
-					);
+					await db
+						.insert(extensionVersionFile)
+						.values(
+							allFiles.map((f) => ({ versionId: existing.id, path: f.path, content: f.content }))
+						);
 				}
 				continue;
 			}
@@ -115,9 +120,11 @@ export class MavenCentralArtifactAdapter implements ArtifactSourceAdapter {
 				.returning({ id: extensionVersion.id });
 
 			if (allFiles.length > 0) {
-				await db.insert(extensionVersionFile).values(
-					allFiles.map((f) => ({ versionId: inserted.id, path: f.path, content: f.content }))
-				);
+				await db
+					.insert(extensionVersionFile)
+					.values(
+						allFiles.map((f) => ({ versionId: inserted.id, path: f.path, content: f.content }))
+					);
 			}
 		}
 	}

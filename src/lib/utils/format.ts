@@ -15,7 +15,11 @@ export function formatSize(bytes: number): string {
 
 export function formatDate(date: Date | string | null): string {
 	if (!date) return '—';
-	return new Date(date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+	return new Date(date).toLocaleDateString('en-US', {
+		year: 'numeric',
+		month: 'short',
+		day: 'numeric'
+	});
 }
 
 export function timeAgo(date: Date | string | null): string {

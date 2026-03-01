@@ -24,10 +24,13 @@
 </script>
 
 <div class="group relative {extraClass}">
-	<pre class="hljs overflow-x-auto rounded-lg border border-border px-4 py-3 font-mono text-xs leading-relaxed"><code>{@html highlighted}</code></pre>
+	<pre
+		class="hljs overflow-x-auto rounded-lg border border-border px-4 py-3 font-mono text-xs leading-relaxed"><code
+			>{@html highlighted}</code
+		></pre>
 	<button
 		onclick={copy}
-		class="absolute right-2 top-2 flex items-center gap-1.5 rounded-md border border-border bg-bg-secondary px-2 py-1 text-xs text-gray-500 opacity-0 transition-all group-hover:opacity-100 hover:border-indigo-500/50 hover:text-white"
+		class="absolute top-2 right-2 flex items-center gap-1.5 rounded-md border border-border bg-bg-secondary px-2 py-1 text-xs text-gray-500 opacity-0 transition-all group-hover:opacity-100 hover:border-indigo-500/50 hover:text-white"
 	>
 		{#if copied}
 			<Check class="h-3 w-3 text-green-400" />

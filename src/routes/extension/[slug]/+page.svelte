@@ -1,5 +1,15 @@
 <script lang="ts">
-	import { Github, BookOpen, History, ScrollText, FileCode2, AlertTriangle, ArrowLeft, Pencil, CheckCircle } from 'lucide-svelte';
+	import {
+		Github,
+		BookOpen,
+		History,
+		ScrollText,
+		FileCode2,
+		AlertTriangle,
+		ArrowLeft,
+		Pencil,
+		CheckCircle
+	} from 'lucide-svelte';
 	import { ExtensionCategoryLabel } from '$lib/common/extension-category';
 	import Badge from '$lib/components/Badge.svelte';
 	import { marked } from 'marked';
@@ -40,7 +50,10 @@
 <div class="mx-auto max-w-6xl px-4 py-10">
 	<!-- Top bar: back link + repo link -->
 	<div class="mb-6 flex items-center justify-between gap-3">
-		<a href="/" class="inline-flex items-center gap-1.5 text-sm text-gray-500 no-underline transition-colors hover:text-gray-300">
+		<a
+			href="/"
+			class="inline-flex items-center gap-1.5 text-sm text-gray-500 no-underline transition-colors hover:text-gray-300"
+		>
 			<ArrowLeft class="h-4 w-4" />
 			Browse extensions
 		</a>
@@ -59,7 +72,9 @@
 
 	<!-- Published banner -->
 	{#if justPublished}
-		<div class="mb-6 flex items-center gap-3 rounded-xl border border-green-600/30 bg-green-600/10 px-4 py-3 text-sm text-green-400">
+		<div
+			class="mb-6 flex items-center gap-3 rounded-xl border border-green-600/30 bg-green-600/10 px-4 py-3 text-sm text-green-400"
+		>
 			<CheckCircle class="h-4 w-4 shrink-0" />
 			Extension published successfully. Versions will sync in the background.
 		</div>
@@ -67,7 +82,9 @@
 
 	<!-- Archived banner -->
 	{#if ext.status === 'archived'}
-		<div class="mb-6 flex items-center gap-3 rounded-xl border border-yellow-600/30 bg-yellow-600/10 px-4 py-3 text-sm text-yellow-400">
+		<div
+			class="mb-6 flex items-center gap-3 rounded-xl border border-yellow-600/30 bg-yellow-600/10 px-4 py-3 text-sm text-yellow-400"
+		>
 			<AlertTriangle class="h-4 w-4 shrink-0" />
 			This extension is archived and no longer maintained. It may not work with recent Keycloak versions.
 		</div>
@@ -99,10 +116,18 @@
 		{/if}
 
 		<div class="flex flex-wrap gap-5 border-t border-border pt-3 text-sm text-gray-500">
-			<span><strong class="text-white">{(ext.downloadCount ?? 0).toLocaleString()}</strong> downloads</span>
-			<span><strong class="text-white">{versions.length}</strong> {versions.length === 1 ? 'version' : 'versions'}</span>
+			<span
+				><strong class="text-white">{(ext.downloadCount ?? 0).toLocaleString()}</strong> downloads</span
+			>
+			<span
+				><strong class="text-white">{versions.length}</strong>
+				{versions.length === 1 ? 'version' : 'versions'}</span
+			>
 			{#if latestVersion}
-				<span>Last release <strong class="text-white">{timeAgo(latestVersion.publishedAt)}</strong></span>
+				<span
+					>Last release <strong class="text-white">{timeAgo(latestVersion.publishedAt)}</strong
+					></span
+				>
 			{/if}
 		</div>
 	</div>
@@ -112,7 +137,10 @@
 		{#each tabs as tab}
 			<button
 				onclick={() => (activeTab = tab.id)}
-				class="flex items-center gap-2 px-5 py-3 text-sm font-medium transition-colors {activeTab === tab.id ? 'border-b-2 border-indigo-500 text-white' : 'text-gray-500 hover:text-gray-300'}"
+				class="flex items-center gap-2 px-5 py-3 text-sm font-medium transition-colors {activeTab ===
+				tab.id
+					? 'border-b-2 border-indigo-500 text-white'
+					: 'text-gray-500 hover:text-gray-300'}"
 			>
 				<tab.icon class="h-4 w-4" />
 				{tab.label}

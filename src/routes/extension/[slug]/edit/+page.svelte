@@ -11,15 +11,22 @@
 </svelte:head>
 
 <div class="mx-auto max-w-2xl py-12">
-	<a href="/extension/{ext.slug}" class="mb-6 inline-flex items-center gap-1.5 text-sm text-gray-500 no-underline transition-colors hover:text-gray-300">
+	<a
+		href="/extension/{ext.slug}"
+		class="mb-6 inline-flex items-center gap-1.5 text-sm text-gray-500 no-underline transition-colors hover:text-gray-300"
+	>
 		← Back to extension
 	</a>
 
-	<h1 class="mb-2 mt-4 text-3xl font-bold">Edit Extension</h1>
-	<p class="mb-8 text-gray-400">Update the details for <strong class="text-white">{ext.name}</strong>.</p>
+	<h1 class="mt-4 mb-2 text-3xl font-bold">Edit Extension</h1>
+	<p class="mb-8 text-gray-400">
+		Update the details for <strong class="text-white">{ext.name}</strong>.
+	</p>
 
 	{#if form?.error}
-		<div class="mb-6 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+		<div
+			class="mb-6 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400"
+		>
 			{form.error}
 		</div>
 	{/if}
@@ -46,7 +53,8 @@
 						name="description"
 						rows="3"
 						class="rounded-lg border border-border bg-bg px-3 py-2 text-sm text-white placeholder-gray-600 focus:border-indigo-500 focus:outline-none"
-					>{ext.description ?? ''}</textarea>
+						>{ext.description ?? ''}</textarea
+					>
 				</label>
 
 				<label class="flex flex-col gap-1.5">
@@ -70,7 +78,9 @@
 						<option value="active" selected={ext.status === 'active'}>Active</option>
 						<option value="archived" selected={ext.status === 'archived'}>Archived</option>
 					</select>
-					<p class="text-xs text-gray-600">Archived extensions are hidden from search and show a deprecation warning.</p>
+					<p class="text-xs text-gray-600">
+						Archived extensions are hidden from search and show a deprecation warning.
+					</p>
 				</label>
 			</div>
 		</div>

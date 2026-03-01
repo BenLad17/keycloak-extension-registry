@@ -28,7 +28,9 @@
 
 	let codeVersionId = $state<number | null>(null);
 	const codeVersion = $derived(
-		codeVersionId !== null ? (versions.find((v) => v.id === codeVersionId) ?? latestVersion) : latestVersion
+		codeVersionId !== null
+			? (versions.find((v) => v.id === codeVersionId) ?? latestVersion)
+			: latestVersion
 	);
 
 	let versionFiles = $state<VersionFile[] | null>(null);
@@ -115,7 +117,13 @@
 				const isLeaf = i === parts.length - 1;
 				let node = nodes.find((n) => n.name === parts[i]);
 				if (!node) {
-					node = { name: parts[i], fullPath: pathSoFar, type: isLeaf ? 'file' : 'dir', content: isLeaf ? file.content : '', children: [] };
+					node = {
+						name: parts[i],
+						fullPath: pathSoFar,
+						type: isLeaf ? 'file' : 'dir',
+						content: isLeaf ? file.content : '',
+						children: []
+					};
 					nodes.push(node);
 					nodes.sort((a, b) => {
 						if (a.type !== b.type) return a.type === 'dir' ? -1 : 1;
@@ -127,11 +135,12 @@
 		}
 		return root;
 	}
-
 </script>
 
 {#if versions.length === 0}
-	<div class="flex flex-col items-center gap-3 rounded-2xl border border-border bg-bg-secondary/50 py-20 text-center">
+	<div
+		class="flex flex-col items-center gap-3 rounded-2xl border border-border bg-bg-secondary/50 py-20 text-center"
+	>
 		<FileCode2 class="h-10 w-10 text-gray-700" />
 		<p class="text-sm font-medium text-gray-400">No files available</p>
 		<p class="text-xs text-gray-600">Source files will appear here once versions are synced.</p>
@@ -142,7 +151,8 @@
 		<div class="flex flex-wrap items-center gap-3 border-b border-border px-5 py-3">
 			<select
 				class="rounded-lg border border-border bg-bg px-3 py-1.5 font-mono text-sm text-white focus:border-indigo-500 focus:outline-none"
-				onchange={(e) => switchCodeVersion(parseInt((e.currentTarget as HTMLSelectElement).value, 10))}
+				onchange={(e) =>
+					switchCodeVersion(parseInt((e.currentTarget as HTMLSelectElement).value, 10))}
 			>
 				{#each versions as v}
 					<option value={v.id} selected={v.id === (codeVersion?.id ?? latestVersion?.id)}>
@@ -168,9 +178,13 @@
 		{#if filesLoading}
 			<div class="flex items-center justify-center py-20 text-sm text-gray-600">Loading files…</div>
 		{:else if versionFiles === null}
-			<div class="py-20 text-center text-sm text-gray-600">Files not available for this version.</div>
+			<div class="py-20 text-center text-sm text-gray-600">
+				Files not available for this version.
+			</div>
 		{:else if versionFiles.length === 0}
-			<div class="py-20 text-center text-sm text-gray-600">No browsable files for this version.</div>
+			<div class="py-20 text-center text-sm text-gray-600">
+				No browsable files for this version.
+			</div>
 		{:else}
 			<div class="flex" style="height: 600px">
 				<!-- File tree -->
@@ -187,7 +201,12 @@
 											class="flex min-w-full items-center gap-1.5 py-1 text-left font-mono text-xs text-gray-500 transition-colors hover:text-gray-300"
 											style="padding-left: {0.75 + depth * 0.875}rem; padding-right: 0.75rem"
 										>
-											<ChevronRight class="h-3 w-3 shrink-0 transition-transform {fileSearch || expandedDirs.has(node.fullPath) ? 'rotate-90' : ''}" />
+											<ChevronRight
+												class="h-3 w-3 shrink-0 transition-transform {fileSearch ||
+												expandedDirs.has(node.fullPath)
+													? 'rotate-90'
+													: ''}"
+											/>
 											<span class="whitespace-nowrap">{node.name}</span>
 										</button>
 										{#if fileSearch || expandedDirs.has(node.fullPath)}
@@ -197,7 +216,10 @@
 								{:else}
 									<button
 										onclick={() => (selectedFile = { path: node.fullPath, content: node.content })}
-										class="flex min-w-full items-center gap-1.5 py-1 text-left font-mono text-xs transition-colors {selectedFile?.path === node.fullPath ? 'bg-indigo-600/15 text-indigo-300' : 'text-gray-400 hover:bg-bg hover:text-gray-200'}"
+										class="flex min-w-full items-center gap-1.5 py-1 text-left font-mono text-xs transition-colors {selectedFile?.path ===
+										node.fullPath
+											? 'bg-indigo-600/15 text-indigo-300'
+											: 'text-gray-400 hover:bg-bg hover:text-gray-200'}"
 										style="padding-left: {0.75 + depth * 0.875 + 1.125}rem; padding-right: 0.75rem"
 									>
 										<span class="whitespace-nowrap" title={node.fullPath}>{node.name}</span>
@@ -218,8 +240,13 @@
 						</div>
 					{:else}
 						<!-- Path bar -->
-						<div class="flex shrink-0 items-center justify-between gap-3 border-b border-border px-4 py-2">
-							<span class="min-w-0 truncate font-mono text-xs text-gray-500" title={selectedFile.path}>
+						<div
+							class="flex shrink-0 items-center justify-between gap-3 border-b border-border px-4 py-2"
+						>
+							<span
+								class="min-w-0 truncate font-mono text-xs text-gray-500"
+								title={selectedFile.path}
+							>
 								{selectedFile.path}
 							</span>
 							<div class="flex shrink-0 items-center gap-1">
@@ -247,12 +274,17 @@
 
 						<!-- Source with line numbers -->
 						<div class="flex min-h-0 flex-1 overflow-auto bg-bg-secondary">
-							<div class="sticky left-0 shrink-0 select-none border-r border-border bg-bg-secondary px-3 py-4 text-right font-mono text-xs leading-relaxed text-gray-600">
+							<div
+								class="sticky left-0 shrink-0 border-r border-border bg-bg-secondary px-3 py-4 text-right font-mono text-xs leading-relaxed text-gray-600 select-none"
+							>
 								{#each { length: selectedFile.content.split('\n').length } as _, i}
 									<div>{i + 1}</div>
 								{/each}
 							</div>
-							<pre class="hljs m-0 min-w-max flex-1 rounded-none p-4 font-mono text-xs leading-relaxed"><code>{@html highlightByExtension(selectedFile.content, selectedFile.path)}</code></pre>
+							<pre
+								class="hljs m-0 min-w-max flex-1 rounded-none p-4 font-mono text-xs leading-relaxed"><code
+									>{@html highlightByExtension(selectedFile.content, selectedFile.path)}</code
+								></pre>
 						</div>
 					{/if}
 				</div>

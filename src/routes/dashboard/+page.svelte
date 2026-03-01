@@ -26,7 +26,9 @@
 	</div>
 
 	{#if extensions.length === 0}
-		<div class="flex flex-col items-center gap-4 rounded-2xl border border-border bg-bg-secondary/50 py-20 text-center">
+		<div
+			class="flex flex-col items-center gap-4 rounded-2xl border border-border bg-bg-secondary/50 py-20 text-center"
+		>
 			<Layers class="h-10 w-10 text-gray-700" />
 			<p class="text-sm font-medium text-gray-400">No extensions yet</p>
 			<p class="text-xs text-gray-600">Extensions you publish will appear here.</p>
@@ -40,7 +42,9 @@
 	{:else}
 		<div class="flex flex-col gap-3">
 			{#each extensions as ext}
-				<div class="flex items-center justify-between gap-4 rounded-2xl border border-border bg-bg-secondary px-5 py-4 transition-colors hover:border-border/80">
+				<div
+					class="flex items-center justify-between gap-4 rounded-2xl border border-border bg-bg-secondary px-5 py-4 transition-colors hover:border-border/80"
+				>
 					<div class="min-w-0 flex-1">
 						<div class="flex flex-wrap items-center gap-2">
 							<a

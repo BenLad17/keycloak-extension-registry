@@ -28,11 +28,18 @@ export function highlight(code: string, lang: string): string {
 export function highlightByExtension(code: string, path: string): string {
 	const LANG_MAP: Record<string, string> = {
 		java: 'java',
-		xml: 'xml', xsd: 'xml', xhtml: 'xml', html: 'xml', htm: 'xml', ftl: 'xml',
+		xml: 'xml',
+		xsd: 'xml',
+		xhtml: 'xml',
+		html: 'xml',
+		htm: 'xml',
+		ftl: 'xml',
 		json: 'json',
 		properties: 'properties',
-		yaml: 'yaml', yml: 'yaml',
-		mf: 'ini', sf: 'ini'
+		yaml: 'yaml',
+		yml: 'yaml',
+		mf: 'ini',
+		sf: 'ini'
 	};
 	const ext = path.split('.').pop()?.toLowerCase() ?? '';
 	const lang = LANG_MAP[ext];

@@ -3,14 +3,22 @@ import { unzipSync } from 'fflate';
 const MAX_CONTENT_BYTES = 100_000;
 
 const TEXT_EXTENSIONS = new Set([
-	'.xml', '.xsd', '.xhtml',
+	'.xml',
+	'.xsd',
+	'.xhtml',
 	'.json',
 	'.properties',
-	'.MF', '.SF',
-	'.ftl', '.html', '.htm',
+	'.MF',
+	'.SF',
+	'.ftl',
+	'.html',
+	'.htm',
 	'.txt',
-	'.yaml', '.yml',
-	'.css', '.js', '.md'
+	'.yaml',
+	'.yml',
+	'.css',
+	'.js',
+	'.md'
 ]);
 
 function isResourceFile(path: string): boolean {

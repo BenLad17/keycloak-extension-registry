@@ -14,7 +14,9 @@
 </script>
 
 {#if versions.length === 0}
-	<div class="flex flex-col items-center gap-3 rounded-2xl border border-border bg-bg-secondary/50 py-20 text-center">
+	<div
+		class="flex flex-col items-center gap-3 rounded-2xl border border-border bg-bg-secondary/50 py-20 text-center"
+	>
 		<History class="h-10 w-10 text-gray-700" />
 		<p class="text-sm font-medium text-gray-400">No changelog entries</p>
 		<p class="text-xs text-gray-600">Release notes will appear here once versions are synced.</p>
@@ -27,7 +29,9 @@
 				<!-- Timeline dot + line -->
 				<div class="flex flex-col items-center">
 					<div
-						class="z-10 mt-1 h-3 w-3 shrink-0 rounded-full border-2 {isLatest ? 'border-indigo-500 bg-indigo-500/40' : 'border-border bg-bg'}"
+						class="z-10 mt-1 h-3 w-3 shrink-0 rounded-full border-2 {isLatest
+							? 'border-indigo-500 bg-indigo-500/40'
+							: 'border-border bg-bg'}"
 					></div>
 					{#if i < versions.length - 1}
 						<div class="mt-1 w-px flex-1 bg-border"></div>
@@ -47,11 +51,13 @@
 						</span>
 					</div>
 					{#if v.releaseNotes}
-						<div class="prose prose-invert prose-sm max-w-none rounded-xl border border-border bg-bg-secondary px-5 py-4">
+						<div
+							class="prose prose-sm max-w-none rounded-xl border border-border bg-bg-secondary px-5 py-4 prose-invert"
+						>
 							{@html renderNotes(v.releaseNotes)}
 						</div>
 					{:else}
-						<p class="text-xs italic text-gray-600">No release notes for this version.</p>
+						<p class="text-xs text-gray-600 italic">No release notes for this version.</p>
 					{/if}
 				</div>
 			</div>

@@ -1,8 +1,4 @@
-import {
-	extension as extensionTable,
-	getDatabase,
-	type Extension
-} from '$lib/server/db';
+import { extension as extensionTable, getDatabase, type Extension } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
 import { getCodeSourceAdapter } from './sources/types';
 import { GithubReleasesArtifactAdapter } from './sources/artifact/github-releases';

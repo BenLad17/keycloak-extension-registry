@@ -14,7 +14,10 @@ import { requireAuth, hasRepoWriteAccess } from '$lib/server/security/auth';
 import { syncExtension } from '$lib/server/extensions/sync';
 
 function toSlug(s: string): string {
-	return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+	return s
+		.toLowerCase()
+		.replace(/[^a-z0-9]+/g, '-')
+		.replace(/^-|-$/g, '');
 }
 
 async function generateSlug(base: string, db: Database): Promise<string> {

@@ -11,16 +11,20 @@
 
 	let { variant = 'primary', size = 'sm', class: extraClass = '', children }: Props = $props();
 
-	const variantCls = $derived({
-		primary: 'badge-primary',
-		danger: 'badge-danger',
-		muted: 'badge-muted'
-	}[variant]);
+	const variantCls = $derived(
+		{
+			primary: 'badge-primary',
+			danger: 'badge-danger',
+			muted: 'badge-muted'
+		}[variant]
+	);
 
-	const sizeCls = $derived({
-		sm: 'px-2.5 py-1 text-xs',
-		md: 'px-3 py-1 text-sm'
-	}[size]);
+	const sizeCls = $derived(
+		{
+			sm: 'px-2.5 py-1 text-xs',
+			md: 'px-3 py-1 text-sm'
+		}[size]
+	);
 </script>
 
 <span class="badge {variantCls} {sizeCls} {extraClass}">

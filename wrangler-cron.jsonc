@@ -1,20 +1,20 @@
 {
-  "$schema": "./node_modules/wrangler/config-schema.json",
-  "name": "keycloak-extension-registry-cron",
-  "compatibility_date": "2026-02-13",
-  "main": "src/cron-worker.ts",
+	"$schema": "./node_modules/wrangler/config-schema.json",
+	"name": "keycloak-extension-registry-cron",
+	"compatibility_date": "2026-02-13",
+	"main": "src/cron-worker.ts",
 
-  // Sync the least-recently-synced extension every 30 minutes.
-  // One extension per run keeps API rate limits safe regardless of registry size.
-  "triggers": {
-    "crons": ["*/30 * * * *"]
-  },
+	// Sync the least-recently-synced extension every 30 minutes.
+	// One extension per run keeps API rate limits safe regardless of registry size.
+	"triggers": {
+		"crons": ["*/30 * * * *"]
+	},
 
-  "vars": {
-    // Set to the deployed URL of the main worker in production
-    "REGISTRY_URL": "http://localhost:8787"
-  }
+	"vars": {
+		// Set to the deployed URL of the main worker in production
+		"REGISTRY_URL": "http://localhost:8787"
+	}
 
-  // Secrets (wrangler secret put --config wrangler-cron.jsonc <NAME>):
-  // - CRON_SECRET  (must match the value set on the main worker)
+	// Secrets (wrangler secret put --config wrangler-cron.jsonc <NAME>):
+	// - CRON_SECRET  (must match the value set on the main worker)
 }

@@ -6,4 +6,3 @@ export async function getUser(userId: number, platform: App.Platform): Promise<U
 	const [result] = await db.select().from(user).where(eq(user.id, userId)).limit(1);
 	return result;
 }
-

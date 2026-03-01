@@ -34,7 +34,8 @@ export const load: PageServerLoad = async ({ platform, params, locals, url, cook
 	await requireAuth(url, cookies, platform!, locals);
 
 	const { ext, allowed } = await canEdit(params.slug, platform!, locals);
-	if (!allowed) throw error(403, 'You need write access to this repository to edit this extension.');
+	if (!allowed)
+		throw error(403, 'You need write access to this repository to edit this extension.');
 
 	return { extension: ext };
 };

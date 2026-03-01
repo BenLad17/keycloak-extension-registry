@@ -13,9 +13,7 @@
 
 	const filteredRepos = $derived(
 		repoSearch
-			? repos.filter((r) =>
-					`${r.owner}/${r.name}`.toLowerCase().includes(repoSearch.toLowerCase())
-				)
+			? repos.filter((r) => `${r.owner}/${r.name}`.toLowerCase().includes(repoSearch.toLowerCase()))
 			: repos
 	);
 
@@ -36,7 +34,9 @@
 	<p class="mb-8 text-gray-400">Register a new Keycloak extension in the registry.</p>
 
 	{#if form?.error}
-		<div class="mb-6 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+		<div
+			class="mb-6 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400"
+		>
 			{form.error}
 		</div>
 	{/if}
@@ -54,7 +54,7 @@
 				<select
 					name="category"
 					required
-					class="cursor-pointer rounded-lg border border-border bg-bg-secondary/50 px-4 py-2 text-white focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+					class="cursor-pointer rounded-lg border border-border bg-bg-secondary/50 px-4 py-2 text-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none"
 				>
 					{#each Object.entries(ExtensionCategoryLabel) as [key, label]}
 						<option value={key}>{label}</option>
@@ -70,11 +70,17 @@
 
 			{#if selectedFullName}
 				<!-- Selected state -->
-				<div class="flex items-center justify-between rounded-lg border border-indigo-500/40 bg-indigo-600/10 px-4 py-3">
+				<div
+					class="flex items-center justify-between rounded-lg border border-indigo-500/40 bg-indigo-600/10 px-4 py-3"
+				>
 					<span class="font-mono text-sm text-indigo-300">{selectedFullName}</span>
 					<button
 						type="button"
-						onclick={() => { selectedFullName = ''; githubOwner = ''; githubRepo = ''; }}
+						onclick={() => {
+							selectedFullName = '';
+							githubOwner = '';
+							githubRepo = '';
+						}}
 						class="text-xs text-gray-500 hover:text-gray-300"
 					>
 						Change
@@ -118,7 +124,9 @@
 		<!-- Artifact sources -->
 		<div class="rounded-2xl border border-border bg-bg-secondary p-6">
 			<h2 class="mb-1 text-lg font-semibold">Artifact Sources</h2>
-			<p class="mb-5 text-sm text-gray-400">Where the compiled JARs are published. Select one or both.</p>
+			<p class="mb-5 text-sm text-gray-400">
+				Where the compiled JARs are published. Select one or both.
+			</p>
 
 			<div class="flex flex-col gap-5">
 				<!-- GitHub Releases -->
@@ -146,21 +154,25 @@
 							{:else}
 								<div class="flex gap-3">
 									<label class="flex flex-1 flex-col gap-1.5">
-										<span class="text-sm text-gray-400">Owner <span class="text-red-400">*</span></span>
+										<span class="text-sm text-gray-400"
+											>Owner <span class="text-red-400">*</span></span
+										>
 										<input
 											type="text"
 											name="artifactOwner"
 											placeholder="acme-corp"
-											class="rounded-lg border border-border bg-bg-secondary/50 px-4 py-2 text-white placeholder-gray-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+											class="rounded-lg border border-border bg-bg-secondary/50 px-4 py-2 text-white placeholder-gray-500 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none"
 										/>
 									</label>
 									<label class="flex flex-1 flex-col gap-1.5">
-										<span class="text-sm text-gray-400">Repo <span class="text-red-400">*</span></span>
+										<span class="text-sm text-gray-400"
+											>Repo <span class="text-red-400">*</span></span
+										>
 										<input
 											type="text"
 											name="artifactRepo"
 											placeholder="keycloak-my-extension"
-											class="rounded-lg border border-border bg-bg-secondary/50 px-4 py-2 text-white placeholder-gray-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+											class="rounded-lg border border-border bg-bg-secondary/50 px-4 py-2 text-white placeholder-gray-500 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none"
 										/>
 									</label>
 								</div>
@@ -186,21 +198,25 @@
 					{#if useMavenCentral}
 						<div class="ml-6 flex gap-3">
 							<label class="flex flex-1 flex-col gap-1.5">
-								<span class="text-sm text-gray-400">Group ID <span class="text-red-400">*</span></span>
+								<span class="text-sm text-gray-400"
+									>Group ID <span class="text-red-400">*</span></span
+								>
 								<input
 									type="text"
 									name="mavenGroupId"
 									placeholder="com.example"
-									class="rounded-lg border border-border bg-bg-secondary/50 px-4 py-2 text-white placeholder-gray-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+									class="rounded-lg border border-border bg-bg-secondary/50 px-4 py-2 text-white placeholder-gray-500 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none"
 								/>
 							</label>
 							<label class="flex flex-1 flex-col gap-1.5">
-								<span class="text-sm text-gray-400">Artifact ID <span class="text-red-400">*</span></span>
+								<span class="text-sm text-gray-400"
+									>Artifact ID <span class="text-red-400">*</span></span
+								>
 								<input
 									type="text"
 									name="mavenArtifactId"
 									placeholder="keycloak-my-extension"
-									class="rounded-lg border border-border bg-bg-secondary/50 px-4 py-2 text-white placeholder-gray-500 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+									class="rounded-lg border border-border bg-bg-secondary/50 px-4 py-2 text-white placeholder-gray-500 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 focus:outline-none"
 								/>
 							</label>
 						</div>
