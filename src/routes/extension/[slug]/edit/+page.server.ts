@@ -3,18 +3,18 @@ import type { PageServerLoad, Actions } from './$types';
 import { extension, githubCodeSource, getDatabase } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
 import { requireAuth, hasRepoWriteAccess, isRegistryAdmin } from '$lib/server/security/auth';
+import { syncExtension } from '$lib/server/extensions/sync';
 
 async function canEdit(
 	slug: string,
 	platform: App.Platform,
 	locals: App.Locals
 ): Promise<{ ext: typeof extension.$inferSelect; allowed: boolean }> {
+	if (!locals.session) return { ext: null as never, allowed: false };
+
 	const db = getDatabase(platform);
 	const [ext] = await db.select().from(extension).where(eq(extension.slug, slug)).limit(1);
 	if (!ext) throw error(404);
-
-	const token = locals.session?.githubToken;
-	if (!token) return { ext, allowed: false };
 
 	const [source] = await db
 		.select()
@@ -24,10 +24,10 @@ async function canEdit(
 
 	if (!source) return { ext, allowed: false };
 
-	const allowed =
-		(await hasRepoWriteAccess(token, source.owner, source.repo)) ||
-		(await isRegistryAdmin(token, platform));
-	return { ext, allowed };
+	const token = locals.session.githubToken;
+	const repoAccess = token ? await hasRepoWriteAccess(token, source.owner, source.repo) : false;
+	const adminAccess = await isRegistryAdmin(locals, platform);
+	return { ext, allowed: repoAccess || adminAccess };
 }
 
 export const load: PageServerLoad = async ({ platform, params, locals, url, cookies }) => {
@@ -78,5 +78,28 @@ export const actions: Actions = {
 			.where(eq(extension.id, ext.id));
 
 		redirect(302, `/extension/${params.slug}`);
+	},
+
+	sync: async ({ platform, params, locals, url, cookies }) => {
+		await requireAuth(url, cookies, platform!, locals);
+
+		const { ext, allowed } = await canEdit(params.slug, platform!, locals);
+		if (!allowed) throw error(403);
+
+		const token = locals.session?.githubToken;
+		await syncExtension(ext, platform!, token ?? undefined);
+		return { synced: true };
+	},
+
+	delete: async ({ platform, params, locals, url, cookies }) => {
+		await requireAuth(url, cookies, platform!, locals);
+
+		const { ext, allowed } = await canEdit(params.slug, platform!, locals);
+		if (!allowed) throw error(403);
+
+		const db = getDatabase(platform);
+		await db.delete(extension).where(eq(extension.id, ext.id));
+
+		redirect(302, '/dashboard');
 	}
 };

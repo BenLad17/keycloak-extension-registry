@@ -18,6 +18,8 @@ export const load: PageServerLoad = async ({ platform, locals, url, cookies }) =
 			status: extension.status,
 			downloadCount: extension.downloadCount,
 			updatedAt: extension.updatedAt,
+			lastSyncedAt: extension.lastSyncedAt,
+			lastSyncError: extension.lastSyncError,
 			githubOwner: githubCodeSource.owner,
 			githubRepo: githubCodeSource.repo
 		})

@@ -34,13 +34,17 @@
 			"id": "your-hyperdrive-id",
 			"localConnectionString": "postgres://root:mysecretpassword@localhost:5432/local"
 		}
-	]
+	],
+
+	// Set to the GitHub repo of this registry (owner/repo) to grant repo admins edit access to all extensions
+	"vars": {
+		"REGISTRY_GITHUB_REPO": "BenLad17/keycloak-extension-registry"
+	}
 
 	// Secrets (don't commit these, use wrangler secret put):
 	// - GITHUB_CLIENT_ID
 	// - GITHUB_CLIENT_SECRET
 	// - GITHUB_INSTALLATION_ID
-	// - GITHUB_WEBHOOK_SECRET
 	// - JWT_SECRET
 	// - CRON_SECRET  (any random string, e.g. openssl rand -hex 32)
 }

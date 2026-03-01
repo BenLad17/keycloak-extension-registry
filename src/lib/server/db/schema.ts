@@ -22,7 +22,7 @@ export const extension = pgTable(
 	{
 		id: integer('id').generatedAlwaysAsIdentity().primaryKey(),
 		slug: text('slug').notNull().unique(),
-		name: text('name').notNull().unique(),
+		name: text('name').notNull(),
 		description: text('description'),
 		category: text('category', { enum: extensionCategories }).notNull(),
 

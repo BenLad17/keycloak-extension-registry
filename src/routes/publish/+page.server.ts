@@ -13,6 +13,10 @@ import { Octokit } from 'octokit';
 import { requireAuth, hasRepoWriteAccess } from '$lib/server/security/auth';
 import { syncExtension } from '$lib/server/extensions/sync';
 
+function toDisplayName(repoName: string): string {
+	return repoName.replace(/[-_]+/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 function toSlug(s: string): string {
 	return s
 		.toLowerCase()
@@ -142,7 +146,7 @@ export const actions: Actions = {
 			.insert(extension)
 			.values({
 				slug,
-				name: repoData.name,
+				name: toDisplayName(repoData.name),
 				description: repoData.description,
 				category: category as 'authentication' | 'user_federation',
 				codeSourceType: 'github',

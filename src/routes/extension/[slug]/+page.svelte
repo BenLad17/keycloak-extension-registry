@@ -144,9 +144,6 @@
 			>
 				<tab.icon class="h-4 w-4" />
 				{tab.label}
-				{#if tab.id === 'versions' && versions.length > 0}
-					<Badge variant="muted" size="sm">{versions.length}</Badge>
-				{/if}
 			</button>
 		{/each}
 	</div>

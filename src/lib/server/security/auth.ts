@@ -5,6 +5,7 @@ import { Octokit } from 'octokit';
 import { getEnv } from '$lib/server/env';
 import { eq } from 'drizzle-orm';
 import { createSession } from '$lib/server/security/session';
+import { getCachedGitHubUser } from '$lib/server/github';
 
 export function isAuthenticated(locals: App.Locals): boolean {
 	return !!locals?.session;
@@ -165,10 +166,27 @@ export async function hasRepoWriteAccess(
 	}
 }
 
-export async function isRegistryAdmin(token: string, platform: App.Platform): Promise<boolean> {
+// Checks admin status by comparing the current user's GitHub login against the
+// owner extracted from REGISTRY_GITHUB_REPO. Uses the GitHub App for the lookup
+// so no user token or repo existence is required.
+export async function isRegistryAdmin(
+	locals: App.Locals,
+	platform: App.Platform
+): Promise<boolean> {
+	if (!locals.session) return false;
 	const registryRepo = getEnv(platform).REGISTRY_GITHUB_REPO;
 	if (!registryRepo) return false;
-	const [owner, repo] = registryRepo.split('/');
-	if (!owner || !repo) return false;
-	return hasRepoWriteAccess(token, owner, repo);
+	const [repoOwner] = registryRepo.split('/');
+	if (!repoOwner) return false;
+
+	const db = getDatabase(platform);
+	const [u] = await db
+		.select({ githubId: user.githubId })
+		.from(user)
+		.where(eq(user.id, locals.session.userId))
+		.limit(1);
+	if (!u) return false;
+
+	const githubUser = await getCachedGitHubUser(u.githubId, platform);
+	return githubUser?.login.toLowerCase() === repoOwner.toLowerCase();
 }

@@ -2,7 +2,7 @@ import type { PageServerLoad } from './$types';
 import { extension, extensionVersion, githubCodeSource, getDatabase } from '$lib/server/db';
 import { desc, eq } from 'drizzle-orm';
 import { error, redirect } from '@sveltejs/kit';
-import { hasRepoWriteAccess, isRegistryAdmin } from '$lib/server/security/auth';
+import { isRegistryAdmin } from '$lib/server/security/auth';
 
 export const load: PageServerLoad = async ({ platform, params, locals }) => {
 	const slug = params.slug;
@@ -29,11 +29,8 @@ export const load: PageServerLoad = async ({ platform, params, locals }) => {
 		.orderBy(desc(extensionVersion.publishedAt));
 
 	let canManage = false;
-	const token = locals.session?.githubToken;
-	if (token && githubSource) {
-		canManage =
-			(await hasRepoWriteAccess(token, githubSource.owner, githubSource.repo)) ||
-			(await isRegistryAdmin(token, platform!));
+	if (locals.session) {
+		canManage = ext.ownerId === locals.session.userId || (await isRegistryAdmin(locals, platform!));
 	}
 
 	return {

@@ -33,7 +33,6 @@
 		downloadsExpanded ? versions : versions.slice(0, DOWNLOADS_COLLAPSED_COUNT)
 	);
 
-	let showInstall = $state(true);
 	let installTab = $state<'fetcher' | 'manual'>('fetcher');
 
 	const registryUrl = $derived(
@@ -54,10 +53,9 @@
 	}
 </script>
 
-<div class="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_300px]">
-	<!-- Left column -->
-	<div class="space-y-4">
-		<!-- README -->
+<div class="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_340px]">
+	<!-- Left column: README -->
+	<div>
 		{#if readmeHtml}
 			<div
 				class="prose max-w-none rounded-2xl border border-border bg-bg-secondary p-8 prose-invert"
@@ -71,114 +69,12 @@
 				No README available.
 			</div>
 		{/if}
-
-		<!-- Install instructions -->
-		{#if latestVersion}
-			<div class="overflow-hidden rounded-2xl border border-border bg-bg-secondary">
-				<button
-					onclick={() => (showInstall = !showInstall)}
-					class="flex w-full items-center justify-between px-6 py-4 text-left transition-colors hover:bg-white/5"
-				>
-					<div class="flex items-center gap-2 text-sm font-medium text-white">
-						<Terminal class="h-4 w-4 text-indigo-400" />
-						Installation
-					</div>
-					<ChevronDown
-						class="h-4 w-4 text-gray-500 transition-transform duration-200 {showInstall
-							? 'rotate-180'
-							: ''}"
-					/>
-				</button>
-				{#if showInstall}
-					<div transition:slide={{ duration: 200 }} class="border-t border-border">
-						<!-- Inner tab bar -->
-						<div class="flex items-center border-b border-border px-6">
-							<button
-								onclick={() => (installTab = 'fetcher')}
-								class="py-3 pr-5 text-xs font-medium transition-colors {installTab === 'fetcher'
-									? 'border-b-2 border-indigo-500 text-white'
-									: 'text-gray-500 hover:text-gray-300'}"
-							>
-								Docker
-							</button>
-							<button
-								onclick={() => (installTab = 'manual')}
-								class="py-3 pr-5 text-xs font-medium transition-colors {installTab === 'manual'
-									? 'border-b-2 border-indigo-500 text-white'
-									: 'text-gray-500 hover:text-gray-300'}"
-							>
-								Manual
-							</button>
-							<span class="ml-auto text-xs text-gray-600">Docker is recommended</span>
-						</div>
-
-						<!-- Docker tab -->
-						{#if installTab === 'fetcher'}
-							<div class="px-6 pt-5 pb-6">
-								<p class="mb-1 font-medium text-gray-300">
-									Add to your <code
-										class="rounded bg-bg px-1 py-0.5 font-mono text-xs text-indigo-300"
-										>providers.yaml</code
-									>
-								</p>
-								<p class="mb-3 text-xs text-gray-600">
-									Then reference this file in a multi-stage Dockerfile — the fetcher tool downloads
-									and verifies the JAR at build time.
-								</p>
-								<CodeBlock code={yamlSnippet} lang="yaml" />
-								<p class="mt-3 text-xs text-gray-600">
-									New to this workflow?
-									<a href="/docs" class="text-indigo-400 hover:text-indigo-300">Read the docs →</a>
-								</p>
-							</div>
-						{/if}
-
-						<!-- Manual install tab -->
-						{#if installTab === 'manual'}
-							<div class="px-6 pt-5 pb-6">
-								<ol class="space-y-5 text-sm">
-									<li>
-										<p class="mb-2 font-medium text-gray-300">1. Download the JAR</p>
-										<a
-											href={latestVersion.downloadUrl}
-											download
-											class="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-1.5 text-sm text-gray-400 no-underline transition-colors hover:border-indigo-500/50 hover:text-white"
-										>
-											<Download class="h-3.5 w-3.5" />
-											{jarFilename(latestVersion.downloadUrl)}
-										</a>
-									</li>
-									<li>
-										<p class="mb-2 font-medium text-gray-300">
-											2. Copy to Keycloak providers directory
-										</p>
-										<pre
-											class="rounded-lg bg-bg px-4 py-3 font-mono text-xs text-gray-400">cp {jarFilename(
-												latestVersion.downloadUrl
-											)} /opt/keycloak/providers/</pre>
-									</li>
-									<li>
-										<p class="mb-2 font-medium text-gray-300">3. Rebuild Keycloak</p>
-										<pre
-											class="rounded-lg bg-bg px-4 py-3 font-mono text-xs text-gray-400">./kc.sh build</pre>
-									</li>
-									<li>
-										<p class="mb-2 font-medium text-gray-300">4. Start Keycloak</p>
-										<pre
-											class="rounded-lg bg-bg px-4 py-3 font-mono text-xs text-gray-400">./kc.sh start</pre>
-									</li>
-								</ol>
-							</div>
-						{/if}
-					</div>
-				{/if}
-			</div>
-		{/if}
 	</div>
 
 	<!-- Sidebar -->
 	<aside class="space-y-4">
 		{#if latestVersion}
+			<!-- Download card -->
 			<Card highlight>
 				<div class="mb-1 flex items-baseline justify-between">
 					<span class="font-mono text-lg font-semibold text-white">{latestVersion.version}</span>
@@ -197,8 +93,88 @@
 					Download latest
 				</a>
 			</Card>
+
+			<!-- Installation card -->
+			<div class="overflow-hidden rounded-2xl border border-border bg-bg-secondary">
+				<!-- Tab bar -->
+				<div class="flex items-center gap-x-5 border-b border-border px-4">
+					<div class="flex items-center gap-1.5 py-3 text-xs font-medium text-gray-500">
+						<Terminal class="h-3.5 w-3.5 text-indigo-400" />
+						Install
+					</div>
+					<div class="ml-auto flex items-center">
+						<button
+							onclick={() => (installTab = 'fetcher')}
+							class="py-3 pr-3 pl-2 text-xs font-medium transition-colors {installTab === 'fetcher'
+								? 'border-b-2 border-indigo-500 text-white'
+								: 'text-gray-500 hover:text-gray-300'}"
+						>
+							Docker
+						</button>
+						<button
+							onclick={() => (installTab = 'manual')}
+							class="py-3 pr-3 pl-2 text-xs font-medium transition-colors {installTab === 'manual'
+								? 'border-b-2 border-indigo-500 text-white'
+								: 'text-gray-500 hover:text-gray-300'}"
+						>
+							Manual
+						</button>
+					</div>
+				</div>
+
+				<!-- Docker tab -->
+				{#if installTab === 'fetcher'}
+					<div class="px-4 pt-4 pb-5">
+						<p class="mb-1 text-xs font-medium text-gray-300">
+							Add to <code class="rounded bg-bg px-1 py-0.5 font-mono text-indigo-300"
+								>providers.yaml</code
+							>
+						</p>
+						<p class="mb-3 text-xs text-gray-600">
+							The fetcher tool downloads and verifies the JAR at Docker build time.
+						</p>
+						<CodeBlock code={yamlSnippet} lang="yaml" />
+						<p class="mt-3 text-xs text-gray-600">
+							<a href="/docs" class="text-indigo-400 hover:text-indigo-300">Read the docs →</a>
+						</p>
+					</div>
+				{/if}
+
+				<!-- Manual tab -->
+				{#if installTab === 'manual'}
+					<div class="px-4 pt-4 pb-5">
+						<ol class="space-y-4 text-xs">
+							<li>
+								<p class="mb-1.5 font-medium text-gray-300">1. Download the JAR</p>
+								<a
+									href={latestVersion.downloadUrl}
+									download
+									class="inline-flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 text-xs text-gray-400 no-underline transition-colors hover:border-indigo-500/50 hover:text-white"
+								>
+									<Download class="h-3 w-3" />
+									{jarFilename(latestVersion.downloadUrl)}
+								</a>
+							</li>
+							<li>
+								<p class="mb-1.5 font-medium text-gray-300">2. Copy to providers directory</p>
+								<pre
+									class="overflow-x-auto rounded-lg bg-bg px-3 py-2 font-mono text-xs text-gray-400">cp {jarFilename(
+										latestVersion.downloadUrl
+									)} /opt/keycloak/providers/</pre>
+							</li>
+							<li>
+								<p class="mb-1.5 font-medium text-gray-300">3. Rebuild &amp; start Keycloak</p>
+								<pre
+									class="rounded-lg bg-bg px-3 py-2 font-mono text-xs text-gray-400">./kc.sh build
+./kc.sh start</pre>
+							</li>
+						</ol>
+					</div>
+				{/if}
+			</div>
 		{/if}
 
+		<!-- Metadata -->
 		<Card padding="none" class="divide-y divide-border overflow-hidden text-sm">
 			{#if githubSource}
 				<div class="px-4 py-3">
@@ -238,11 +214,9 @@
 			{/if}
 		</Card>
 
+		<!-- Downloads chart -->
 		{#if versions.length > 0}
 			<Card title="Downloads">
-				<p class="mb-3 text-xs text-gray-600">
-					{(ext.downloadCount ?? 0).toLocaleString()} total across all versions
-				</p>
 				<div class="space-y-2.5">
 					{#each visibleDownloadVersions as v}
 						<div class="flex items-center gap-3">

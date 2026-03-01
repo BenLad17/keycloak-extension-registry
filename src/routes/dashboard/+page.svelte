@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { ExtensionCategoryLabel } from '$lib/common/extension-category';
 	import Badge from '$lib/components/Badge.svelte';
-	import { Layers, Pencil, ExternalLink } from 'lucide-svelte';
+	import { Layers, Pencil, ExternalLink, AlertCircle, RefreshCw, Clock } from 'lucide-svelte';
+	import { timeAgo } from '$lib/utils/format';
 
 	let { data } = $props();
 	const extensions = $derived(data.extensions);
@@ -43,46 +44,65 @@
 		<div class="flex flex-col gap-3">
 			{#each extensions as ext}
 				<div
-					class="flex items-center justify-between gap-4 rounded-2xl border border-border bg-bg-secondary px-5 py-4 transition-colors hover:border-border/80"
+					class="rounded-2xl border bg-bg-secondary px-5 py-4 transition-colors {ext.lastSyncError
+						? 'border-red-500/30'
+						: 'border-border hover:border-border/80'}"
 				>
-					<div class="min-w-0 flex-1">
-						<div class="flex flex-wrap items-center gap-2">
+					<div class="flex items-start justify-between gap-4">
+						<div class="min-w-0 flex-1">
+							<div class="flex flex-wrap items-center gap-2">
+								<a
+									href="/extension/{ext.slug}"
+									class="font-semibold text-white no-underline hover:text-indigo-400"
+								>
+									{ext.name}
+								</a>
+								<Badge size="sm">{ExtensionCategoryLabel[ext.category]}</Badge>
+								{#if ext.status === 'archived'}
+									<Badge variant="muted" size="sm">Archived</Badge>
+								{/if}
+							</div>
+							{#if ext.description}
+								<p class="mt-1 truncate text-sm text-gray-500">{ext.description}</p>
+							{/if}
+							<div class="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
+								{#if ext.lastSyncError}
+									<span class="flex items-center gap-1 text-red-400">
+										<AlertCircle class="h-3 w-3 shrink-0" />
+										Sync error: {ext.lastSyncError}
+									</span>
+								{:else if ext.lastSyncedAt}
+									<span class="flex items-center gap-1 text-gray-600">
+										<RefreshCw class="h-3 w-3 shrink-0" />
+										Synced {timeAgo(ext.lastSyncedAt)}
+									</span>
+								{:else}
+									<span class="flex items-center gap-1 text-gray-600">
+										<Clock class="h-3 w-3 shrink-0" />
+										Pending first sync
+									</span>
+								{/if}
+								{#if ext.githubOwner && ext.githubRepo}
+									<span class="font-mono text-gray-600">{ext.githubOwner}/{ext.githubRepo}</span>
+								{/if}
+							</div>
+						</div>
+						<div class="flex shrink-0 items-center gap-2">
 							<a
 								href="/extension/{ext.slug}"
-								class="font-semibold text-white no-underline hover:text-indigo-400"
+								class="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs text-gray-400 no-underline transition-colors hover:border-border/60 hover:text-white"
 							>
-								{ext.name}
+								<ExternalLink class="h-3.5 w-3.5" />
+								View
 							</a>
-							<Badge size="sm">{ExtensionCategoryLabel[ext.category]}</Badge>
-							{#if ext.status === 'archived'}
-								<Badge variant="muted" size="sm">Archived</Badge>
-							{/if}
+							<a
+								href="/extension/{ext.slug}/edit"
+								class="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs text-gray-400 no-underline transition-colors hover:border-indigo-500/50 hover:text-white"
+							>
+								<Pencil class="h-3.5 w-3.5" />
+								Edit
+							</a>
 						</div>
-						{#if ext.description}
-							<p class="mt-1 truncate text-sm text-gray-500">{ext.description}</p>
-						{/if}
-						<p class="mt-1 text-xs text-gray-600">
-							{(ext.downloadCount ?? 0).toLocaleString()} downloads
-							{#if ext.githubOwner && ext.githubRepo}
-								· <span class="font-mono">{ext.githubOwner}/{ext.githubRepo}</span>
-							{/if}
-						</p>
-					</div>
-					<div class="flex shrink-0 items-center gap-2">
-						<a
-							href="/extension/{ext.slug}"
-							class="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs text-gray-400 no-underline transition-colors hover:border-border/60 hover:text-white"
-						>
-							<ExternalLink class="h-3.5 w-3.5" />
-							View
-						</a>
-						<a
-							href="/extension/{ext.slug}/edit"
-							class="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs text-gray-400 no-underline transition-colors hover:border-indigo-500/50 hover:text-white"
-						>
-							<Pencil class="h-3.5 w-3.5" />
-							Edit
-						</a>
 					</div>
 				</div>
 			{/each}

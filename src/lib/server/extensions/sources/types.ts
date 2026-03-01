@@ -3,7 +3,6 @@ import { GithubCodeSourceAdapter } from './code/github';
 export type CodeSourceType = 'github';
 
 export interface ExtensionMetadata {
-	name: string;
 	description: string | null;
 	readme: string | null;
 }

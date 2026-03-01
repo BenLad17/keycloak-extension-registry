@@ -3,10 +3,6 @@ import { getOctokitInstance } from '$lib/server/github';
 import { eq } from 'drizzle-orm';
 import type { CodeSourceAdapter, ExtensionMetadata } from '../types';
 
-function toDisplayName(repoName: string): string {
-	return repoName.replace(/[-_]+/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
 export class GithubCodeSourceAdapter implements CodeSourceAdapter {
 	async syncMetadata(extensionId: number, platform: App.Platform): Promise<ExtensionMetadata> {
 		const db = getDatabase(platform);
@@ -37,17 +33,14 @@ export class GithubCodeSourceAdapter implements CodeSourceAdapter {
 				.catch(() => null) // README is optional
 		]);
 
-		const metadata: ExtensionMetadata = {
-			name: toDisplayName(repoResponse.data.name),
-			description: repoResponse.data.description ?? null,
-			readme: readmeResponse ? String(readmeResponse.data) : null
-		};
+		const description = repoResponse.data.description ?? null;
+		const readme = readmeResponse ? String(readmeResponse.data) : null;
 
 		await db
 			.update(extensionTable)
-			.set({ name: metadata.name, description: metadata.description, readme: metadata.readme })
+			.set({ description, readme })
 			.where(eq(extensionTable.id, extensionId));
 
-		return metadata;
+		return { description, readme };
 	}
 }

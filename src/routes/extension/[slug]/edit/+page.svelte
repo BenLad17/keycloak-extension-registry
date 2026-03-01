@@ -1,9 +1,12 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+
 	import { ExtensionCategoryLabel } from '$lib/common/extension-category';
 
 	let { data, form } = $props();
 	const ext = $derived(data.extension);
+
+	let deleteConfirmed = $state(false);
 </script>
 
 <svelte:head>
@@ -28,6 +31,14 @@
 			class="mb-6 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400"
 		>
 			{form.error}
+		</div>
+	{/if}
+
+	{#if form?.synced}
+		<div
+			class="mb-6 rounded-xl border border-green-600/30 bg-green-600/10 px-4 py-3 text-sm text-green-400"
+		>
+			Extension synced successfully. Versions and README have been updated.
 		</div>
 	{/if}
 
@@ -100,4 +111,45 @@
 			</button>
 		</div>
 	</form>
+
+	<!-- Sync -->
+	<div class="mt-6 rounded-2xl border border-border bg-bg-secondary p-6">
+		<h2 class="mb-1 text-base font-semibold">Sync now</h2>
+		<p class="mb-4 text-sm text-gray-500">
+			Fetch the latest releases, README, and download counts from GitHub and Maven Central.
+		</p>
+		<form method="POST" action="?/sync" use:enhance>
+			<button
+				type="submit"
+				class="rounded-lg border border-border px-4 py-2 text-sm text-gray-300 transition-colors hover:border-indigo-500/50 hover:text-white"
+			>
+				Sync extension
+			</button>
+		</form>
+	</div>
+
+	<!-- Danger zone -->
+	<div class="mt-6 rounded-2xl border border-red-500/20 bg-bg-secondary p-6">
+		<h2 class="mb-1 text-base font-semibold text-red-400">Danger zone</h2>
+		<p class="mb-4 text-sm text-gray-500">
+			Permanently deletes this extension and all its versions and files. This cannot be undone.
+		</p>
+		<label class="mb-4 flex items-center gap-2 text-sm text-gray-400">
+			<input
+				type="checkbox"
+				bind:checked={deleteConfirmed}
+				class="rounded border-border accent-red-500"
+			/>
+			I understand this will permanently delete <strong class="text-white">{ext.name}</strong>.
+		</label>
+		<form method="POST" action="?/delete" use:enhance>
+			<button
+				type="submit"
+				disabled={!deleteConfirmed}
+				class="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-40"
+			>
+				Delete extension
+			</button>
+		</form>
+	</div>
 </div>
