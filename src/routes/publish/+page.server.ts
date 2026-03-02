@@ -6,7 +6,8 @@ import {
 	githubArtifactSource,
 	mavenArtifactSource,
 	getDatabase,
-	type Database
+	type Database,
+	type ExtensionCategory
 } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
 import { Octokit } from 'octokit';
@@ -72,7 +73,7 @@ export const load: PageServerLoad = async ({ platform, locals, url, cookies }) =
 					description: r.description ?? null
 				}));
 		} catch {
-			// Non-fatal — fall back to empty list; user can still type manually
+			// Non-fatal - fall back to empty list; user can still type manually
 		}
 	}
 
@@ -148,7 +149,7 @@ export const actions: Actions = {
 				slug,
 				name: toDisplayName(repoData.name),
 				description: repoData.description,
-				category: category as 'authentication' | 'user_federation',
+				category: category as ExtensionCategory,
 				codeSourceType: 'github',
 				ownerId: locals.session!.userId,
 				status: 'active'
@@ -177,7 +178,9 @@ export const actions: Actions = {
 			});
 		}
 
-		await syncExtension(inserted, platform!, token);
+		// Kick off the initial sync in the background - the success banner already
+		// tells the user that versions will sync in the background.
+		platform!.ctx.waitUntil(syncExtension(inserted, platform!, token));
 
 		redirect(302, `/extension/${inserted.slug}?published=true`);
 	}

@@ -1,9 +1,13 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
-import { extension, githubCodeSource, getDatabase } from '$lib/server/db';
+import { extension, githubCodeSource, getDatabase, type ExtensionCategory } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
 import { requireAuth, hasRepoWriteAccess, isRegistryAdmin } from '$lib/server/security/auth';
 import { syncExtension } from '$lib/server/extensions/sync';
+import { ExtensionCategoryLabel } from '$lib/common/extension-category';
+
+const VALID_CATEGORIES = new Set(Object.keys(ExtensionCategoryLabel));
+const VALID_STATUSES = new Set(['active', 'archived']);
 
 async function canEdit(
 	slug: string,
@@ -57,11 +61,11 @@ export const actions: Actions = {
 			return fail(400, { error: 'Name and category are required.' });
 		}
 
-		if (!['authentication', 'user_federation'].includes(category)) {
+		if (!VALID_CATEGORIES.has(category)) {
 			return fail(400, { error: 'Invalid category.' });
 		}
 
-		if (!['active', 'archived'].includes(status)) {
+		if (!VALID_STATUSES.has(status)) {
 			return fail(400, { error: 'Invalid status.' });
 		}
 
@@ -71,7 +75,7 @@ export const actions: Actions = {
 			.set({
 				name,
 				description,
-				category: category as 'authentication' | 'user_federation',
+				category: category as ExtensionCategory,
 				status,
 				updatedAt: new Date()
 			})

@@ -21,7 +21,7 @@ export function highlight(code: string, lang: string): string {
 	try {
 		return hljs.highlight(code, { language: lang }).value;
 	} catch {
-		return code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+		return escapeHtml(code);
 	}
 }
 

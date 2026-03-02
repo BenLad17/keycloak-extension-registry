@@ -5,7 +5,7 @@ const MAX_CONTENT_BYTES = 200_000;
 /**
  * Extract Java source files from a ZIP archive (GitHub zipball or Maven sources JAR).
  *
- * GitHub zipballs wrap everything under a single "{owner}-{repo}-{sha}/" prefix —
+ * GitHub zipballs wrap everything under a single "{owner}-{repo}-{sha}/" prefix -
  * this is detected automatically and stripped so stored paths are relative to the
  * repo root (e.g. "src/main/java/com/example/Foo.java").
  *
@@ -13,7 +13,12 @@ const MAX_CONTENT_BYTES = 200_000;
  * and need no stripping.
  */
 export function extractSourceFiles(bytes: Uint8Array): { path: string; content: string }[] {
-	const unzipped = unzipSync(bytes);
+	let unzipped: ReturnType<typeof unzipSync>;
+	try {
+		unzipped = unzipSync(bytes);
+	} catch {
+		return [];
+	}
 	const entries = Object.entries(unzipped).filter(([p]) => !p.endsWith('/'));
 
 	// Detect a single top-level directory prefix (GitHub zipball pattern)
@@ -33,7 +38,7 @@ export function extractSourceFiles(bytes: Uint8Array): { path: string; content: 
 			const content = new TextDecoder('utf-8', { fatal: true }).decode(data);
 			results.push({ path, content });
 		} catch {
-			// Not valid UTF-8 — skip
+			// Not valid UTF-8 - skip
 		}
 	}
 

@@ -1,5 +1,5 @@
 import { getEnv } from '$lib/server/env';
-import { SESSION_TTL_SECONDS, type SessionData } from '$lib/server/security/session';
+import { type SessionData } from '$lib/server/security/session';
 
 export async function getSessionData(
 	sessionId: string,
@@ -8,10 +8,14 @@ export async function getSessionData(
 	const env = getEnv(platform);
 	const sessionStore = env.SESSIONS;
 	const sessionContent = await sessionStore.get(sessionId);
-	if (sessionContent) {
+	if (!sessionContent) return null;
+	try {
 		return JSON.parse(sessionContent) as SessionData;
+	} catch {
+		// Corrupted or unrecognizable session data: treat as no session.
+		await sessionStore.delete(sessionId);
+		return null;
 	}
-	return null;
 }
 
 export async function setSessionData(data: SessionData, platform: App.Platform): Promise<void> {

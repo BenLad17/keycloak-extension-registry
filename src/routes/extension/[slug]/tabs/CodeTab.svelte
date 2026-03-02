@@ -139,18 +139,18 @@
 
 {#if versions.length === 0}
 	<div
-		class="flex flex-col items-center gap-3 rounded-2xl border border-border bg-bg-secondary/50 py-20 text-center"
+		class="flex flex-col items-center gap-3 rounded-xl border border-border bg-surface-muted py-20 text-center"
 	>
-		<FileCode2 class="h-10 w-10 text-gray-700" />
-		<p class="text-sm font-medium text-gray-400">No files available</p>
-		<p class="text-xs text-gray-600">Source files will appear here once versions are synced.</p>
+		<FileCode2 class="h-10 w-10 text-text-secondary/40" />
+		<p class="text-sm font-medium text-text-secondary">No files available</p>
+		<p class="text-xs text-text-secondary/60">Source files will appear here once versions are synced.</p>
 	</div>
 {:else}
-	<div class="overflow-hidden rounded-2xl border border-border bg-bg-secondary">
+	<div class="overflow-hidden rounded-xl border border-border bg-surface">
 		<!-- Controls bar -->
 		<div class="flex flex-wrap items-center gap-3 border-b border-border px-5 py-3">
 			<select
-				class="rounded-lg border border-border bg-bg px-3 py-1.5 font-mono text-sm text-white focus:border-indigo-500 focus:outline-none"
+				class="rounded-lg border border-border bg-bg px-3 py-1.5 font-mono text-sm text-text focus:border-brand focus:outline-none"
 				onchange={(e) =>
 					switchCodeVersion(parseInt((e.currentTarget as HTMLSelectElement).value, 10))}
 			>
@@ -166,9 +166,9 @@
 					type="search"
 					placeholder="Search files…"
 					bind:value={fileSearch}
-					class="w-56 rounded-lg border border-border bg-bg px-3 py-1.5 text-sm text-white placeholder-gray-600 focus:border-indigo-500 focus:outline-none"
+					class="w-56 rounded-lg border border-border bg-bg px-3 py-1.5 text-sm text-text placeholder-text-secondary/60 focus:border-brand focus:outline-none"
 				/>
-				<span class="text-xs text-gray-600">
+				<span class="text-xs text-text-secondary/60">
 					{fileSearch ? `${matchCount} of ` : ''}{versionFiles.length} files
 				</span>
 			{/if}
@@ -176,13 +176,13 @@
 
 		<!-- Browser -->
 		{#if filesLoading}
-			<div class="flex items-center justify-center py-20 text-sm text-gray-600">Loading files…</div>
+			<div class="flex items-center justify-center py-20 text-sm text-text-secondary/60">Loading files…</div>
 		{:else if versionFiles === null}
-			<div class="py-20 text-center text-sm text-gray-600">
+			<div class="py-20 text-center text-sm text-text-secondary/60">
 				Files not available for this version.
 			</div>
 		{:else if versionFiles.length === 0}
-			<div class="py-20 text-center text-sm text-gray-600">
+			<div class="py-20 text-center text-sm text-text-secondary/60">
 				No browsable files for this version.
 			</div>
 		{:else}
@@ -190,7 +190,7 @@
 				<!-- File tree -->
 				<div class="w-72 shrink-0 overflow-auto border-r border-border">
 					{#if activeTree.length === 0 && fileSearch}
-						<p class="px-3 py-4 text-xs text-gray-600">No files match.</p>
+						<p class="px-3 py-4 text-xs text-text-secondary/60">No files match.</p>
 					{:else}
 						{#snippet treeNodes(nodes: TreeNode[], depth: number)}
 							{#each nodes as node}
@@ -198,7 +198,7 @@
 									<div>
 										<button
 											onclick={() => !fileSearch && toggleDir(node.fullPath)}
-											class="flex min-w-full items-center gap-1.5 py-1 text-left font-mono text-xs text-gray-500 transition-colors hover:text-gray-300"
+											class="flex min-w-full items-center gap-1.5 py-1 text-left font-mono text-xs text-text-secondary transition-colors hover:text-text"
 											style="padding-left: {0.75 + depth * 0.875}rem; padding-right: 0.75rem"
 										>
 											<ChevronRight
@@ -218,8 +218,8 @@
 										onclick={() => (selectedFile = { path: node.fullPath, content: node.content })}
 										class="flex min-w-full items-center gap-1.5 py-1 text-left font-mono text-xs transition-colors {selectedFile?.path ===
 										node.fullPath
-											? 'bg-indigo-600/15 text-indigo-300'
-											: 'text-gray-400 hover:bg-bg hover:text-gray-200'}"
+											? 'bg-brand/15 text-brand'
+											: 'text-text-secondary hover:bg-surface-muted hover:text-text'}"
 										style="padding-left: {0.75 + depth * 0.875 + 1.125}rem; padding-right: 0.75rem"
 									>
 										<span class="whitespace-nowrap" title={node.fullPath}>{node.name}</span>
@@ -234,7 +234,7 @@
 				<!-- Content pane -->
 				<div class="flex min-w-0 flex-1 flex-col overflow-hidden">
 					{#if !selectedFile}
-						<div class="flex flex-1 flex-col items-center justify-center gap-2 text-gray-600">
+						<div class="flex flex-1 flex-col items-center justify-center gap-2 text-text-secondary/40">
 							<FileText class="h-8 w-8 opacity-20" />
 							<p class="text-sm">Select a file to view its contents</p>
 						</div>
@@ -244,7 +244,7 @@
 							class="flex shrink-0 items-center justify-between gap-3 border-b border-border px-4 py-2"
 						>
 							<span
-								class="min-w-0 truncate font-mono text-xs text-gray-500"
+								class="min-w-0 truncate font-mono text-xs text-text-secondary"
 								title={selectedFile.path}
 							>
 								{selectedFile.path}
@@ -252,11 +252,11 @@
 							<div class="flex shrink-0 items-center gap-1">
 								<button
 									onclick={copyCode}
-									class="flex items-center gap-1.5 rounded px-2 py-1 text-xs text-gray-500 transition-colors hover:bg-white/5 hover:text-gray-300"
+									class="flex items-center gap-1.5 rounded px-2 py-1 text-xs text-text-secondary transition-colors hover:bg-surface-muted hover:text-text"
 								>
 									{#if codeCopied}
-										<Check class="h-3.5 w-3.5 text-green-400" />
-										<span class="text-green-400">Copied</span>
+										<Check class="h-3.5 w-3.5 text-success" />
+										<span class="text-success">Copied</span>
 									{:else}
 										<Copy class="h-3.5 w-3.5" />
 										Copy
@@ -264,7 +264,7 @@
 								</button>
 								<button
 									onclick={() => (selectedFile = null)}
-									class="ml-1 shrink-0 text-gray-600 hover:text-gray-300"
+									class="ml-1 shrink-0 text-text-secondary/60 hover:text-text-secondary"
 									aria-label="Close"
 								>
 									<X class="h-4 w-4" />
@@ -273,9 +273,9 @@
 						</div>
 
 						<!-- Source with line numbers -->
-						<div class="flex min-h-0 flex-1 overflow-auto bg-bg-secondary">
+						<div class="flex min-h-0 flex-1 overflow-auto bg-surface">
 							<div
-								class="sticky left-0 shrink-0 border-r border-border bg-bg-secondary px-3 py-4 text-right font-mono text-xs leading-relaxed text-gray-600 select-none"
+								class="sticky left-0 shrink-0 border-r border-border bg-surface px-3 py-4 text-right font-mono text-xs leading-relaxed text-text-secondary/40 select-none"
 							>
 								{#each { length: selectedFile.content.split('\n').length } as _, i}
 									<div>{i + 1}</div>

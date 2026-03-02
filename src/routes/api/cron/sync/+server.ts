@@ -4,6 +4,8 @@ import { getEnv } from '$lib/server/env';
 import { syncExtension } from '$lib/server/extensions/sync';
 import { eq, sql } from 'drizzle-orm';
 
+const BATCH_SIZE = 5;
+
 export const POST: RequestHandler = async ({ request, platform }) => {
 	const env = getEnv(platform);
 	if (request.headers.get('Authorization') !== `Bearer ${env.CRON_SECRET}`) {
@@ -12,20 +14,22 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 
 	const db = getDatabase(platform);
 
-	// Pick the active extension that was synced least recently (never-synced first).
-	// This ensures one extension per cron run — no API rate-limit spikes.
-	const [ext] = await db
+	// Pick the BATCH_SIZE active extensions that were synced least recently (never-synced first).
+	// Spreading the work across multiple extensions per run keeps sync lag low as the registry grows.
+	const extensions = await db
 		.select()
 		.from(extension)
 		.where(eq(extension.status, 'active'))
 		.orderBy(sql`${extension.lastSyncedAt} ASC NULLS FIRST`)
-		.limit(1);
+		.limit(BATCH_SIZE);
 
-	if (!ext) {
-		return Response.json({ ok: true, synced: null });
+	if (extensions.length === 0) {
+		return Response.json({ ok: true, synced: [] });
 	}
 
-	platform?.ctx.waitUntil(syncExtension(ext, platform!));
+	for (const ext of extensions) {
+		platform?.ctx.waitUntil(syncExtension(ext, platform!));
+	}
 
-	return Response.json({ ok: true, synced: ext.slug });
+	return Response.json({ ok: true, synced: extensions.map((e) => e.slug) });
 };

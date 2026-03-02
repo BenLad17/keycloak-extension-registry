@@ -2,6 +2,15 @@ import { unzipSync } from 'fflate';
 
 const MAX_CONTENT_BYTES = 100_000;
 
+export const MAX_JAR_BYTES = 50 * 1024 * 1024; // 50 MB
+
+export async function sha256Hex(bytes: Uint8Array): Promise<string> {
+	const buf = await crypto.subtle.digest('SHA-256', bytes);
+	return Array.from(new Uint8Array(buf))
+		.map((b) => b.toString(16).padStart(2, '0'))
+		.join('');
+}
+
 const TEXT_EXTENSIONS = new Set([
 	'.xml',
 	'.xsd',
@@ -35,7 +44,12 @@ function isResourceFile(path: string): boolean {
  * Returns the raw XML string, or null if not found.
  */
 export function extractPomXml(bytes: Uint8Array): string | null {
-	const unzipped = unzipSync(bytes);
+	let unzipped: ReturnType<typeof unzipSync>;
+	try {
+		unzipped = unzipSync(bytes);
+	} catch {
+		return null;
+	}
 	for (const [path, data] of Object.entries(unzipped)) {
 		if (path.startsWith('META-INF/maven/') && path.endsWith('/pom.xml')) {
 			try {
@@ -53,7 +67,12 @@ export function extractPomXml(bytes: Uint8Array): string | null {
  * Skips .class files and anything that can't be decoded as UTF-8.
  */
 export function extractResourceFiles(bytes: Uint8Array): { path: string; content: string }[] {
-	const unzipped = unzipSync(bytes);
+	let unzipped: ReturnType<typeof unzipSync>;
+	try {
+		unzipped = unzipSync(bytes);
+	} catch {
+		return [];
+	}
 	const results: { path: string; content: string }[] = [];
 
 	for (const [path, data] of Object.entries(unzipped)) {
@@ -65,7 +84,7 @@ export function extractResourceFiles(bytes: Uint8Array): { path: string; content
 			const content = new TextDecoder('utf-8', { fatal: true }).decode(data);
 			results.push({ path, content });
 		} catch {
-			// Not valid UTF-8 — skip
+			// Not valid UTF-8 - skip
 		}
 	}
 

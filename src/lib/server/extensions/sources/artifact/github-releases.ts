@@ -1,5 +1,4 @@
 import {
-	extension as extensionTable,
 	extensionVersion,
 	extensionVersionFile,
 	githubArtifactSource,
@@ -7,11 +6,11 @@ import {
 } from '$lib/server/db';
 import { Octokit } from 'octokit';
 import { getOctokitInstance } from '$lib/server/github';
-import { extractResourceFiles, extractPomXml } from '$lib/server/extensions/jar';
+import { extractResourceFiles, extractPomXml, MAX_JAR_BYTES, sha256Hex } from '$lib/server/extensions/jar';
 import { extractSourceFiles } from '$lib/server/extensions/source';
 import { parseKeycloakVersion } from '$lib/server/extensions/pom';
 import { and, eq } from 'drizzle-orm';
-import type { ArtifactSourceAdapter } from '../types';
+import type { ArtifactSourceAdapter, VersionDownloadCount } from '../types';
 
 export class GithubReleasesArtifactAdapter implements ArtifactSourceAdapter {
 	constructor(private readonly githubToken?: string) {}
@@ -36,9 +35,12 @@ export class GithubReleasesArtifactAdapter implements ArtifactSourceAdapter {
 		}
 
 		const octokit = this.getOctokit(platform);
-		const { data: releases } = await octokit.request('GET /repos/{owner}/{repo}/releases', {
+
+		// Fetch all releases across all pages (avoids the default 30-item cap).
+		const releases = await octokit.paginate('GET /repos/{owner}/{repo}/releases', {
 			owner: source.owner,
-			repo: source.repo
+			repo: source.repo,
+			per_page: 100
 		});
 
 		for (const release of releases) {
@@ -59,7 +61,7 @@ export class GithubReleasesArtifactAdapter implements ArtifactSourceAdapter {
 				continue;
 			}
 
-			// Check if files already synced
+			// Skip if version already has files synced.
 			if (existing) {
 				const [fileRow] = await db
 					.select({ id: extensionVersionFile.id })
@@ -69,7 +71,15 @@ export class GithubReleasesArtifactAdapter implements ArtifactSourceAdapter {
 				if (fileRow) continue;
 			}
 
-			// Download binary JAR for resource files
+			// Reject suspiciously large JARs before downloading to protect Worker memory.
+			if (asset.size > MAX_JAR_BYTES) {
+				console.error(
+					`JAR for release ${release.tag_name} of extension ${extensionId} exceeds size limit (${asset.size} bytes)`
+				);
+				continue;
+			}
+
+			// Download binary JAR for resource files + keycloak version detection.
 			const jarResponse = await fetch(asset.browser_download_url);
 			if (!jarResponse.ok) {
 				console.error(
@@ -80,7 +90,7 @@ export class GithubReleasesArtifactAdapter implements ArtifactSourceAdapter {
 			const jarBytes = new Uint8Array(await jarResponse.arrayBuffer());
 			const keycloakVersion = parseKeycloakVersion(extractPomXml(jarBytes) ?? '') ?? undefined;
 
-			// Download source zipball from GitHub
+			// Download source zipball from GitHub.
 			const zipballUrl = `https://github.com/${source.owner}/${source.repo}/archive/refs/tags/${release.tag_name}.zip`;
 			const zipResponse = await fetch(zipballUrl);
 
@@ -99,20 +109,15 @@ export class GithubReleasesArtifactAdapter implements ArtifactSourceAdapter {
 
 				if (allFiles.length > 0) {
 					console.log(`Backfilling files for ${release.tag_name} of extension ${extensionId}`);
-					await db
-						.insert(extensionVersionFile)
-						.values(
-							allFiles.map((f) => ({ versionId: existing.id, path: f.path, content: f.content }))
-						);
+					await db.insert(extensionVersionFile).values(
+						allFiles.map((f) => ({ versionId: existing.id, path: f.path, content: f.content }))
+					);
 				}
 				continue;
 			}
 
-			// New version
-			const digestBuffer = await crypto.subtle.digest('SHA-256', jarBytes);
-			const digest = Array.from(new Uint8Array(digestBuffer))
-				.map((b) => b.toString(16).padStart(2, '0'))
-				.join('');
+			// New version - compute digest and insert.
+			const digest = await sha256Hex(jarBytes);
 
 			console.log(`Found new release ${release.tag_name} for extension ${extensionId}`);
 
@@ -132,16 +137,17 @@ export class GithubReleasesArtifactAdapter implements ArtifactSourceAdapter {
 				.returning({ id: extensionVersion.id });
 
 			if (allFiles.length > 0) {
-				await db
-					.insert(extensionVersionFile)
-					.values(
-						allFiles.map((f) => ({ versionId: inserted.id, path: f.path, content: f.content }))
-					);
+				await db.insert(extensionVersionFile).values(
+					allFiles.map((f) => ({ versionId: inserted.id, path: f.path, content: f.content }))
+				);
 			}
 		}
 	}
 
-	async syncDownloadCounts(extensionId: number, platform: App.Platform): Promise<void> {
+	async fetchDownloadCounts(
+		extensionId: number,
+		platform: App.Platform
+	): Promise<VersionDownloadCount[]> {
 		const db = getDatabase(platform);
 		const octokit = this.getOctokit(platform);
 
@@ -155,34 +161,29 @@ export class GithubReleasesArtifactAdapter implements ArtifactSourceAdapter {
 			throw new Error(`No GitHub artifact source configured for extension ${extensionId}`);
 		}
 
+		// Fetch all releases in one paginated call instead of one call per version.
+		const releases = await octokit.paginate('GET /repos/{owner}/{repo}/releases', {
+			owner: source.owner,
+			repo: source.repo,
+			per_page: 100
+		});
+
+		// Build a map of download URL → download count for fast lookup.
+		const downloadCountByUrl = new Map<string, number>();
+		for (const release of releases) {
+			for (const asset of release.assets) {
+				downloadCountByUrl.set(asset.browser_download_url, asset.download_count);
+			}
+		}
+
 		const versions = await db
 			.select()
 			.from(extensionVersion)
 			.where(eq(extensionVersion.extensionId, extensionId));
 
-		let totalDownloads = 0;
-		for (const version of versions) {
-			const githubRelease = await octokit.request('GET /repos/{owner}/{repo}/releases/tags/{tag}', {
-				owner: source.owner,
-				repo: source.repo,
-				tag: version.version
-			});
-			const githubReleaseAsset = githubRelease.data.assets.find(
-				(asset) => asset.browser_download_url === version.downloadUrl
-			);
-			if (githubReleaseAsset) {
-				const downloadCount = githubReleaseAsset.download_count;
-				await db
-					.update(extensionVersion)
-					.set({ downloadCount })
-					.where(eq(extensionVersion.id, version.id));
-				totalDownloads += downloadCount;
-			}
-		}
-
-		await db
-			.update(extensionTable)
-			.set({ downloadCount: totalDownloads })
-			.where(eq(extensionTable.id, extensionId));
+		return versions.map((v) => ({
+			versionId: v.id,
+			count: downloadCountByUrl.get(v.downloadUrl) ?? 0
+		}));
 	}
 }

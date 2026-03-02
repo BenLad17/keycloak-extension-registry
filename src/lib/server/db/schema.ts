@@ -8,6 +8,7 @@ import {
 	timestamp,
 	uniqueIndex
 } from 'drizzle-orm/pg-core';
+import { ExtensionCategoryLabel } from '$lib/common/extension-category';
 
 export const user = pgTable('user', {
 	id: integer('id').generatedAlwaysAsIdentity().primaryKey(),
@@ -15,7 +16,11 @@ export const user = pgTable('user', {
 	createdAt: timestamp('created_at').defaultNow().notNull()
 });
 
-const extensionCategories = ['authentication', 'user_federation'] as const;
+// Derived from the common file so categories are always in sync across server and client.
+const extensionCategories = Object.keys(ExtensionCategoryLabel) as [
+	keyof typeof ExtensionCategoryLabel,
+	...Array<keyof typeof ExtensionCategoryLabel>
+];
 
 export const extension = pgTable(
 	'extension',
@@ -37,7 +42,7 @@ export const extension = pgTable(
 
 		lastSyncedAt: timestamp('last_synced_at'),
 		lastSyncError: text('last_sync_error'),
-		status: text('status').default('active'), // 'pending', 'active', 'archived'
+		status: text('status', { enum: ['pending', 'active', 'archived'] }).default('active'),
 
 		downloadCount: integer('download_count').default(0)
 	},
@@ -124,7 +129,5 @@ export type ExtensionVersionFile = typeof extensionVersionFile.$inferSelect;
 export type NewExtensionVersionFile = typeof extensionVersionFile.$inferInsert;
 export type ExtensionCategory = (typeof extensionCategories)[number];
 
-export const ExtensionCategoryLabel: Record<ExtensionCategory, string> = {
-	authentication: 'Authentication',
-	user_federation: 'User Federation'
-};
+// Re-exported from the common file for callers that already import from $lib/server/db.
+export { ExtensionCategoryLabel } from '$lib/common/extension-category';

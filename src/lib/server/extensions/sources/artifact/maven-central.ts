@@ -4,7 +4,7 @@ import {
 	mavenArtifactSource,
 	getDatabase
 } from '$lib/server/db';
-import { extractResourceFiles, extractPomXml } from '$lib/server/extensions/jar';
+import { extractResourceFiles, extractPomXml, MAX_JAR_BYTES, sha256Hex } from '$lib/server/extensions/jar';
 import { extractSourceFiles } from '$lib/server/extensions/source';
 import { parseKeycloakVersion } from '$lib/server/extensions/pom';
 import { and, eq } from 'drizzle-orm';
@@ -59,6 +59,16 @@ export class MavenCentralArtifactAdapter implements ArtifactSourceAdapter {
 
 			const base = `${MAVEN_BASE}/${groupPath}/${source.artifactId}/${version}/${source.artifactId}-${version}`;
 
+			// Check Content-Length before downloading to protect Worker memory.
+			const headResponse = await fetch(`${base}.jar`, { method: 'HEAD' });
+			const contentLength = Number(headResponse.headers.get('Content-Length') ?? 0);
+			if (contentLength > MAX_JAR_BYTES) {
+				console.error(
+					`JAR for Maven ${source.groupId}:${source.artifactId}:${version} exceeds size limit (${contentLength} bytes)`
+				);
+				continue;
+			}
+
 			// Download binary JAR
 			const jarResponse = await fetch(`${base}.jar`);
 			if (!jarResponse.ok) {
@@ -99,10 +109,7 @@ export class MavenCentralArtifactAdapter implements ArtifactSourceAdapter {
 				continue;
 			}
 
-			const digestBuffer = await crypto.subtle.digest('SHA-256', jarBytes);
-			const digest = Array.from(new Uint8Array(digestBuffer))
-				.map((b) => b.toString(16).padStart(2, '0'))
-				.join('');
+			const digest = await sha256Hex(jarBytes);
 
 			console.log(`Found new Maven version ${version} for extension ${extensionId}`);
 

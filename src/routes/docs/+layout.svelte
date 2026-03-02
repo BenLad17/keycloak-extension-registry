@@ -14,7 +14,7 @@
 <div class="flex gap-12">
 	<!-- Sidebar -->
 	<nav class="hidden w-44 shrink-0 lg:block">
-		<p class="mb-3 text-xs font-semibold tracking-widest text-gray-600 uppercase">Documentation</p>
+		<p class="mb-3 text-xs font-semibold tracking-widest text-text-secondary/60 uppercase">Documentation</p>
 		<ul class="space-y-0.5">
 			{#each nav as item}
 				<li>
@@ -22,8 +22,8 @@
 						href={item.href}
 						class="block rounded-lg px-3 py-1.5 text-sm no-underline transition-colors {page.url
 							.pathname === item.href
-							? 'bg-indigo-600/15 font-medium text-indigo-300'
-							: 'text-gray-500 hover:bg-white/5 hover:text-gray-300'}"
+							? 'bg-brand/15 font-medium text-brand'
+							: 'text-text-secondary hover:bg-surface-muted hover:text-text'}"
 					>
 						{item.label}
 					</a>

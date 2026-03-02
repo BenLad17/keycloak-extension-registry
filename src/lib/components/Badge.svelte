@@ -3,7 +3,7 @@
 
 	interface Props {
 		variant?: 'primary' | 'danger' | 'muted';
-		/** sm — compact (lists, cards)  md — prominent (headings) */
+		/** sm - compact (lists, cards)  md - prominent (headings) */
 		size?: 'sm' | 'md';
 		class?: string;
 		children: Snippet;

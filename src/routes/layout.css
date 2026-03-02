@@ -1,124 +1,197 @@
 @import 'tailwindcss';
 @plugin '@tailwindcss/typography';
 
-/* ── Color palette ── */
-@theme {
-	--color-bg: #0f0f1a;
-	--color-bg-secondary: #1a1a2e;
-	--color-border: #2a2a4a;
-	--color-text: #ffffff;
-	--color-text-secondary: #a0a0c0;
-	--color-text-muted: #6b6b8a;
-	--color-primary: #6366f1;
-	--color-primary-hover: #4f46e5;
+/* -- Light mode palette -- */
+/* Warm neutrals - #00b8e3 cyan is accent only */
+:root {
+	--brand: #00b8e3;
+	--brand-soft: #ddf3fa;
+	--success: #008a52;
+	--success-soft: #d4f5e5;
+	--warning: #c47000;
+	--warning-soft: #faecc8;
+	--bg: #faf9f5;
+	--surface: #ffffff;
+	--surface-muted: #e8e6dc;
+	--border: #c8c6bc;
+	--text: #141413;
+	--text-secondary: #6e6c65;
+	--brand-fg: #00728a;
+	/* Extended */
+	--danger: #c82020;
+	--danger-soft: #fad8d8;
+}
+
+/* -- Dark mode palette - explicit class -- */
+:root.dark {
+	--brand: #0099bc;
+	--brand-soft: #052830;
+	--success: #00d88a;
+	--success-soft: #042e18;
+	--warning: #ffaa2a;
+	--warning-soft: #271800;
+	--bg: #141413;
+	--surface: #1e1d1b;
+	--surface-muted: #252422;
+	--border: #333230;
+	--text: #faf9f5;
+	--text-secondary: #b0aea5;
+	--brand-fg: #0099bc;
+	/* Extended */
+	--danger: #ff5252;
+	--danger-soft: #2c0808;
+}
+
+/* -- Dark mode palette - system preference (no explicit choice) -- */
+@media (prefers-color-scheme: dark) {
+	:root:not(.light) {
+		--brand: #0099bc;
+		--brand-soft: #052830;
+		--success: #00d88a;
+		--success-soft: #042e18;
+		--warning: #ffaa2a;
+		--warning-soft: #271800;
+		--bg: #141413;
+		--surface: #1e1d1b;
+		--surface-muted: #252422;
+		--border: #333230;
+		--text: #faf9f5;
+		--text-secondary: #b0aea5;
+		/* Extended */
+		--danger: #ff5252;
+		--danger-soft: #2c0808;
+	}
+}
+
+/* ── Tailwind theme tokens ── */
+@theme inline {
+	--color-brand: var(--brand);
+	--color-brand-fg: var(--brand-fg);
+	--color-brand-soft: var(--brand-soft);
+	--color-success: var(--success);
+	--color-success-soft: var(--success-soft);
+	--color-warning: var(--warning);
+	--color-bg: var(--bg);
+	--color-surface: var(--surface);
+	--color-surface-muted: var(--surface-muted);
+	--color-border: var(--border);
+	--color-text: var(--text);
+	--color-text-secondary: var(--text-secondary);
+	--color-danger: var(--danger);
+	--color-danger-soft: var(--danger-soft);
+	--font-sans: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+	--font-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Code', 'Source Code Pro', monospace;
 }
 
 /* ── Syntax highlighting theme ── */
-/*
- * Custom hljs theme tuned to the page palette (replaces atom-one-dark).
- * All token colors are drawn from the indigo/slate/emerald palette used
- * throughout the UI. Import highlight.js/lib/core — do NOT import any
- * highlight.js CSS file or it will override these rules.
- */
 .hljs {
-	background: var(--color-bg-secondary);
-	color: #a0aec0; /* slate cool-gray default */
+	background: var(--surface);
+	color: var(--text-secondary);
 }
 
-/* Comments */
 .hljs-comment,
 .hljs-quote {
-	color: #4a5568;
+	color: var(--text-secondary);
+	opacity: 0.6;
 	font-style: italic;
 }
 
-/* Keywords — indigo (matches --color-primary) */
 .hljs-keyword,
 .hljs-selector-tag,
 .hljs-subst {
-	color: #818cf8;
+	color: var(--brand);
 }
 
-/* Strings — emerald */
 .hljs-string,
 .hljs-regexp,
 .hljs-meta .hljs-string {
-	color: #6ee7b7;
+	color: var(--success);
 }
 
-/* Numbers, literals */
 .hljs-number,
 .hljs-literal {
-	color: #f472b6;
+	color: var(--warning);
 }
 
-/* YAML / HTML attribute names */
 .hljs-attr,
 .hljs-attribute {
-	color: #7dd3fc;
+	color: color-mix(in oklab, var(--brand) 60%, var(--text-secondary));
 }
 
-/* Tag names, built-ins */
 .hljs-name,
 .hljs-tag,
 .hljs-built_in,
 .hljs-builtin-name {
-	color: #93c5fd;
+	color: var(--brand);
 }
 
-/* Type / class names */
 .hljs-type,
 .hljs-title,
 .hljs-class .hljs-title {
-	color: #c084fc;
+	color: color-mix(in oklab, var(--brand) 60%, var(--text-secondary));
 }
 
-/* Variables */
 .hljs-variable,
 .hljs-template-variable {
-	color: #e2e8f0;
+	color: var(--text);
 }
 
-/* Bullets, symbols (YAML list dashes, etc.) */
 .hljs-bullet,
 .hljs-symbol {
-	color: #818cf8;
+	color: var(--brand);
 }
 
-/* Links */
 .hljs-link {
-	color: #7dd3fc;
+	color: var(--brand);
 	text-decoration: underline;
 }
 
-/* Meta / preprocessor */
 .hljs-meta {
-	color: #64748b;
+	color: var(--text-secondary);
 }
 
-/* Section headings */
 .hljs-section {
-	color: #818cf8;
+	color: var(--brand);
 	font-weight: bold;
 }
 
-/* Diff */
 .hljs-addition {
-	color: #6ee7b7;
-}
-.hljs-deletion {
-	color: #f87171;
+	color: var(--success);
 }
 
-/* Emphasis / strong */
+.hljs-deletion {
+	color: var(--danger);
+}
+
 .hljs-emphasis {
 	font-style: italic;
 }
+
 .hljs-strong {
 	font-weight: bold;
 }
 
 /* ── Prose overrides ── */
+/* Tie all prose colors to our CSS variables so they adapt to both themes automatically */
+.prose {
+	--tw-prose-body: var(--text);
+	--tw-prose-headings: var(--text);
+	--tw-prose-lead: var(--text-secondary);
+	--tw-prose-links: var(--brand-fg);
+	--tw-prose-bold: var(--text);
+	--tw-prose-counters: var(--text-secondary);
+	--tw-prose-bullets: var(--text-secondary);
+	--tw-prose-hr: var(--border);
+	--tw-prose-quotes: var(--text);
+	--tw-prose-quote-borders: var(--border);
+	--tw-prose-captions: var(--text-secondary);
+	--tw-prose-code: var(--text);
+	--tw-prose-pre-code: var(--text-secondary);
+	--tw-prose-pre-bg: var(--surface-muted);
+	--tw-prose-th-borders: var(--border);
+	--tw-prose-td-borders: var(--border);
+}
+
 .prose img {
 	display: inline;
 	margin: 0;
@@ -127,20 +200,46 @@
 /* ── Base ── */
 @layer base {
 	html {
-		background-color: var(--color-bg);
-		color: var(--color-text);
+		background-color: var(--bg);
+		color: var(--text);
+		-webkit-font-smoothing: antialiased;
+		-moz-osx-font-smoothing: grayscale;
+		text-rendering: optimizeLegibility;
 	}
 
 	body {
-		font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+		font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+		font-size: 0.9375rem;
+		line-height: 1.6;
+		letter-spacing: -0.015em;
+		font-optical-sizing: auto;
+	}
+
+	h1,
+	h2,
+	h3,
+	h4,
+	h5,
+	h6 {
+		letter-spacing: -0.03em;
+		line-height: 1.2;
+		font-weight: 600;
+	}
+
+	code,
+	kbd,
+	pre,
+	samp {
+		font-family: 'JetBrains Mono', ui-monospace, 'Cascadia Code', 'Source Code Pro', monospace;
+		font-feature-settings: 'liga' 1, 'calt' 1;
 	}
 
 	a {
-		color: var(--color-primary);
+		color: var(--brand);
 	}
 
 	a:hover {
-		color: var(--color-primary-hover);
+		opacity: 0.8;
 	}
 }
 
@@ -148,33 +247,47 @@
 @layer components {
 	/* Surface card */
 	.card {
-		@apply rounded-2xl border border-border bg-bg-secondary;
+		@apply rounded-xl border border-border bg-surface;
 	}
 
-	/* Card section heading — used at the top of a padded card */
+	/* Card section heading */
 	.card-title {
-		@apply mb-3 text-xs font-semibold tracking-widest text-gray-500 uppercase;
+		@apply mb-3 text-xs font-medium tracking-widest text-text-secondary uppercase;
 	}
 
-	/* Key–value row label (inside divided cards) */
+	/* Key-value row label */
 	.meta-label {
-		@apply mb-0.5 text-xs font-medium tracking-wide text-gray-500 uppercase;
+		@apply mb-0.5 text-xs font-medium tracking-wide text-text-secondary uppercase;
 	}
 
-	/* Badge — combine with a variant class below */
+	/* Badge */
 	.badge {
-		@apply inline-flex items-center rounded-full font-medium;
+		@apply inline-flex items-center rounded-md font-medium;
 	}
 
 	.badge-primary {
-		@apply bg-indigo-600/20 text-indigo-400;
+		@apply bg-brand/15;
+		color: var(--brand-fg);
 	}
 
 	.badge-danger {
-		@apply bg-red-600/20 text-red-400;
+		@apply bg-danger/12 text-danger;
 	}
 
 	.badge-muted {
-		@apply bg-bg text-gray-500;
+		@apply bg-surface-muted text-text-secondary;
+	}
+
+	/* Flat filled button */
+	.btn {
+		@apply inline-flex items-center gap-2 rounded-md px-3.5 py-1.5 text-sm font-medium transition-colors;
+	}
+
+	.btn-primary {
+		@apply bg-brand text-white hover:bg-brand/85;
+	}
+
+	.btn-ghost {
+		@apply border border-border text-text-secondary hover:border-border/60 hover:text-text;
 	}
 }

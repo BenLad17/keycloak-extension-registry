@@ -1,5 +1,10 @@
-import { extension as extensionTable, getDatabase, type Extension } from '$lib/server/db';
-import { eq } from 'drizzle-orm';
+import {
+	extension as extensionTable,
+	extensionVersion,
+	getDatabase,
+	type Extension
+} from '$lib/server/db';
+import { eq, sql } from 'drizzle-orm';
 import { getCodeSourceAdapter } from './sources/types';
 import { GithubReleasesArtifactAdapter } from './sources/artifact/github-releases';
 import { MavenCentralArtifactAdapter } from './sources/artifact/maven-central';
@@ -33,7 +38,30 @@ export async function syncExtension(
 
 		for (const adapter of adapters) {
 			await adapter.discoverVersions(ext.id, platform);
-			await adapter.syncDownloadCounts?.(ext.id, platform);
+
+			if (adapter.fetchDownloadCounts) {
+				const counts = await adapter.fetchDownloadCounts(ext.id, platform);
+
+				// Persist per-version counts.
+				// TODO: when download history is implemented, record a snapshot here too.
+				for (const { versionId, count } of counts) {
+					await db
+						.update(extensionVersion)
+						.set({ downloadCount: count })
+						.where(eq(extensionVersion.id, versionId));
+				}
+
+				// Re-compute the extension-level total from the DB so all sources are included.
+				const [{ total }] = await db
+					.select({ total: sql<number>`coalesce(sum(${extensionVersion.downloadCount}), 0)` })
+					.from(extensionVersion)
+					.where(eq(extensionVersion.extensionId, ext.id));
+
+				await db
+					.update(extensionTable)
+					.set({ downloadCount: Number(total) })
+					.where(eq(extensionTable.id, ext.id));
+			}
 		}
 
 		await db

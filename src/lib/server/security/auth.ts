@@ -1,4 +1,5 @@
 import { type Cookies, error, redirect } from '@sveltejs/kit';
+import { clearSessionCookie } from '$lib/server/security/session-cookie';
 import { getUser } from '$lib/server/security/user';
 import { getDatabase, type User, user } from '$lib/server/db';
 import { Octokit } from 'octokit';
@@ -7,9 +8,6 @@ import { eq } from 'drizzle-orm';
 import { createSession } from '$lib/server/security/session';
 import { getCachedGitHubUser } from '$lib/server/github';
 
-export function isAuthenticated(locals: App.Locals): boolean {
-	return !!locals?.session;
-}
 
 export async function getAuthenticatedUser(
 	locals: App.Locals,
@@ -24,13 +22,19 @@ export async function requireAuth(
 	platform: App.Platform,
 	locals: App.Locals
 ): Promise<User> {
-	const session = locals.session;
-	if (session) {
-		return await getUser(session.userId, platform!);
-	} else {
+	if (!locals.session) {
+		// initializeAuth always throws a SvelteKit redirect - never returns.
 		await initializeAuth(url, cookies, platform!, url.pathname);
+		throw new Error('unreachable');
 	}
-	throw new Error('Authentication failed');
+	const foundUser = await getUser(locals.session.userId, platform!);
+	if (!foundUser) {
+		// Session references a deleted user - clear and redirect to login.
+		clearSessionCookie(cookies);
+		await initializeAuth(url, cookies, platform!, url.pathname);
+		throw new Error('unreachable');
+	}
+	return foundUser;
 }
 
 export async function initializeAuth(
@@ -118,7 +122,7 @@ export function getGitHubOAuthURL(clientId: string, redirectUri: string, state: 
 		client_id: clientId,
 		redirect_uri: redirectUri,
 		state: state,
-		scope: 'read:user user:email public_repo'
+		scope: 'read:user user:email'
 	});
 	return `https://github.com/login/oauth/authorize?${params}`;
 }

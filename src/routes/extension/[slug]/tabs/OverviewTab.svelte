@@ -48,6 +48,10 @@
 			: ''
 	);
 
+	function proxyDownloadUrl(version: string): string {
+		return `/extension/${ext.slug}/${version}/download`;
+	}
+
 	function jarFilename(url: string): string {
 		return url.split('/').pop() ?? 'extension.jar';
 	}
@@ -58,13 +62,13 @@
 	<div>
 		{#if readmeHtml}
 			<div
-				class="prose max-w-none rounded-2xl border border-border bg-bg-secondary p-8 prose-invert"
+				class="prose max-w-none rounded-xl border border-border bg-surface p-8"
 			>
 				{@html readmeHtml}
 			</div>
 		{:else}
 			<div
-				class="rounded-2xl border border-border bg-bg-secondary/50 py-20 text-center text-gray-500"
+				class="rounded-xl border border-border bg-surface-muted py-20 text-center text-text-secondary"
 			>
 				No README available.
 			</div>
@@ -77,45 +81,83 @@
 			<!-- Download card -->
 			<Card highlight>
 				<div class="mb-1 flex items-baseline justify-between">
-					<span class="font-mono text-lg font-semibold text-white">{latestVersion.version}</span>
-					<span class="text-sm text-gray-500">{formatSize(latestVersion.downloadSize)}</span>
+					<span class="font-mono text-lg font-semibold text-text">{latestVersion.version}</span>
+					<span class="text-sm text-text-secondary">{formatSize(latestVersion.downloadSize)}</span>
 				</div>
 				{#if latestVersion.keycloakVersion}
-					<p class="mb-1 text-xs text-indigo-400">For Keycloak {latestVersion.keycloakVersion}</p>
+					<p class="mb-1 text-xs text-brand">For Keycloak {latestVersion.keycloakVersion}</p>
 				{/if}
-				<p class="mb-4 text-xs text-gray-600">Published {formatDate(latestVersion.publishedAt)}</p>
+				<p class="mb-4 text-xs text-text-secondary/60">Published {formatDate(latestVersion.publishedAt)}</p>
 				<a
-					href={latestVersion.downloadUrl}
-					download
-					class="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white no-underline transition-colors hover:bg-indigo-500"
+					href={proxyDownloadUrl(latestVersion.version)}
+					class="flex w-full items-center justify-center gap-2 rounded-lg bg-brand px-4 py-2.5 text-sm font-medium text-white no-underline transition-colors hover:bg-brand/85"
 				>
 					<Download class="h-4 w-4" />
 					Download latest
 				</a>
 			</Card>
 
+			<!-- Downloads chart -->
+			{#if versions.length > 0}
+				<Card title="Downloads">
+					<div class="space-y-2.5">
+						{#each visibleDownloadVersions as v}
+							<div class="flex items-center gap-3">
+							<span
+									class="w-20 shrink-0 truncate font-mono text-xs text-text-secondary"
+									title={v.version}
+							>
+								{v.version}
+							</span>
+								<div class="h-2 flex-1 overflow-hidden rounded-full bg-bg">
+									<div
+											class="h-2 rounded-full bg-brand/60 transition-all"
+											style="width: {maxDownloads > 0
+										? (((v.downloadCount ?? 0) / maxDownloads) * 100).toFixed(1)
+										: 0}%"
+									></div>
+								</div>
+								<span class="w-10 shrink-0 text-right text-xs text-text-secondary/60">
+								{formatCount(v.downloadCount ?? 0)}
+							</span>
+							</div>
+						{/each}
+					</div>
+					{#if versions.length > DOWNLOADS_COLLAPSED_COUNT}
+						<button
+								onclick={() => (downloadsExpanded = !downloadsExpanded)}
+								class="mt-3 w-full text-center text-xs text-text-secondary/60 transition-colors hover:text-text-secondary"
+						>
+							{downloadsExpanded
+									? 'Show less'
+									: `Show ${versions.length - DOWNLOADS_COLLAPSED_COUNT} more…`}
+						</button>
+					{/if}
+				</Card>
+			{/if}
+
 			<!-- Installation card -->
-			<div class="overflow-hidden rounded-2xl border border-border bg-bg-secondary">
+			<div class="overflow-hidden rounded-xl border border-border bg-surface">
 				<!-- Tab bar -->
 				<div class="flex items-center gap-x-5 border-b border-border px-4">
-					<div class="flex items-center gap-1.5 py-3 text-xs font-medium text-gray-500">
-						<Terminal class="h-3.5 w-3.5 text-indigo-400" />
+					<div class="flex items-center gap-1.5 py-3 text-xs font-medium text-text-secondary">
+						<Terminal class="h-3.5 w-3.5 text-brand" />
 						Install
 					</div>
 					<div class="ml-auto flex items-center">
 						<button
 							onclick={() => (installTab = 'fetcher')}
 							class="py-3 pr-3 pl-2 text-xs font-medium transition-colors {installTab === 'fetcher'
-								? 'border-b-2 border-indigo-500 text-white'
-								: 'text-gray-500 hover:text-gray-300'}"
+								? 'border-b-2 border-brand text-text'
+								: 'text-text-secondary hover:text-text'}"
 						>
 							Docker
 						</button>
 						<button
 							onclick={() => (installTab = 'manual')}
 							class="py-3 pr-3 pl-2 text-xs font-medium transition-colors {installTab === 'manual'
-								? 'border-b-2 border-indigo-500 text-white'
-								: 'text-gray-500 hover:text-gray-300'}"
+								? 'border-b-2 border-brand text-text'
+								: 'text-text-secondary hover:text-text'}"
 						>
 							Manual
 						</button>
@@ -125,17 +167,17 @@
 				<!-- Docker tab -->
 				{#if installTab === 'fetcher'}
 					<div class="px-4 pt-4 pb-5">
-						<p class="mb-1 text-xs font-medium text-gray-300">
-							Add to <code class="rounded bg-bg px-1 py-0.5 font-mono text-indigo-300"
+						<p class="mb-1 text-xs font-medium text-text">
+							Add to <code class="rounded bg-bg px-1 py-0.5 font-mono text-brand"
 								>providers.yaml</code
 							>
 						</p>
-						<p class="mb-3 text-xs text-gray-600">
+						<p class="mb-3 text-xs text-text-secondary/60">
 							The fetcher tool downloads and verifies the JAR at Docker build time.
 						</p>
 						<CodeBlock code={yamlSnippet} lang="yaml" />
-						<p class="mt-3 text-xs text-gray-600">
-							<a href="/docs" class="text-indigo-400 hover:text-indigo-300">Read the docs →</a>
+						<p class="mt-3 text-xs text-text-secondary/60">
+							<a href="/docs" class="text-brand hover:text-brand/80">Read the docs →</a>
 						</p>
 					</div>
 				{/if}
@@ -145,27 +187,26 @@
 					<div class="px-4 pt-4 pb-5">
 						<ol class="space-y-4 text-xs">
 							<li>
-								<p class="mb-1.5 font-medium text-gray-300">1. Download the JAR</p>
+								<p class="mb-1.5 font-medium text-text">1. Download the JAR</p>
 								<a
-									href={latestVersion.downloadUrl}
-									download
-									class="inline-flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 text-xs text-gray-400 no-underline transition-colors hover:border-indigo-500/50 hover:text-white"
+									href={proxyDownloadUrl(latestVersion.version)}
+									class="inline-flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 text-xs text-text-secondary no-underline transition-colors hover:border-brand/50 hover:text-text"
 								>
 									<Download class="h-3 w-3" />
 									{jarFilename(latestVersion.downloadUrl)}
 								</a>
 							</li>
 							<li>
-								<p class="mb-1.5 font-medium text-gray-300">2. Copy to providers directory</p>
+								<p class="mb-1.5 font-medium text-text">2. Copy to providers directory</p>
 								<pre
-									class="overflow-x-auto rounded-lg bg-bg px-3 py-2 font-mono text-xs text-gray-400">cp {jarFilename(
+									class="overflow-x-auto rounded-lg bg-bg px-3 py-2 font-mono text-xs text-text-secondary">cp {jarFilename(
 										latestVersion.downloadUrl
 									)} /opt/keycloak/providers/</pre>
 							</li>
 							<li>
-								<p class="mb-1.5 font-medium text-gray-300">3. Rebuild &amp; start Keycloak</p>
+								<p class="mb-1.5 font-medium text-text">3. Rebuild &amp; start Keycloak</p>
 								<pre
-									class="rounded-lg bg-bg px-3 py-2 font-mono text-xs text-gray-400">./kc.sh build
+									class="rounded-lg bg-bg px-3 py-2 font-mono text-xs text-text-secondary">./kc.sh build
 ./kc.sh start</pre>
 							</li>
 						</ol>
@@ -183,7 +224,7 @@
 						href="https://github.com/{githubSource.owner}/{githubSource.repo}"
 						target="_blank"
 						rel="noopener noreferrer"
-						class="flex items-center gap-1.5 text-indigo-400 no-underline hover:text-indigo-300"
+						class="flex items-center gap-1.5 text-brand no-underline hover:text-brand/80"
 					>
 						<Github class="h-3.5 w-3.5" />
 						{githubSource.owner}/{githubSource.repo}
@@ -192,65 +233,27 @@
 			{/if}
 			<div class="px-4 py-3">
 				<p class="meta-label">Category</p>
-				<p class="text-gray-300">{ExtensionCategoryLabel[ext.category]}</p>
+				<p class="text-text">{ExtensionCategoryLabel[ext.category]}</p>
 			</div>
 			{#if firstVersion && versions.length > 1}
 				<div class="px-4 py-3">
 					<p class="meta-label">First release</p>
-					<p class="text-gray-300">{formatDate(firstVersion.publishedAt)}</p>
+					<p class="text-text">{formatDate(firstVersion.publishedAt)}</p>
 				</div>
 			{/if}
 			{#if ext.lastSyncedAt}
 				<div class="px-4 py-3">
 					<p class="meta-label">Last synced</p>
-					<p class="text-gray-500">{timeAgo(ext.lastSyncedAt)}</p>
+					<p class="text-text-secondary">{timeAgo(ext.lastSyncedAt)}</p>
 				</div>
 			{/if}
 			{#if ext.lastSyncError}
 				<div class="px-4 py-3">
-					<p class="meta-label" style="color: rgb(220 38 38 / 0.8)">Sync error</p>
-					<p class="font-mono text-xs break-all text-red-400">{ext.lastSyncError}</p>
+					<p class="meta-label text-danger">Sync error</p>
+					<p class="font-mono text-xs break-all text-danger">{ext.lastSyncError}</p>
 				</div>
 			{/if}
 		</Card>
 
-		<!-- Downloads chart -->
-		{#if versions.length > 0}
-			<Card title="Downloads">
-				<div class="space-y-2.5">
-					{#each visibleDownloadVersions as v}
-						<div class="flex items-center gap-3">
-							<span
-								class="w-20 shrink-0 truncate font-mono text-xs text-gray-500"
-								title={v.version}
-							>
-								{v.version}
-							</span>
-							<div class="h-2 flex-1 overflow-hidden rounded-full bg-bg">
-								<div
-									class="h-2 rounded-full bg-indigo-500/60 transition-all"
-									style="width: {maxDownloads > 0
-										? (((v.downloadCount ?? 0) / maxDownloads) * 100).toFixed(1)
-										: 0}%"
-								></div>
-							</div>
-							<span class="w-10 shrink-0 text-right text-xs text-gray-600">
-								{formatCount(v.downloadCount ?? 0)}
-							</span>
-						</div>
-					{/each}
-				</div>
-				{#if versions.length > DOWNLOADS_COLLAPSED_COUNT}
-					<button
-						onclick={() => (downloadsExpanded = !downloadsExpanded)}
-						class="mt-3 w-full text-center text-xs text-gray-600 transition-colors hover:text-gray-400"
-					>
-						{downloadsExpanded
-							? 'Show less'
-							: `Show ${versions.length - DOWNLOADS_COLLAPSED_COUNT} more…`}
-					</button>
-				{/if}
-			</Card>
-		{/if}
 	</aside>
 </div>

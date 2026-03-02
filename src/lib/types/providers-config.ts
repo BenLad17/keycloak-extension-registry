@@ -18,7 +18,7 @@ export function generateYamlSnippet(entry: ProviderEntry, registryUrl: string): 
 		`registry_url: ${registryUrl}`,
 		`providers:`,
 		`  - name: ${entry.name}`,
-		`    version: ${entry.version}`
+		`    version: "${entry.version}"`
 	];
 	if (entry.sha256) lines.push(`    sha256: "${entry.sha256}"`);
 	return lines.join('\n');
