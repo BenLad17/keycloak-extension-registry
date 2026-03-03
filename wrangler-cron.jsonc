@@ -6,6 +6,7 @@
 
 	// Sync the least-recently-synced extension every 30 minutes.
 	// One extension per run keeps API rate limits safe regardless of registry size.
+	"workers_dev": false,
 	"triggers": {
 		"crons": ["*/30 * * * *"]
 	},
