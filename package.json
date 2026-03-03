@@ -7,17 +7,16 @@
 		"dev": "vite dev",
 		"build": "vite build",
 		"preview": "vite preview",
-		"deploy": "npm run build && wrangler deploy && wrangler deploy --config wrangler-cron.jsonc",
+		"deploy": "npm run build && wrangler deploy && npm run db:migrate && wrangler deploy --config wrangler-cron.jsonc ",
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ../tsconfig.json --workspace src",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ../tsconfig.json --workspace src --watch",
 		"lint": "prettier --check .",
 		"format": "prettier --write .",
 		"types": "wrangler types",
-		"db:start": "docker compose up",
-		"db:push": "drizzle-kit push --force",
 		"db:generate": "drizzle-kit generate",
-		"db:migrate": "drizzle-kit migrate",
+		"db:migrate": "wrangler d1 migrations apply keycloak-extension-registry --remote",
+		"db:migrate:local": "wrangler d1 migrations apply keycloak-extension-registry --local",
 		"db:studio": "drizzle-kit studio"
 	},
 	"devDependencies": {
@@ -48,7 +47,6 @@
 		"marked": "^17.0.3",
 		"node-emoji": "^2.2.0",
 		"octokit": "^5.0.5",
-		"postgres": "^3.4.8",
 		"uuid": "^13.0.0",
 		"yaml": "^2.8.2",
 		"zod": "^4.3.6"

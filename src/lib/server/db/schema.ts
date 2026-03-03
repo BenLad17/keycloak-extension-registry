@@ -1,19 +1,12 @@
-import {
-	bigint,
-	boolean,
-	index,
-	integer,
-	pgTable,
-	text,
-	timestamp,
-	uniqueIndex
-} from 'drizzle-orm/pg-core';
+import { index, integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
 import { ExtensionCategoryLabel } from '../../common/extension-category';
 
-export const user = pgTable('user', {
-	id: integer('id').generatedAlwaysAsIdentity().primaryKey(),
+export const user = sqliteTable('user', {
+	id: integer('id').primaryKey({ autoIncrement: true }),
 	githubId: integer('github_id').notNull().unique(),
-	createdAt: timestamp('created_at').defaultNow().notNull()
+	createdAt: integer('created_at', { mode: 'timestamp' })
+		.notNull()
+		.$defaultFn(() => new Date())
 });
 
 // Derived from the common file so categories are always in sync across server and client.
@@ -22,10 +15,10 @@ const extensionCategories = Object.keys(ExtensionCategoryLabel) as [
 	...Array<keyof typeof ExtensionCategoryLabel>
 ];
 
-export const extension = pgTable(
+export const extension = sqliteTable(
 	'extension',
 	{
-		id: integer('id').generatedAlwaysAsIdentity().primaryKey(),
+		id: integer('id').primaryKey({ autoIncrement: true }),
 		slug: text('slug').notNull().unique(),
 		name: text('name').notNull(),
 		description: text('description'),
@@ -35,12 +28,16 @@ export const extension = pgTable(
 
 		ownerId: integer('owner_id').references(() => user.id),
 
-		createdAt: timestamp('created_at').defaultNow().notNull(),
-		updatedAt: timestamp('updated_at').defaultNow().notNull(),
+		createdAt: integer('created_at', { mode: 'timestamp' })
+			.notNull()
+			.$defaultFn(() => new Date()),
+		updatedAt: integer('updated_at', { mode: 'timestamp' })
+			.notNull()
+			.$defaultFn(() => new Date()),
 
 		readme: text('readme'),
 
-		lastSyncedAt: timestamp('last_synced_at'),
+		lastSyncedAt: integer('last_synced_at', { mode: 'timestamp' }),
 		lastSyncError: text('last_sync_error'),
 		status: text('status', { enum: ['pending', 'active', 'archived'] }).default('active'),
 
@@ -49,16 +46,16 @@ export const extension = pgTable(
 	(table) => [index('owner_idx').on(table.ownerId)]
 );
 
-export const githubCodeSource = pgTable('github_code_source', {
+export const githubCodeSource = sqliteTable('github_code_source', {
 	extensionId: integer('extension_id')
 		.primaryKey()
 		.references(() => extension.id, { onDelete: 'cascade' }),
-	repoId: bigint('repo_id', { mode: 'number' }).notNull().unique(),
+	repoId: integer('repo_id').notNull().unique(),
 	owner: text('owner').notNull(),
 	repo: text('repo').notNull()
 });
 
-export const githubArtifactSource = pgTable('github_artifact_source', {
+export const githubArtifactSource = sqliteTable('github_artifact_source', {
 	extensionId: integer('extension_id')
 		.primaryKey()
 		.references(() => extension.id, { onDelete: 'cascade' }),
@@ -66,7 +63,7 @@ export const githubArtifactSource = pgTable('github_artifact_source', {
 	repo: text('repo').notNull()
 });
 
-export const mavenArtifactSource = pgTable('maven_artifact_source', {
+export const mavenArtifactSource = sqliteTable('maven_artifact_source', {
 	extensionId: integer('extension_id')
 		.primaryKey()
 		.references(() => extension.id, { onDelete: 'cascade' }),
@@ -74,23 +71,27 @@ export const mavenArtifactSource = pgTable('maven_artifact_source', {
 	artifactId: text('artifact_id').notNull()
 });
 
-export const extensionVersion = pgTable(
+export const extensionVersion = sqliteTable(
 	'extension_version',
 	{
-		id: integer('id').generatedAlwaysAsIdentity().primaryKey(),
+		id: integer('id').primaryKey({ autoIncrement: true }),
 		extensionId: integer('extension_id')
 			.references(() => extension.id, { onDelete: 'cascade' })
 			.notNull(),
 		version: text('version').notNull(),
 		keycloakVersion: text(),
 		downloadUrl: text('download_url').notNull(),
-		downloadSize: bigint('download_size', { mode: 'number' }).notNull(),
+		downloadSize: integer('download_size').notNull(),
 		releaseNotes: text('release_notes'),
-		deprecated: boolean('deprecated').default(false),
+		deprecated: integer('deprecated', { mode: 'boolean' }).default(false),
 		downloadCount: integer('download_count').default(0),
-		publishedAt: timestamp('published_at').defaultNow().notNull(),
+		publishedAt: integer('published_at', { mode: 'timestamp' })
+			.notNull()
+			.$defaultFn(() => new Date()),
 		digest: text('digest').notNull(),
-		providerImageBuilt: boolean('provider_image_built').notNull().default(false)
+		providerImageBuilt: integer('provider_image_built', { mode: 'boolean' })
+			.notNull()
+			.default(false)
 	},
 	(table) => [
 		uniqueIndex('version_idx').on(table.extensionId, table.version),
@@ -98,10 +99,10 @@ export const extensionVersion = pgTable(
 	]
 );
 
-export const extensionVersionFile = pgTable(
+export const extensionVersionFile = sqliteTable(
 	'extension_version_file',
 	{
-		id: integer('id').generatedAlwaysAsIdentity().primaryKey(),
+		id: integer('id').primaryKey({ autoIncrement: true }),
 		versionId: integer('version_id')
 			.references(() => extensionVersion.id, { onDelete: 'cascade' })
 			.notNull(),

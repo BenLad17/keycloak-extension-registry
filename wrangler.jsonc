@@ -1,48 +1,49 @@
 {
-  "$schema": "./node_modules/wrangler/config-schema.json",
-  "name": "keycloak-extension-registry",
-  "compatibility_date": "2026-02-13",
-  "compatibility_flags": [
-    "nodejs_compat"
-  ],
-  "main": ".svelte-kit/cloudflare/_worker.js",
-  "routes": [
-    {
-      "pattern": "kcer.dev",
-      "custom_domain": true
-    }
-  ],
-  "assets": {
-    "binding": "ASSETS",
-    "directory": ".svelte-kit/cloudflare"
-  },
-  "workers_dev": false,
-  "preview_urls": true,
-  "kv_namespaces": [
-    {
-      "binding": "SESSIONS",
-      "id": "49f5c952d1b44de9b461d870f6202588"
-    },
-    {
-      "binding": "GITHUB_USERS",
-      "id": "e903079341674997b5feac147e17d29c"
-    }
-  ],
-  "hyperdrive": [
-    {
-      "binding": "HYPERDRIVE",
-      "id": "03cd63f3f01e47518d6b9c1067ffe436",
-      "localConnectionString": "postgres://root:mysecretpassword@localhost:5432/local"
-    }
-  ],
-  "vars": {
-    "REGISTRY_GITHUB_REPO": "BenLad17/keycloak-extension-registry",
-    "REGISTRY_URL": "https://kcer.dev"
-  },
-  "observability": {
-    "logs": {
-      "enabled": true,
-      "invocation_logs": true
-    }
-  }
+	"$schema": "./node_modules/wrangler/config-schema.json",
+	"name": "keycloak-extension-registry",
+	"compatibility_date": "2026-02-13",
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
+	"main": ".svelte-kit/cloudflare/_worker.js",
+	"routes": [
+		{
+			"pattern": "kcer.dev",
+			"custom_domain": true
+		}
+	],
+	"assets": {
+		"binding": "ASSETS",
+		"directory": ".svelte-kit/cloudflare"
+	},
+	"workers_dev": false,
+	"preview_urls": true,
+	"kv_namespaces": [
+		{
+			"binding": "SESSIONS",
+			"id": "49f5c952d1b44de9b461d870f6202588"
+		},
+		{
+			"binding": "GITHUB_USERS",
+			"id": "e903079341674997b5feac147e17d29c"
+		}
+	],
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "keycloak-extension-registry",
+			"database_id": "fdd3eb6b-43c2-4fcf-b222-7deb971ad4ac",
+			"migrations_dir": "./migrations"
+		}
+	],
+	"vars": {
+		"REGISTRY_GITHUB_REPO": "BenLad17/keycloak-extension-registry",
+		"REGISTRY_URL": "https://kcer.dev"
+	},
+	"observability": {
+		"logs": {
+			"enabled": true,
+			"invocation_logs": true
+		}
+	}
 }
