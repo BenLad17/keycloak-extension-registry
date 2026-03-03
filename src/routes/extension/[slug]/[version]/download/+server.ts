@@ -1,6 +1,7 @@
 import { type RequestHandler } from '@sveltejs/kit';
 import { extension, extensionVersion, getDatabase } from '$lib/server/db';
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
+import { incrementDownloadCount } from '$lib/server/extensions/downloads';
 
 export const GET: RequestHandler = async ({ platform, params }) => {
 	const slug = params.slug;
@@ -11,48 +12,28 @@ export const GET: RequestHandler = async ({ platform, params }) => {
 
 	const db = getDatabase(platform);
 
-	const [downloadExtension] = await db
-		.select()
+	const [ext] = await db
+		.select({ id: extension.id })
 		.from(extension)
 		.where(eq(extension.slug, slug))
 		.limit(1);
-	if (!downloadExtension) {
+	if (!ext) {
 		return new Response('Extension not found', { status: 404 });
 	}
 
-	const [downloadVersion] = await db
-		.select()
+	const [ver] = await db
+		.select({ downloadUrl: extensionVersion.downloadUrl })
 		.from(extensionVersion)
-		.where(
-			and(
-				eq(extensionVersion.version, version),
-				eq(extensionVersion.extensionId, downloadExtension.id)
-			)
-		)
+		.where(and(eq(extensionVersion.extensionId, ext.id), eq(extensionVersion.version, version)))
 		.limit(1);
-	if (!downloadVersion) {
+	if (!ver) {
 		return new Response('Version not found', { status: 404 });
 	}
 
-	const response = await fetch(downloadVersion.downloadUrl, {
-		cf: {
-			cache: 'no-store'
-		}
-	});
+	const response = await fetch(ver.downloadUrl, { cf: { cache: 'no-store' } });
 
 	if (response.ok) {
-		platform?.ctx.waitUntil(
-			Promise.all([
-				db
-					.update(extensionVersion)
-					.set({ downloadCount: sql`${extensionVersion.downloadCount} + 1` })
-					.where(eq(extensionVersion.id, downloadVersion.id)),
-				db
-					.update(extension)
-					.set({ downloadCount: sql`${extension.downloadCount} + 1` })
-					.where(eq(extension.id, downloadExtension.id))
-			])
-		);
+		platform?.ctx.waitUntil(incrementDownloadCount(slug, version, platform));
 	}
 
 	return response;

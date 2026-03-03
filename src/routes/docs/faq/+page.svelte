@@ -1,14 +1,3 @@
-<script lang="ts">
-	import CodeBlock from '$lib/components/CodeBlock.svelte';
-
-	const multiProviderExample = `providers:
-  - name: keycloak-home-idp-discovery
-    version: v26.1.1
-  - name: my-other-extension
-    version: v1.0.0
-    sha256: "abc123..."`;
-</script>
-
 <svelte:head>
 	<title>FAQ - Keycloak Extension Registry Docs</title>
 </svelte:head>
@@ -17,35 +6,33 @@
 	<div>
 		<h1 class="mb-3 text-2xl font-semibold tracking-tight">FAQ</h1>
 		<p class="text-base leading-relaxed text-text-secondary">
-			Common questions about the registry and the fetcher tool.
+			Common questions about the registry and the Dockerfile pattern.
 		</p>
 	</div>
 
 	<div class="space-y-4">
 		<div class="rounded-xl border border-border bg-surface/40 px-5 py-4">
-			<p class="mb-1.5 font-medium text-text">Do I need the SHA-256?</p>
+			<p class="mb-1.5 font-medium text-text">Where does the provider image come from?</p>
 			<p class="text-sm text-text-secondary">
-				No, it is optional. But it is strongly recommended for production builds. Without it the
-				fetcher downloads whatever the registry returns. With it, the build fails if the artifact
-				has changed, catching both accidental and malicious modifications before they reach your
-				image.
+				When the registry syncs a new extension version it automatically builds a minimal OCI image
+				containing only the JAR and publishes it. This happens within minutes of a new release
+				being detected. The image is public and free to pull.
 			</p>
 		</div>
 
 		<div class="rounded-xl border border-border bg-surface/40 px-5 py-4">
-			<p class="mb-1.5 font-medium text-text">Can I list multiple extensions?</p>
-			<p class="mb-3 text-sm text-text-secondary">
-				Yes. Add as many entries as you need under <code class="font-mono text-xs text-text"
-					>providers</code
-				>. The fetcher processes them all in one run:
+			<p class="mb-1.5 font-medium text-text">Can I use multiple extensions?</p>
+			<p class="text-sm text-text-secondary">
+				Yes. Add one
+				<code class="rounded bg-bg px-1 py-0.5 font-mono text-xs text-text">COPY --from=</code>
+				line per extension before the
+				<code class="rounded bg-bg px-1 py-0.5 font-mono text-xs text-text">RUN kc.sh build</code>
+				step. The pattern is identical for any number of extensions.
 			</p>
-			<CodeBlock code={multiProviderExample} lang="yaml" />
 		</div>
 
 		<div class="rounded-xl border border-border bg-surface/40 px-5 py-4">
-			<p class="mb-1.5 font-medium text-text">
-				Why pin to an exact version instead of using "latest"?
-			</p>
+			<p class="mb-1.5 font-medium text-text">Why pin to an exact version instead of "latest"?</p>
 			<p class="text-sm text-text-secondary">
 				Reproducibility. A Docker build from three months ago should produce the same image as one
 				run today. A "latest" shorthand would silently update extensions between builds, making
@@ -54,44 +41,37 @@
 		</div>
 
 		<div class="rounded-xl border border-border bg-surface/40 px-5 py-4">
-			<p class="mb-1.5 font-medium text-text">Where do the JARs end up?</p>
+			<p class="mb-1.5 font-medium text-text">What does <code class="font-mono text-xs">kc.sh build</code> do?</p>
 			<p class="text-sm text-text-secondary">
-				The fetcher writes each JAR to its working directory as
-				<code class="rounded bg-bg px-1 py-0.5 font-mono text-xs text-text">{'{name}'}.jar</code
-				>. In the example Dockerfile,
-				<code class="font-mono text-xs text-text">WORKDIR /work</code>
-				is set so JARs land in <code class="font-mono text-xs text-text">/work/*.jar</code>,
-				then get copied into the builder stage.
+				It augments Keycloak's classpath for the installed providers using Quarkus's build-time
+				optimisation. The result is a faster, leaner startup. It is required if you start Keycloak
+				with
+				<code class="rounded bg-bg px-1 py-0.5 font-mono text-xs text-text">--optimized</code>,
+				which is the recommended production mode.
 			</p>
 		</div>
 
 		<div class="rounded-xl border border-border bg-surface/40 px-5 py-4">
-			<p class="mb-1.5 font-medium text-text">
-				Which Keycloak version does an extension support?
-			</p>
+			<p class="mb-1.5 font-medium text-text">Which Keycloak version should I use?</p>
 			<p class="text-sm text-text-secondary">
-				Each version entry in the Versions tab shows a compatibility badge. Pick a release that
-				matches the Keycloak version in your base image. The Installation card always pre-selects
-				the latest available release.
+				You choose. Each extension page shows which Keycloak version it was built against, but
+				extensions are often compatible with newer versions too. Check the extension's changelog and
+				GitHub issues if you are unsure. The registry does not dictate your Keycloak base image.
 			</p>
 		</div>
 
 		<div class="rounded-xl border border-border bg-surface/40 px-5 py-4">
-			<p class="mb-1.5 font-medium text-text">Does the fetcher run at container startup?</p>
+			<p class="mb-1.5 font-medium text-text">Does anything run at container startup?</p>
 			<p class="text-sm text-text-secondary">
-				No. It runs only during <code class="font-mono text-xs text-text">docker build</code>
-				as a multi-stage build step. Your running container has no dependency on the registry or the fetcher
-				tool; the JARs are baked in at build time.
+				No. Extensions are baked into the image at build time. Your running container has no
+				dependency on the registry or any external service.
 			</p>
 		</div>
 	</div>
 
 	<div class="flex items-center justify-start border-t border-border pt-6">
-		<a
-			href="/docs/configuration"
-			class="text-sm text-brand no-underline hover:text-brand/80"
+		<a href="/docs/configuration" class="text-sm text-brand no-underline hover:text-brand/80"
+			>← Dockerfile reference</a
 		>
-			← Configuration
-		</a>
 	</div>
 </div>

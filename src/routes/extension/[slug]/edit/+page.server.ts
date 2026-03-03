@@ -5,9 +5,16 @@ import { eq } from 'drizzle-orm';
 import { requireAuth, hasRepoWriteAccess, isRegistryAdmin } from '$lib/server/security/auth';
 import { syncExtension } from '$lib/server/extensions/sync';
 import { ExtensionCategoryLabel } from '$lib/common/extension-category';
+import { z } from 'zod';
 
-const VALID_CATEGORIES = new Set(Object.keys(ExtensionCategoryLabel));
-const VALID_STATUSES = new Set(['active', 'archived']);
+const validCategories = Object.keys(ExtensionCategoryLabel) as [string, ...string[]];
+
+const EditSchema = z.object({
+	name: z.string().min(1, 'Name is required.'),
+	description: z.string().transform((s) => s || null),
+	category: z.enum(validCategories, { error: 'Invalid category.' }),
+	status: z.enum(['active', 'archived'], { error: 'Invalid status.' })
+});
 
 async function canEdit(
 	slug: string,
@@ -52,22 +59,16 @@ export const actions: Actions = {
 		if (!allowed) throw error(403);
 
 		const formData = await request.formData();
-		const name = (formData.get('name') as string)?.trim();
-		const description = (formData.get('description') as string)?.trim() || null;
-		const category = formData.get('category') as string;
-		const status = formData.get('status') as string;
-
-		if (!name || !category) {
-			return fail(400, { error: 'Name and category are required.' });
+		const raw: Record<string, unknown> = {};
+		for (const [key, value] of formData.entries()) {
+			raw[key] = typeof value === 'string' ? value.trim() : value;
 		}
 
-		if (!VALID_CATEGORIES.has(category)) {
-			return fail(400, { error: 'Invalid category.' });
+		const parsed = EditSchema.safeParse(raw);
+		if (!parsed.success) {
+			return fail(400, { error: parsed.error.issues[0].message });
 		}
-
-		if (!VALID_STATUSES.has(status)) {
-			return fail(400, { error: 'Invalid status.' });
-		}
+		const { name, description, category, status } = parsed.data;
 
 		const db = getDatabase(platform);
 		await db

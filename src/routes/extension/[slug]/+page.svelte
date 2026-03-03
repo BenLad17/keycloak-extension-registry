@@ -26,6 +26,7 @@
 	const versions = $derived(data.versions);
 	const githubSource = $derived(data.githubSource);
 	const canManage = $derived(data.canManage);
+	const providerRegistryBase = $derived(data.providerRegistryBase);
 	const latestVersion = $derived(versions[0] ?? null);
 	const justPublished = $derived(page.url.searchParams.get('published') === 'true');
 	const firstVersion = $derived(versions[versions.length - 1] ?? null);
@@ -171,6 +172,7 @@
 				{githubSource}
 				{maxDownloads}
 				{readmeHtml}
+				{providerRegistryBase}
 			/>
 		{:else if activeTab === 'versions'}
 			<VersionsTab {versions} {latestVersion} {maxDownloads} extensionSlug={ext.slug} />

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { untrack } from 'svelte';
 	import { ExtensionCategoryLabel } from '$lib/common/extension-category';
 	import Badge from '$lib/components/Badge.svelte';
 	import { Search, Download } from 'lucide-svelte';
@@ -7,8 +8,12 @@
 
 	let { data } = $props();
 
-	let searchQuery = $state(data.query);
-	let selectedCategory = $state(data.category);
+	let searchQuery = $state(untrack(() => data.query));
+	let selectedCategory = $state(untrack(() => data.category));
+
+	// Keep local state in sync when data changes (e.g. browser back/forward).
+	$effect(() => { searchQuery = data.query; });
+	$effect(() => { selectedCategory = data.category; });
 </script>
 
 <svelte:head>

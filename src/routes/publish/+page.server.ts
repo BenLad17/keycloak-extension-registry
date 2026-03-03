@@ -13,6 +13,40 @@ import { eq } from 'drizzle-orm';
 import { Octokit } from 'octokit';
 import { requireAuth, hasRepoWriteAccess } from '$lib/server/security/auth';
 import { syncExtension } from '$lib/server/extensions/sync';
+import { ExtensionCategoryLabel } from '$lib/common/extension-category';
+import { z } from 'zod';
+
+const validCategories = Object.keys(ExtensionCategoryLabel) as [string, ...string[]];
+
+const PublishSchema = z
+	.object({
+		category: z.enum(validCategories, { error: 'Invalid category.' }),
+		githubOwner: z.string().min(1, 'GitHub owner is required.'),
+		githubRepo: z.string().min(1, 'GitHub repository is required.'),
+		useGithubReleases: z.literal('on').optional(),
+		useMavenCentral: z.literal('on').optional(),
+		artifactOwner: z.string().default(''),
+		artifactRepo: z.string().default(''),
+		mavenGroupId: z.string().default(''),
+		mavenArtifactId: z.string().default('')
+	})
+	.superRefine((data, ctx) => {
+		if (!data.useGithubReleases && !data.useMavenCentral) {
+			ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'At least one artifact source is required.' });
+		}
+		if (data.useGithubReleases) {
+			if (!data.artifactOwner)
+				ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['artifactOwner'], message: 'GitHub artifact owner is required.' });
+			if (!data.artifactRepo)
+				ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['artifactRepo'], message: 'GitHub artifact repo is required.' });
+		}
+		if (data.useMavenCentral) {
+			if (!data.mavenGroupId)
+				ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['mavenGroupId'], message: 'Maven groupId is required.' });
+			if (!data.mavenArtifactId)
+				ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['mavenArtifactId'], message: 'Maven artifactId is required.' });
+		}
+	});
 
 function toDisplayName(repoName: string): string {
 	return repoName.replace(/[-_]+/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
@@ -90,29 +124,26 @@ export const actions: Actions = {
 		}
 
 		const formData = await request.formData();
+		const raw: Record<string, unknown> = {};
+		for (const [key, value] of formData.entries()) {
+			raw[key] = typeof value === 'string' ? value.trim() : value;
+		}
 
-		const category = formData.get('category') as string;
-		const githubOwner = (formData.get('githubOwner') as string)?.trim();
-		const githubRepo = (formData.get('githubRepo') as string)?.trim();
-		const useGithubReleases = formData.get('useGithubReleases') === 'on';
-		const useMavenCentral = formData.get('useMavenCentral') === 'on';
-		const artifactOwner = (formData.get('artifactOwner') as string)?.trim();
-		const artifactRepo = (formData.get('artifactRepo') as string)?.trim();
-		const mavenGroupId = (formData.get('mavenGroupId') as string)?.trim();
-		const mavenArtifactId = (formData.get('mavenArtifactId') as string)?.trim();
-
-		if (!category || !githubOwner || !githubRepo) {
-			return fail(400, { error: 'Missing required fields.' });
+		const parsed = PublishSchema.safeParse(raw);
+		if (!parsed.success) {
+			return fail(400, { error: parsed.error.issues[0].message });
 		}
-		if (!useGithubReleases && !useMavenCentral) {
-			return fail(400, { error: 'At least one artifact source is required.' });
-		}
-		if (useGithubReleases && (!artifactOwner || !artifactRepo)) {
-			return fail(400, { error: 'GitHub artifact owner and repo are required.' });
-		}
-		if (useMavenCentral && (!mavenGroupId || !mavenArtifactId)) {
-			return fail(400, { error: 'Maven groupId and artifactId are required.' });
-		}
+		const {
+			category,
+			githubOwner,
+			githubRepo,
+			useGithubReleases,
+			useMavenCentral,
+			artifactOwner,
+			artifactRepo,
+			mavenGroupId,
+			mavenArtifactId
+		} = parsed.data;
 
 		const octokit = new Octokit({ auth: token });
 

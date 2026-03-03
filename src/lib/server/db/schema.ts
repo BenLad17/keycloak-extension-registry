@@ -8,7 +8,7 @@ import {
 	timestamp,
 	uniqueIndex
 } from 'drizzle-orm/pg-core';
-import { ExtensionCategoryLabel } from '$lib/common/extension-category';
+import { ExtensionCategoryLabel } from '../../common/extension-category';
 
 export const user = pgTable('user', {
 	id: integer('id').generatedAlwaysAsIdentity().primaryKey(),
@@ -89,7 +89,8 @@ export const extensionVersion = pgTable(
 		deprecated: boolean('deprecated').default(false),
 		downloadCount: integer('download_count').default(0),
 		publishedAt: timestamp('published_at').defaultNow().notNull(),
-		digest: text('digest').notNull()
+		digest: text('digest').notNull(),
+		providerImageBuilt: boolean('provider_image_built').notNull().default(false)
 	},
 	(table) => [
 		uniqueIndex('version_idx').on(table.extensionId, table.version),
@@ -130,4 +131,4 @@ export type NewExtensionVersionFile = typeof extensionVersionFile.$inferInsert;
 export type ExtensionCategory = (typeof extensionCategories)[number];
 
 // Re-exported from the common file for callers that already import from $lib/server/db.
-export { ExtensionCategoryLabel } from '$lib/common/extension-category';
+export { ExtensionCategoryLabel } from '../../common/extension-category';

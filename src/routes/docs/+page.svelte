@@ -1,11 +1,17 @@
 <script lang="ts">
+	import { page } from '$app/state';
 	import CodeBlock from '$lib/components/CodeBlock.svelte';
 
-	const providersYamlExample = `registry_url: https://registry.example.com
-providers:
-  - name: keycloak-home-idp-discovery
-    version: v26.1.1
-    sha256: "b6744e..."`;
+	const base = $derived(page.data.providerRegistryBase);
+
+	const dockerfileExample = $derived(`FROM quay.io/keycloak/keycloak AS builder
+COPY --from=${base}/keycloak-home-idp-discovery:v26.1.1 /providers/ /opt/keycloak/providers/
+RUN /opt/keycloak/bin/kc.sh build
+
+FROM quay.io/keycloak/keycloak
+COPY --from=builder /opt/keycloak/ /opt/keycloak/
+ENTRYPOINT ["/opt/keycloak/bin/kc.sh"]
+CMD ["start", "--optimized"]`);
 </script>
 
 <svelte:head>
@@ -17,85 +23,55 @@ providers:
 		<h1 class="mb-4 text-2xl font-semibold tracking-tight">How it works</h1>
 		<div class="space-y-3 text-base leading-relaxed text-text-secondary">
 			<p>
-				Keycloak extensions (called <em>providers</em>) are JAR files you drop into
+				Keycloak extensions (called <em>providers</em>) are JAR files placed in
 				<code class="rounded bg-surface px-1.5 py-0.5 font-mono text-xs text-text"
 					>/opt/keycloak/providers/</code
 				>
 				before running
 				<code class="rounded bg-surface px-1.5 py-0.5 font-mono text-xs text-text"
 					>kc.sh build</code
-				>. Doing this manually across environments is fragile: you have to track download URLs,
-				remember which versions you used, and trust that the file has not changed.
+				>. Tracking download URLs, versions, and checksums manually across environments is error-prone.
 			</p>
 			<p>
-				This registry, together with a small companion tool, makes the whole process declarative.
-				You describe what you want in a config file. The tool fetches it, verifies it, and places it
-				where Keycloak expects it, reproducibly, in every environment, from a single source of
-				truth.
+				This registry solves that by publishing a minimal container image for every extension version
+				it indexes. You reference it directly in your Dockerfile — no extra tools, no config files.
 			</p>
 		</div>
 	</div>
 
 	<section>
-		<h2 class="mb-6 text-xl font-semibold text-text">The three pieces</h2>
+		<h2 class="mb-6 text-xl font-semibold text-text">The two pieces</h2>
 		<div class="space-y-4">
 			<div class="rounded-xl border border-border bg-surface/40 px-6 py-5">
 				<div class="mb-3 flex items-center gap-3">
-					<span
-						class="rounded-full bg-brand/20 px-2.5 py-0.5 font-mono text-xs text-brand"
-						>1</span
-					>
+					<span class="rounded-full bg-brand/20 px-2.5 py-0.5 font-mono text-xs text-brand">1</span>
 					<div>
 						<h3 class="font-semibold text-text">The Registry</h3>
 						<p class="text-xs text-text-secondary">this site</p>
 					</div>
 				</div>
 				<p class="text-sm leading-relaxed text-text-secondary">
-					A searchable catalog of community Keycloak extensions. Each extension has versioned
-					releases with download links, Keycloak compatibility info, and SHA-256 checksums. Browse
-					it to discover extensions and to grab the exact values you need for your config.
+					Discovers and indexes community Keycloak extensions from GitHub Releases and Maven Central.
+					For every version it finds, it publishes a minimal OCI image containing just the JAR,
+					verified against its SHA-256 digest.
 				</p>
 			</div>
 
 			<div class="rounded-xl border border-border bg-surface/40 px-6 py-5">
 				<div class="mb-3 flex items-center gap-3">
-					<span
-						class="rounded-full bg-brand/20 px-2.5 py-0.5 font-mono text-xs text-brand"
-						>2</span
-					>
+					<span class="rounded-full bg-brand/20 px-2.5 py-0.5 font-mono text-xs text-brand">2</span>
 					<div>
-						<h3 class="font-semibold text-text"><code class="font-mono">providers.yaml</code></h3>
-						<p class="text-xs text-text-secondary">your extension manifest</p>
+						<h3 class="font-semibold text-text">Your Dockerfile</h3>
+						<p class="text-xs text-text-secondary">one COPY line per extension</p>
 					</div>
 				</div>
 				<p class="mb-4 text-sm leading-relaxed text-text-secondary">
-					A YAML file you keep alongside your Dockerfile declaring which extensions you need and at
-					what versions. Plain text, version-controlled with your infrastructure code, readable by
-					anyone on your team without knowing the download internals.
+					Reference the provider image directly with
+					<code class="rounded bg-bg px-1 py-0.5 font-mono text-xs text-text">COPY --from=</code>.
+					Docker pulls the image at build time and copies the JAR into your Keycloak builder stage.
+					Adding another extension is one more line — the pattern never changes.
 				</p>
-				<CodeBlock code={providersYamlExample} lang="yaml" />
-			</div>
-
-			<div class="rounded-xl border border-border bg-surface/40 px-6 py-5">
-				<div class="mb-3 flex items-center gap-3">
-					<span
-						class="rounded-full bg-brand/20 px-2.5 py-0.5 font-mono text-xs text-brand"
-						>3</span
-					>
-					<div>
-						<h3 class="font-semibold text-text">The fetcher tool</h3>
-						<p class="text-xs text-text-secondary"><code class="font-mono">ker-provider-fetcher</code></p>
-					</div>
-				</div>
-				<p class="text-sm leading-relaxed text-text-secondary">
-					A minimal Docker image that reads your
-					<code class="rounded bg-bg px-1 py-0.5 font-mono text-xs text-text"
-						>providers.yaml</code
-					>, downloads each listed JAR from the registry, verifies it against the SHA-256 checksum
-					if provided, and writes the files to the working directory. It runs as a build stage;
-					nothing is installed on your machine or in your final image. The output is just JARs,
-					ready to be copied into Keycloak.
-				</p>
+				<CodeBlock code={dockerfileExample} lang="dockerfile" />
 			</div>
 		</div>
 	</section>

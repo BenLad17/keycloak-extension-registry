@@ -16,9 +16,15 @@ export interface VersionDownloadCount {
 	count: number;
 }
 
+export interface NewVersion {
+	version: string;
+	downloadUrl: string;
+	digest: string;
+}
+
 export interface ArtifactSourceAdapter {
-	/** Discovers new versions and syncs all files. Owns all DB writes. */
-	discoverVersions(extensionId: number, platform: App.Platform): Promise<void>;
+	/** Discovers new versions and syncs all files. Owns all DB writes. Returns newly inserted versions. */
+	discoverVersions(extensionId: number, platform: App.Platform): Promise<NewVersion[]>;
 	/**
 	 * Fetches the current download count for each known version.
 	 * Returns raw counts only - persistence (including future history snapshots)

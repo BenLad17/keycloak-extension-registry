@@ -4,7 +4,7 @@ const MAX_CONTENT_BYTES = 100_000;
 
 export const MAX_JAR_BYTES = 50 * 1024 * 1024; // 50 MB
 
-export async function sha256Hex(bytes: Uint8Array): Promise<string> {
+export async function sha256Hex(bytes: Uint8Array<ArrayBuffer>): Promise<string> {
 	const buf = await crypto.subtle.digest('SHA-256', bytes);
 	return Array.from(new Uint8Array(buf))
 		.map((b) => b.toString(16).padStart(2, '0'))

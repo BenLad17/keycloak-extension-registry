@@ -8,12 +8,12 @@ import { extractResourceFiles, extractPomXml, MAX_JAR_BYTES, sha256Hex } from '$
 import { extractSourceFiles } from '$lib/server/extensions/source';
 import { parseKeycloakVersion } from '$lib/server/extensions/pom';
 import { and, eq } from 'drizzle-orm';
-import type { ArtifactSourceAdapter } from '../types';
+import type { ArtifactSourceAdapter, NewVersion } from '../types';
 
 const MAVEN_BASE = 'https://repo1.maven.org/maven2';
 
 export class MavenCentralArtifactAdapter implements ArtifactSourceAdapter {
-	async discoverVersions(extensionId: number, platform: App.Platform): Promise<void> {
+	async discoverVersions(extensionId: number, platform: App.Platform): Promise<NewVersion[]> {
 		const db = getDatabase(platform);
 
 		const [source] = await db
@@ -37,6 +37,7 @@ export class MavenCentralArtifactAdapter implements ArtifactSourceAdapter {
 		}
 
 		const versions = parseVersions(await metadataResponse.text());
+		const newVersions: NewVersion[] = [];
 
 		for (const version of versions) {
 			const [existing] = await db
@@ -110,6 +111,7 @@ export class MavenCentralArtifactAdapter implements ArtifactSourceAdapter {
 			}
 
 			const digest = await sha256Hex(jarBytes);
+			const downloadUrl = `${base}.jar`;
 
 			console.log(`Found new Maven version ${version} for extension ${extensionId}`);
 
@@ -118,7 +120,7 @@ export class MavenCentralArtifactAdapter implements ArtifactSourceAdapter {
 				.values({
 					extensionId,
 					version,
-					downloadUrl: `${base}.jar`,
+					downloadUrl,
 					downloadSize: jarBytes.byteLength,
 					digest,
 					keycloakVersion,
@@ -133,7 +135,11 @@ export class MavenCentralArtifactAdapter implements ArtifactSourceAdapter {
 						allFiles.map((f) => ({ versionId: inserted.id, path: f.path, content: f.content }))
 					);
 			}
+
+			newVersions.push({ version, downloadUrl, digest });
 		}
+
+		return newVersions;
 	}
 }
 

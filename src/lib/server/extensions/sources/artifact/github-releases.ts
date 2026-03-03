@@ -10,7 +10,7 @@ import { extractResourceFiles, extractPomXml, MAX_JAR_BYTES, sha256Hex } from '$
 import { extractSourceFiles } from '$lib/server/extensions/source';
 import { parseKeycloakVersion } from '$lib/server/extensions/pom';
 import { and, eq } from 'drizzle-orm';
-import type { ArtifactSourceAdapter, VersionDownloadCount } from '../types';
+import type { ArtifactSourceAdapter, NewVersion, VersionDownloadCount } from '../types';
 
 export class GithubReleasesArtifactAdapter implements ArtifactSourceAdapter {
 	constructor(private readonly githubToken?: string) {}
@@ -21,7 +21,7 @@ export class GithubReleasesArtifactAdapter implements ArtifactSourceAdapter {
 			: getOctokitInstance(platform);
 	}
 
-	async discoverVersions(extensionId: number, platform: App.Platform): Promise<void> {
+	async discoverVersions(extensionId: number, platform: App.Platform): Promise<NewVersion[]> {
 		const db = getDatabase(platform);
 
 		const [source] = await db
@@ -42,6 +42,8 @@ export class GithubReleasesArtifactAdapter implements ArtifactSourceAdapter {
 			repo: source.repo,
 			per_page: 100
 		});
+
+		const newVersions: NewVersion[] = [];
 
 		for (const release of releases) {
 			const [existing] = await db
@@ -141,7 +143,11 @@ export class GithubReleasesArtifactAdapter implements ArtifactSourceAdapter {
 					allFiles.map((f) => ({ versionId: inserted.id, path: f.path, content: f.content }))
 				);
 			}
+
+			newVersions.push({ version: release.tag_name, downloadUrl: asset.browser_download_url, digest });
 		}
+
+		return newVersions;
 	}
 
 	async fetchDownloadCounts(
