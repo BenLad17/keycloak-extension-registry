@@ -11,8 +11,7 @@
 	},
 
 	"vars": {
-		// Set to the deployed URL of the main worker in production
-		"REGISTRY_URL": "http://localhost:8787"
+		"REGISTRY_URL": "https://kcer.dev"
 	}
 
 	// Secrets (wrangler secret put --config wrangler-cron.jsonc <NAME>):
