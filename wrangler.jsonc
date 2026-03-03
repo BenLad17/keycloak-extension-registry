@@ -3,6 +3,12 @@
 	"name": "keycloak-extension-registry",
 	"compatibility_date": "2026-02-13",
 	"main": ".svelte-kit/cloudflare/_worker.js",
+	"routes": [
+		{
+			"pattern": "kcer.dev",
+			"custom_domain": true
+		}
+	],
 	"assets": {
 		"binding": "ASSETS",
 		"directory": ".svelte-kit/cloudflare"
@@ -10,37 +16,25 @@
 	"workers_dev": false,
 	"preview_urls": true,
 	"kv_namespaces": [
-		// caching (GitHub profiles, etc.)
-		{
-			"binding": "CACHE",
-			"id": "cache"
-		},
-		// sessions
 		{
 			"binding": "SESSIONS",
-			"id": "sessions"
+			"id": "49f5c952d1b44de9b461d870f6202588"
 		},
-		// GitHub users
 		{
 			"binding": "GITHUB_USERS",
-			"id": "github_users"
+			"id": "e903079341674997b5feac147e17d29c"
 		}
 	],
-	// Hyperdrive for Postgres connection pooling
-	// Create with: wrangler hyperdrive create keycloak-registry-db --connection-string="postgres://..."
 	"hyperdrive": [
 		{
 			"binding": "HYPERDRIVE",
-			"id": "your-hyperdrive-id",
+			"id": "03cd63f3f01e47518d6b9c1067ffe436",
 			"localConnectionString": "postgres://root:mysecretpassword@localhost:5432/local"
 		}
 	],
-
-	// Set to the GitHub repo of this registry (owner/repo) to grant repo admins edit access to all extensions
 	"vars": {
 		"REGISTRY_GITHUB_REPO": "BenLad17/keycloak-extension-registry"
 	}
-
 	// Secrets (don't commit these, use wrangler secret put):
 	// - GITHUB_CLIENT_ID
 	// - GITHUB_CLIENT_SECRET
