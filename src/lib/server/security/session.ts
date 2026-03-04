@@ -9,6 +9,7 @@ export interface SessionData {
 	id: string;
 	userId: number;
 	githubToken?: string;
+	githubLogin?: string;
 	createdAt: number;
 	expiresAt: number;
 }
@@ -17,7 +18,8 @@ export async function createSession(
 	userId: number,
 	platform: App.Platform,
 	cookies: Cookies,
-	githubToken?: string
+	githubToken?: string,
+	githubLogin?: string
 ): Promise<void> {
 	const sessionId = crypto.randomUUID();
 	const timestampEpochSeconds = epochSecondsNow();
@@ -25,6 +27,7 @@ export async function createSession(
 		userId: userId,
 		id: sessionId,
 		githubToken,
+		githubLogin,
 		createdAt: timestampEpochSeconds,
 		expiresAt: timestampEpochSeconds + SESSION_TTL_SECONDS
 	} as SessionData;

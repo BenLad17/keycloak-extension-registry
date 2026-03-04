@@ -6,7 +6,6 @@ import { Octokit } from 'octokit';
 import { getEnv } from '$lib/server/env';
 import { eq } from 'drizzle-orm';
 import { createSession } from '$lib/server/security/session';
-import { getCachedGitHubUser } from '$lib/server/github';
 
 
 export async function getAuthenticatedUser(
@@ -112,7 +111,7 @@ export async function processOAuthCallback(url: URL, cookies: Cookies, platform:
 		[localUser] = await db.insert(user).values({ githubId: githubUser.id }).returning();
 	}
 
-	await createSession(localUser.id, platform!, cookies, accessToken);
+	await createSession(localUser.id, platform!, cookies, accessToken, githubUser.login);
 
 	redirect(301, redirectTo);
 }
@@ -177,20 +176,11 @@ export async function isRegistryAdmin(
 	locals: App.Locals,
 	platform: App.Platform
 ): Promise<boolean> {
-	if (!locals.session) return false;
+	if (!locals.session?.githubLogin) return false;
 	const registryRepo = getEnv(platform).REGISTRY_GITHUB_REPO;
 	if (!registryRepo) return false;
 	const [repoOwner] = registryRepo.split('/');
 	if (!repoOwner) return false;
 
-	const db = getDatabase(platform);
-	const [u] = await db
-		.select({ githubId: user.githubId })
-		.from(user)
-		.where(eq(user.id, locals.session.userId))
-		.limit(1);
-	if (!u) return false;
-
-	const githubUser = await getCachedGitHubUser(u.githubId, platform);
-	return githubUser?.login.toLowerCase() === repoOwner.toLowerCase();
+	return locals.session.githubLogin.toLowerCase() === repoOwner.toLowerCase();
 }
