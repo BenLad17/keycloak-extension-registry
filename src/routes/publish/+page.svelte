@@ -4,18 +4,10 @@
 
 	let { data, form } = $props();
 
-	const repos = $derived(data.repos ?? []);
-
 	let repoSearch = $state('');
 	let selectedFullName = $state('');
 	let githubOwner = $state('');
 	let githubRepo = $state('');
-
-	const filteredRepos = $derived(
-		repoSearch
-			? repos.filter((r) => `${r.owner}/${r.name}`.toLowerCase().includes(repoSearch.toLowerCase()))
-			: repos
-	);
 
 	function selectRepo(owner: string, name: string) {
 		githubOwner = owner;
@@ -87,37 +79,47 @@
 					</button>
 				</div>
 			{:else}
-				<!-- Picker -->
-				{#if repos.length > 0}
-					<div class="flex flex-col gap-2">
-						{#if repos.length > 6}
-							<input
-								type="text"
-								placeholder="Filter repositories…"
-								bind:value={repoSearch}
-								class="rounded-lg border border-border bg-bg px-3 py-2 text-sm text-text placeholder-text-secondary/60 focus:border-brand focus:outline-none"
-							/>
-						{/if}
-						<div class="max-h-56 overflow-y-auto rounded-lg border border-border">
-							{#each filteredRepos as repo}
-								<button
-									type="button"
-									onclick={() => selectRepo(repo.owner, repo.name)}
-									class="flex w-full flex-col gap-0.5 px-4 py-2.5 text-left transition-colors hover:bg-surface-muted"
-								>
-									<span class="font-mono text-sm text-text">{repo.owner}/{repo.name}</span>
-									{#if repo.description}
-										<span class="truncate text-xs text-text-secondary">{repo.description}</span>
-									{/if}
-								</button>
-							{:else}
-								<p class="px-4 py-3 text-sm text-text-secondary/60">No repositories match.</p>
-							{/each}
-						</div>
+				{#await data.repos}
+					<div class="flex items-center gap-2 text-sm text-text-secondary">
+						<svg class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+							<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+							<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8h4z" />
+						</svg>
+						Loading your repositories…
 					</div>
-				{:else}
-					<p class="text-sm text-text-secondary">No repositories with write access found.</p>
-				{/if}
+				{:then repos}
+					{@const filteredRepos = repoSearch ? repos.filter((r) => `${r.owner}/${r.name}`.toLowerCase().includes(repoSearch.toLowerCase())) : repos}
+					{#if repos.length > 0}
+						<div class="flex flex-col gap-2">
+							{#if repos.length > 6}
+								<input
+									type="text"
+									placeholder="Filter repositories…"
+									bind:value={repoSearch}
+									class="rounded-lg border border-border bg-bg px-3 py-2 text-sm text-text placeholder-text-secondary/60 focus:border-brand focus:outline-none"
+								/>
+							{/if}
+							<div class="max-h-56 overflow-y-auto rounded-lg border border-border">
+								{#each filteredRepos as repo}
+									<button
+										type="button"
+										onclick={() => selectRepo(repo.owner, repo.name)}
+										class="flex w-full flex-col gap-0.5 px-4 py-2.5 text-left transition-colors hover:bg-surface-muted"
+									>
+										<span class="font-mono text-sm text-text">{repo.owner}/{repo.name}</span>
+										{#if repo.description}
+											<span class="truncate text-xs text-text-secondary">{repo.description}</span>
+										{/if}
+									</button>
+								{:else}
+									<p class="px-4 py-3 text-sm text-text-secondary/60">No repositories match.</p>
+								{/each}
+							</div>
+						</div>
+					{:else}
+						<p class="text-sm text-text-secondary">No repositories with write access found.</p>
+					{/if}
+				{/await}
 			{/if}
 		</div>
 

@@ -103,33 +103,34 @@ export interface UserRepo {
 	description: string | null;
 }
 
+async function fetchUserRepos(token: string): Promise<UserRepo[]> {
+	try {
+		const octokit = new Octokit({ auth: token });
+		const { data } = await octokit.request('GET /user/repos', {
+			affiliation: 'owner,organization_member',
+			sort: 'updated',
+			per_page: 100
+		});
+		return data
+			.filter((r) => r.permissions?.push)
+			.map((r) => ({
+				owner: r.owner.login,
+				name: r.name,
+				description: r.description ?? null
+			}));
+	} catch {
+		return [];
+	}
+}
+
 export const load: PageServerLoad = async ({ platform, locals, url, cookies }) => {
 	await requireAuth(url, cookies, platform!, locals);
 
 	const token = locals.session!.githubToken;
-	let repos: UserRepo[] = [];
 
-	if (token) {
-		try {
-			const octokit = new Octokit({ auth: token });
-			const { data } = await octokit.request('GET /user/repos', {
-				affiliation: 'owner,organization_member',
-				sort: 'updated',
-				per_page: 100
-			});
-			repos = data
-				.filter((r) => r.permissions?.push)
-				.map((r) => ({
-					owner: r.owner.login,
-					name: r.name,
-					description: r.description ?? null
-				}));
-		} catch {
-			// Non-fatal - fall back to empty list; user can still type manually
-		}
-	}
-
-	return { repos };
+	return {
+		repos: token ? fetchUserRepos(token) : ([] as UserRepo[])
+	};
 };
 
 export const actions: Actions = {
