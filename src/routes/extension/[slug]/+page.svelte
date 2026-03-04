@@ -60,7 +60,7 @@
 	<meta name="twitter:description" content={ext.description ?? `${ext.name} - a community Keycloak extension.`} />
 </svelte:head>
 
-<div class="mx-auto max-w-6xl px-4 py-10">
+<div class="mx-auto max-w-6xl px-4 py-6 sm:py-10">
 	<!-- Top bar: back link + repo link -->
 	<div class="mb-6 flex items-center justify-between gap-3">
 		<a
@@ -150,13 +150,13 @@
 		{#each tabs as tab}
 			<button
 				onclick={() => switchTab(tab.id)}
-				class="flex items-center gap-2 px-5 py-3 text-sm font-medium transition-colors {activeTab ===
+				class="flex items-center gap-1.5 px-3 py-2.5 text-sm font-medium transition-colors sm:gap-2 sm:px-5 sm:py-3 {activeTab ===
 				tab.id
 					? 'border-b-2 border-brand text-text'
 					: 'text-text-secondary hover:text-text'}"
 			>
 				<tab.icon class="h-4 w-4" />
-				{tab.label}
+				<span class="hidden sm:inline">{tab.label}</span>
 			</button>
 		{/each}
 	</div>

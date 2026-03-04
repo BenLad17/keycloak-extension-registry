@@ -51,14 +51,14 @@
 			>
 				<!-- Header row -->
 				<div
-					class="flex flex-wrap items-center gap-x-6 gap-y-3 px-6 py-5 {v.releaseNotes
+					class="flex flex-wrap items-center gap-x-6 gap-y-3 px-4 py-4 sm:px-6 sm:py-5 {v.releaseNotes
 						? 'cursor-pointer select-none'
 						: ''}"
 					onclick={() => v.releaseNotes && (expandedNotesId = isExpanded ? null : v.id)}
 					role={v.releaseNotes ? 'button' : undefined}
 				>
 					<!-- Version + date -->
-					<div class="w-64 shrink-0 space-y-1.5">
+					<div class="min-w-0 flex-1 space-y-1.5">
 						<div class="flex flex-wrap items-center gap-2">
 							<Tag class="h-3.5 w-3.5 shrink-0 text-text-secondary/60" />
 							<span class="font-mono text-sm font-semibold text-text">{v.version}</span>
@@ -72,8 +72,8 @@
 						</div>
 					</div>
 
-					<!-- Download bar + count -->
-					<div class="flex shrink-0 items-center gap-2">
+					<!-- Download bar + count (hidden on mobile) -->
+					<div class="hidden shrink-0 items-center gap-2 sm:flex">
 						<div class="h-1 w-24 overflow-hidden rounded-full bg-bg">
 							<div
 								class="h-1 rounded-full bg-brand/30 transition-all"
@@ -91,7 +91,7 @@
 					</div>
 
 					<!-- Size + download button + chevron -->
-					<div class="ml-auto flex shrink-0 items-center gap-3">
+					<div class="ml-auto flex shrink-0 items-center gap-2 sm:gap-3">
 						<div class="flex items-center gap-1.5 text-xs text-text-secondary/60">
 							<Package class="h-3.5 w-3.5" />
 							{formatSize(v.downloadSize)}
@@ -120,7 +120,7 @@
 				{#if isExpanded && v.releaseNotes}
 					<div
 						transition:slide={{ duration: 220 }}
-						class="border-t border-border bg-bg/50 px-6 py-5"
+						class="border-t border-border bg-bg/50 px-4 py-4 sm:px-6 sm:py-5"
 					>
 						<div class="prose prose-sm max-w-none">
 							{@html renderNotes(v.releaseNotes)}

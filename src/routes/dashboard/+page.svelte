@@ -13,7 +13,7 @@
 </svelte:head>
 
 <div class="mx-auto max-w-5xl py-10">
-	<div class="mb-8 flex items-center justify-between">
+	<div class="mb-8 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
 		<div>
 			<h1 class="text-2xl font-semibold tracking-tight">My Extensions</h1>
 			<p class="mt-1 text-sm text-text-secondary">Extensions you have published to the registry.</p>
@@ -87,17 +87,17 @@
 								{/if}
 							</div>
 						</div>
-						<div class="flex shrink-0 items-center gap-2">
+						<div class="flex shrink-0 flex-col items-stretch gap-2 sm:flex-row sm:items-center">
 							<a
 								href="/extension/{ext.slug}"
-								class="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs text-text-secondary no-underline transition-colors hover:border-border/60 hover:text-text"
+								class="flex items-center justify-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs text-text-secondary no-underline transition-colors hover:border-border/60 hover:text-text"
 							>
 								<ExternalLink class="h-3.5 w-3.5" />
 								View
 							</a>
 							<a
 								href="/extension/{ext.slug}/edit"
-								class="flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs text-text-secondary no-underline transition-colors hover:border-brand/50 hover:text-text"
+								class="flex items-center justify-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs text-text-secondary no-underline transition-colors hover:border-brand/50 hover:text-text"
 							>
 								<Pencil class="h-3.5 w-3.5" />
 								Edit

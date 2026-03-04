@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ChevronRight, FileText, FileCode2, Copy, Check, X } from 'lucide-svelte';
+	import { ChevronRight, FileText, FileCode2, Copy, Check, X, FolderOpen } from 'lucide-svelte';
 	import { highlightByExtension } from '$lib/hljs';
 	import type { ExtensionVersion } from '$lib/server/db';
 
@@ -27,6 +27,7 @@
 	} = $props();
 
 	let codeVersionId = $state<number | null>(null);
+	let showTree = $state(true);
 	const codeVersion = $derived(
 		codeVersionId !== null
 			? (versions.find((v) => v.id === codeVersionId) ?? latestVersion)
@@ -148,7 +149,21 @@
 {:else}
 	<div class="overflow-hidden rounded-xl border border-border bg-surface">
 		<!-- Controls bar -->
-		<div class="flex flex-wrap items-center gap-3 border-b border-border px-5 py-3">
+		<div class="flex flex-wrap items-center gap-2 border-b border-border px-3 py-3 sm:gap-3 sm:px-5">
+			<!-- Mobile tree toggle -->
+			<button
+				onclick={() => (showTree = !showTree)}
+				class="flex items-center gap-1.5 rounded-lg border border-border px-2.5 py-1.5 text-xs text-text-secondary transition-colors hover:bg-surface-muted hover:text-text md:hidden"
+				title={showTree ? 'Hide file tree' : 'Show file tree'}
+			>
+				<FolderOpen class="h-3.5 w-3.5" />
+				{#if !showTree && selectedFile}
+					<span class="max-w-32 truncate font-mono">{selectedFile.path.split('/').pop()}</span>
+				{:else}
+					Files
+				{/if}
+			</button>
+
 			<select
 				class="rounded-lg border border-border bg-bg px-3 py-1.5 font-mono text-sm text-text focus:border-brand focus:outline-none"
 				onchange={(e) =>
@@ -166,7 +181,7 @@
 					type="search"
 					placeholder="Search files…"
 					bind:value={fileSearch}
-					class="w-56 rounded-lg border border-border bg-bg px-3 py-1.5 text-sm text-text placeholder-text-secondary/60 focus:border-brand focus:outline-none"
+					class="w-full flex-1 rounded-lg border border-border bg-bg px-3 py-1.5 text-sm text-text placeholder-text-secondary/60 focus:border-brand focus:outline-none sm:w-56 sm:flex-none"
 				/>
 				<span class="text-xs text-text-secondary/60">
 					{fileSearch ? `${matchCount} of ` : ''}{versionFiles.length} files
@@ -186,9 +201,9 @@
 				No browsable files for this version.
 			</div>
 		{:else}
-			<div class="flex" style="height: 600px">
+			<div class="flex" style="height: clamp(400px, 70vh, 700px)">
 				<!-- File tree -->
-				<div class="w-72 shrink-0 overflow-auto border-r border-border">
+				<div class="{showTree ? 'flex' : 'hidden'} w-64 shrink-0 flex-col overflow-auto border-r border-border sm:w-72 md:flex">
 					{#if activeTree.length === 0 && fileSearch}
 						<p class="px-3 py-4 text-xs text-text-secondary/60">No files match.</p>
 					{:else}

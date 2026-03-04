@@ -13,7 +13,7 @@
 	<title>Edit {ext.name} - Keycloak Extension Registry</title>
 </svelte:head>
 
-<div class="mx-auto max-w-2xl py-12">
+<div class="mx-auto max-w-2xl py-6 sm:py-12">
 	<a
 		href="/extension/{ext.slug}"
 		class="mb-6 inline-flex items-center gap-1.5 text-sm text-text-secondary no-underline transition-colors hover:text-text"
@@ -43,7 +43,7 @@
 	{/if}
 
 	<form method="POST" use:enhance class="flex flex-col gap-6">
-		<div class="rounded-xl border border-border bg-surface p-6">
+		<div class="rounded-xl border border-border bg-surface p-4 sm:p-6">
 			<h2 class="card-title">Details</h2>
 
 			<div class="flex flex-col gap-4">
@@ -113,7 +113,7 @@
 	</form>
 
 	<!-- Sync -->
-	<div class="mt-6 rounded-xl border border-border bg-surface p-6">
+	<div class="mt-6 rounded-xl border border-border bg-surface p-4 sm:p-6">
 		<h2 class="mb-1 text-sm font-semibold text-text">Sync now</h2>
 		<p class="mb-4 text-sm text-text-secondary">
 			Fetch the latest releases, README, and download counts from GitHub and Maven Central.
@@ -129,7 +129,7 @@
 	</div>
 
 	<!-- Danger zone -->
-	<div class="mt-6 rounded-xl border border-danger/20 bg-surface p-6">
+	<div class="mt-6 rounded-xl border border-danger/20 bg-surface p-4 sm:p-6">
 		<h2 class="mb-1 text-sm font-semibold text-danger">Danger zone</h2>
 		<p class="mb-4 text-sm text-text-secondary">
 			Permanently deletes this extension and all its versions and files. This cannot be undone.

@@ -25,7 +25,7 @@
 	<div>
 		{#each versions as v, i}
 			{@const isLatest = v.id === latestVersion?.id}
-			<div class="relative flex gap-6 {i < versions.length - 1 ? 'pb-8' : ''}">
+			<div class="relative flex gap-4 sm:gap-6 {i < versions.length - 1 ? 'pb-6 sm:pb-8' : ''}">
 				<!-- Timeline dot + line -->
 				<div class="flex flex-col items-center">
 					<div

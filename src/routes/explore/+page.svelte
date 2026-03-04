@@ -22,7 +22,7 @@
 
 <div class="mx-auto max-w-5xl">
 	<!-- Search bar -->
-	<div class="mb-8 flex gap-2 pt-2">
+	<div class="mb-8 flex flex-col gap-2 pt-2 sm:flex-row">
 		<div class="relative flex-1">
 			<Search class="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-text-secondary/40" />
 			<input
@@ -36,7 +36,7 @@
 		<select
 			bind:value={selectedCategory}
 			onchange={() => goto(`/explore?q=${searchQuery}&category=${selectedCategory}`)}
-			class="cursor-pointer rounded-lg border border-border bg-surface px-3 py-2.5 text-sm text-text transition-colors focus:border-brand focus:ring-1 focus:ring-brand/20 focus:outline-none"
+			class="w-full cursor-pointer rounded-lg border border-border bg-surface px-3 py-2.5 text-sm text-text transition-colors focus:border-brand focus:ring-1 focus:ring-brand/20 focus:outline-none sm:w-auto"
 		>
 			<option value="">All categories</option>
 			{#each Object.entries(ExtensionCategoryLabel) as [key, label]}
@@ -45,7 +45,7 @@
 		</select>
 		<a
 			href={`/explore?q=${searchQuery}&category=${selectedCategory}`}
-			class="rounded-lg bg-brand px-5 py-2.5 text-sm font-medium text-white no-underline transition-colors hover:bg-brand/85"
+			class="w-full rounded-lg bg-brand px-5 py-2.5 text-center text-sm font-medium text-white no-underline transition-colors hover:bg-brand/85 sm:w-auto"
 		>
 			Search
 		</a>

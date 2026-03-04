@@ -29,7 +29,7 @@
 	let useMavenCentral = $state(false);
 </script>
 
-<div class="mx-auto max-w-2xl py-12">
+<div class="mx-auto max-w-2xl py-6 sm:py-12">
 	<h1 class="mb-2 text-2xl font-semibold">Publish Extension</h1>
 	<p class="mb-8 text-text-secondary">Register a new Keycloak extension in the registry.</p>
 
@@ -47,7 +47,7 @@
 		<input type="hidden" name="githubRepo" value={githubRepo} />
 
 		<!-- Basic info -->
-		<div class="rounded-xl border border-border bg-surface p-6">
+		<div class="rounded-xl border border-border bg-surface p-4 sm:p-6">
 			<h2 class="card-title">Basic Info</h2>
 			<label class="flex flex-col gap-1.5">
 				<span class="text-sm text-text-secondary">Category <span class="text-danger">*</span></span>
@@ -64,7 +64,7 @@
 		</div>
 
 		<!-- Code source repo picker -->
-		<div class="rounded-xl border border-border bg-surface p-6">
+		<div class="rounded-xl border border-border bg-surface p-4 sm:p-6">
 			<h2 class="mb-1 text-sm font-semibold text-text">Code Source</h2>
 			<p class="mb-4 text-sm text-text-secondary">The GitHub repository where the source code lives.</p>
 
@@ -122,7 +122,7 @@
 		</div>
 
 		<!-- Artifact sources -->
-		<div class="rounded-xl border border-border bg-surface p-6">
+		<div class="rounded-xl border border-border bg-surface p-4 sm:p-6">
 			<h2 class="mb-1 text-sm font-semibold text-text">Artifact Sources</h2>
 			<p class="mb-5 text-sm text-text-secondary">
 				Where the compiled JARs are published. Select one or both.
@@ -142,7 +142,7 @@
 					</label>
 
 					{#if useGithubReleases}
-						<div class="ml-6 flex flex-col gap-3">
+						<div class="ml-3 flex flex-col gap-3 sm:ml-6">
 							<label class="flex cursor-pointer items-center gap-2 text-sm text-text-secondary">
 								<input type="checkbox" bind:checked={sameAsCodeSource} class="accent-brand" />
 								Same repository as code source
@@ -152,7 +152,7 @@
 								<input type="hidden" name="artifactOwner" value={githubOwner} />
 								<input type="hidden" name="artifactRepo" value={githubRepo} />
 							{:else}
-								<div class="flex gap-3">
+								<div class="flex flex-col gap-3 sm:flex-row">
 									<label class="flex flex-1 flex-col gap-1.5">
 										<span class="text-sm text-text-secondary"
 											>Owner <span class="text-danger">*</span></span
@@ -196,7 +196,7 @@
 					</label>
 
 					{#if useMavenCentral}
-						<div class="ml-6 flex gap-3">
+						<div class="ml-3 flex flex-col gap-3 sm:ml-6 sm:flex-row">
 							<label class="flex flex-1 flex-col gap-1.5">
 								<span class="text-sm text-text-secondary"
 									>Group ID <span class="text-danger">*</span></span

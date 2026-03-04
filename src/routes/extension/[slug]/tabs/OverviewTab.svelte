@@ -42,12 +42,12 @@
 	}
 </script>
 
-<div class="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_340px]">
+<div class="grid grid-cols-1 gap-4 lg:gap-8 lg:grid-cols-[1fr_340px]">
 	<!-- Left column: README -->
 	<div>
 		{#if readmeHtml}
 			<div
-				class="prose max-w-none rounded-xl border border-border bg-surface p-8"
+				class="prose max-w-none rounded-xl border border-border bg-surface p-4 sm:p-6 md:p-8"
 			>
 				{@html readmeHtml}
 			</div>
@@ -88,23 +88,23 @@
 					<div class="space-y-2.5">
 						{#each visibleDownloadVersions as v}
 							<div class="flex items-center gap-3">
-							<span
-									class="w-20 shrink-0 truncate font-mono text-xs text-text-secondary"
+								<span
+									class="min-w-0 flex-1 truncate font-mono text-xs text-text-secondary"
 									title={v.version}
-							>
-								{v.version}
-							</span>
-								<div class="h-2 flex-1 overflow-hidden rounded-full bg-bg">
+								>
+									{v.version}
+								</span>
+								<div class="h-2 w-16 overflow-hidden rounded-full bg-bg sm:w-24">
 									<div
-											class="h-2 rounded-full bg-brand/60 transition-all"
-											style="width: {maxDownloads > 0
-										? (((v.downloadCount ?? 0) / maxDownloads) * 100).toFixed(1)
-										: 0}%"
+										class="h-2 rounded-full bg-brand/60 transition-all"
+										style="width: {maxDownloads > 0
+											? (((v.downloadCount ?? 0) / maxDownloads) * 100).toFixed(1)
+											: 0}%"
 									></div>
 								</div>
-								<span class="w-10 shrink-0 text-right text-xs text-text-secondary/60">
-								{formatCount(v.downloadCount ?? 0)}
-							</span>
+								<span class="shrink-0 text-right text-xs text-text-secondary/60">
+									{formatCount(v.downloadCount ?? 0)}
+								</span>
 							</div>
 						{/each}
 					</div>

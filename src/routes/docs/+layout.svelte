@@ -12,7 +12,7 @@
 </script>
 
 <div class="flex gap-12">
-	<!-- Sidebar -->
+	<!-- Sidebar (desktop) -->
 	<nav class="hidden w-44 shrink-0 lg:block">
 		<p class="mb-3 text-xs font-semibold tracking-widest text-text-secondary/60 uppercase">Documentation</p>
 		<ul class="space-y-0.5">
@@ -34,6 +34,21 @@
 
 	<!-- Page content -->
 	<div class="max-w-2xl min-w-0 flex-1">
+		<!-- Mobile nav (inline, above content) -->
+		<nav class="mb-6 flex flex-wrap gap-1 lg:hidden">
+			{#each nav as item}
+				<a
+					href={item.href}
+					class="rounded-lg px-3 py-1.5 text-sm no-underline transition-colors {page.url
+						.pathname === item.href
+						? 'bg-brand/15 font-medium text-brand'
+						: 'text-text-secondary hover:bg-surface-muted hover:text-text'}"
+				>
+					{item.label}
+				</a>
+			{/each}
+		</nav>
+
 		{@render children()}
 	</div>
 </div>

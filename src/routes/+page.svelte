@@ -5,11 +5,11 @@
 </script>
 
 <!-- Hero -->
-<section class="mx-auto max-w-5xl pb-16 pt-20">
+<section class="mx-auto max-w-5xl pb-10 pt-10 sm:pb-16 lg:pb-16 lg:pt-20">
 	<p class="mb-5 text-xs font-medium tracking-widest text-text-secondary uppercase">
 		Community · Open Source
 	</p>
-	<h1 class="mb-5 max-w-2xl text-5xl font-semibold tracking-tight text-text" style="line-height: 1.1">
+	<h1 class="mb-5 max-w-2xl text-3xl font-semibold tracking-tight text-text sm:text-4xl lg:text-5xl" style="line-height: 1.1">
 		Community extensions<br />for Keycloak.
 	</h1>
 	<p class="mb-8 max-w-xl text-base leading-relaxed text-text-secondary">
@@ -17,7 +17,7 @@
 		pulled directly into your Docker build, no extra tools required.
 	</p>
 
-	<div class="flex items-center gap-3">
+	<div class="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
 		<a
 			href="/explore"
 			class="inline-flex items-center gap-2 rounded-lg bg-brand px-5 py-2.5 text-sm font-medium text-white no-underline transition-colors hover:bg-brand/85"
@@ -35,7 +35,7 @@
 	</div>
 
 	{#if data.extensionCount > 0}
-		<div class="mt-10 flex items-center gap-8">
+		<div class="mt-10 flex items-center gap-6 sm:gap-8">
 			<div>
 				<p class="text-2xl font-semibold tracking-tight text-text">{data.extensionCount}</p>
 				<p class="text-xs text-text-secondary">Extensions</p>
@@ -52,7 +52,7 @@
 
 <!-- How it works -->
 <section class="mx-auto max-w-5xl pb-20">
-	<div class="grid grid-cols-1 gap-6 sm:grid-cols-3">
+	<div class="grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-3">
 		<div class="rounded-xl border border-border bg-surface p-6">
 			<p class="card-title mb-2">No tooling</p>
 			<p class="text-sm leading-relaxed text-text-secondary">
@@ -76,8 +76,8 @@
 
 <!-- Publish CTA -->
 <section class="mx-auto max-w-5xl pb-20">
-	<div class="rounded-xl border border-border bg-surface px-8 py-8">
-		<div class="flex items-center justify-between gap-8">
+	<div class="rounded-xl border border-border bg-surface px-5 py-5 sm:px-8 sm:py-8">
+		<div class="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-8">
 			<div>
 				<h2 class="mb-1 text-base font-semibold text-text">Building a Keycloak extension?</h2>
 				<p class="text-sm text-text-secondary">
