@@ -1,6 +1,7 @@
 import type { RequestHandler } from '@sveltejs/kit';
 import { getEnv } from '$lib/server/env';
 import { incrementDownloadCount } from '$lib/server/extensions/downloads';
+import { getGhcrToken } from '$lib/server/ghcr';
 
 const handler: RequestHandler = async ({ platform, params, request }) => {
 	const { slug, reference } = params as { slug: string; reference: string };
@@ -12,10 +13,15 @@ const handler: RequestHandler = async ({ platform, params, request }) => {
 		platform?.ctx.waitUntil(incrementDownloadCount(slug, reference, platform));
 	}
 
-	return new Response(null, {
-		status: 307,
-		headers: { Location: `https://ghcr.io/v2/${imagePath}/manifests/${reference}` }
+	const token = await getGhcrToken(imagePath);
+	const upstream = await fetch(`https://ghcr.io/v2/${imagePath}/manifests/${reference}`, {
+		headers: {
+			Accept: request.headers.get('Accept') ?? '*/*',
+			Authorization: `Bearer ${token}`
+		}
 	});
+
+	return new Response(upstream.body, upstream);
 };
 
 export const GET = handler;
