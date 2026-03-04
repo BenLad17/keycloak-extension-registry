@@ -59,6 +59,7 @@ export const githubArtifactSource = sqliteTable('github_artifact_source', {
 	extensionId: integer('extension_id')
 		.primaryKey()
 		.references(() => extension.id, { onDelete: 'cascade' }),
+	repoId: integer('repo_id'),
 	owner: text('owner').notNull(),
 	repo: text('repo').notNull()
 });

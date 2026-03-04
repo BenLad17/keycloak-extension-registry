@@ -1,0 +1,1 @@
+ALTER TABLE `github_artifact_source` ADD `repo_id` integer;

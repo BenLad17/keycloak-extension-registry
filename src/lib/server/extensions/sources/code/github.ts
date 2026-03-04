@@ -19,6 +19,25 @@ export class GithubCodeSourceAdapter implements CodeSourceAdapter {
 
 		const octokit = getOctokitInstance(platform);
 
+		// Resolve current owner/repo via ID to transparently handle renames/transfers.
+		try {
+			const { data } = await octokit.request('GET /repositories/{repository_id}', {
+				repository_id: source.repoId
+			});
+			const currentOwner = data.owner.login;
+			const currentRepo = data.name;
+			if (currentOwner !== source.owner || currentRepo !== source.repo) {
+				await db
+					.update(githubCodeSource)
+					.set({ owner: currentOwner, repo: currentRepo })
+					.where(eq(githubCodeSource.extensionId, extensionId));
+				source.owner = currentOwner;
+				source.repo = currentRepo;
+			}
+		} catch {
+			// Fall through and attempt sync with stored owner/repo.
+		}
+
 		const [repoResponse, readmeResponse] = await Promise.all([
 			octokit.request('GET /repos/{owner}/{repo}', {
 				owner: source.owner,

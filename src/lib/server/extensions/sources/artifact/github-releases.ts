@@ -36,6 +36,27 @@ export class GithubReleasesArtifactAdapter implements ArtifactSourceAdapter {
 
 		const octokit = this.getOctokit(platform);
 
+		// Resolve current owner/repo via ID to transparently handle renames/transfers.
+		if (source.repoId) {
+			try {
+				const { data } = await octokit.request('GET /repositories/{repository_id}', {
+					repository_id: source.repoId
+				});
+				const currentOwner = data.owner.login;
+				const currentRepo = data.name;
+				if (currentOwner !== source.owner || currentRepo !== source.repo) {
+					await db
+						.update(githubArtifactSource)
+						.set({ owner: currentOwner, repo: currentRepo })
+						.where(eq(githubArtifactSource.extensionId, extensionId));
+					source.owner = currentOwner;
+					source.repo = currentRepo;
+				}
+			} catch {
+				// Fall through and attempt sync with stored owner/repo.
+			}
+		}
+
 		// Fetch all releases across all pages (avoids the default 30-item cap).
 		const releases = await octokit.paginate('GET /repos/{owner}/{repo}/releases', {
 			owner: source.owner,
@@ -165,6 +186,27 @@ export class GithubReleasesArtifactAdapter implements ArtifactSourceAdapter {
 
 		if (!source) {
 			throw new Error(`No GitHub artifact source configured for extension ${extensionId}`);
+		}
+
+		// Resolve current owner/repo via ID to transparently handle renames/transfers.
+		if (source.repoId) {
+			try {
+				const { data } = await octokit.request('GET /repositories/{repository_id}', {
+					repository_id: source.repoId
+				});
+				const currentOwner = data.owner.login;
+				const currentRepo = data.name;
+				if (currentOwner !== source.owner || currentRepo !== source.repo) {
+					await db
+						.update(githubArtifactSource)
+						.set({ owner: currentOwner, repo: currentRepo })
+						.where(eq(githubArtifactSource.extensionId, extensionId));
+					source.owner = currentOwner;
+					source.repo = currentRepo;
+				}
+			} catch {
+				// Fall through and attempt sync with stored owner/repo.
+			}
 		}
 
 		// Fetch all releases in one paginated call instead of one call per version.

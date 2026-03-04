@@ -218,8 +218,25 @@ export const actions: Actions = {
 		});
 
 		if (useGithubReleases) {
+			let artifactRepoId: number;
+			if (artifactOwner === githubOwner && artifactRepo === githubRepo) {
+				artifactRepoId = repoData.id;
+			} else {
+				try {
+					const { data } = await octokit.request('GET /repos/{owner}/{repo}', {
+						owner: artifactOwner,
+						repo: artifactRepo
+					});
+					artifactRepoId = data.id;
+				} catch {
+					return fail(400, {
+						error: `GitHub artifact repo ${artifactOwner}/${artifactRepo} not found or inaccessible.`
+					});
+				}
+			}
 			await db.insert(githubArtifactSource).values({
 				extensionId: inserted.id,
+				repoId: artifactRepoId,
 				owner: artifactOwner,
 				repo: artifactRepo
 			});
