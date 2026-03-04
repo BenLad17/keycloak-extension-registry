@@ -22,5 +22,5 @@ export const GET: RequestHandler = async ({ platform, params }) => {
 		headers: { Authorization: `Bearer ${token}` }
 	});
 
-	return new Response(res.body, res);
+	return res;
 };

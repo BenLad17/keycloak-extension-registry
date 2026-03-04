@@ -30,11 +30,7 @@ export const GET: RequestHandler = async ({ platform, params }) => {
 		return new Response('Version not found', { status: 404 });
 	}
 
-	const response = await fetch(ver.downloadUrl, { cf: { cache: 'no-store' } });
+	platform?.ctx.waitUntil(incrementDownloadCount(slug, version, platform));
 
-	if (response.ok) {
-		platform?.ctx.waitUntil(incrementDownloadCount(slug, version, platform));
-	}
-
-	return response;
+	return new Response(null, { status: 302, headers: { Location: ver.downloadUrl } });
 };

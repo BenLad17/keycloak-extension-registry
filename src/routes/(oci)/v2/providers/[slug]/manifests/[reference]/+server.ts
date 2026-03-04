@@ -30,7 +30,7 @@ const handler: RequestHandler = async ({ platform, params, request }) => {
 		}
 	});
 
-	return new Response(upstream.body, upstream);
+	return upstream;
 };
 
 export const GET = handler;

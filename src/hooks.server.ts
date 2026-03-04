@@ -24,8 +24,9 @@ export const handle: Handle = async ({ event, resolve }) => {
 	}
 
 	const response = await resolve(event);
-	response.headers.set('X-Frame-Options', 'DENY');
-	response.headers.set('X-Content-Type-Options', 'nosniff');
-	response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-	return response;
+	const mutable = new Response(response.body, response);
+	mutable.headers.set('X-Frame-Options', 'DENY');
+	mutable.headers.set('X-Content-Type-Options', 'nosniff');
+	mutable.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+	return mutable;
 };
