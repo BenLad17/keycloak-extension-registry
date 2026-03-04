@@ -6,6 +6,9 @@
 		"nodejs_compat"
 	],
 	"main": ".svelte-kit/cloudflare/_worker.js",
+	"triggers": {
+		"crons": ["*/30 * * * *"]
+	},
 	"routes": [
 		{
 			"pattern": "kcer.dev",
