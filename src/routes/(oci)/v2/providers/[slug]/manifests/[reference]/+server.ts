@@ -13,7 +13,16 @@ const handler: RequestHandler = async ({ platform, params, request }) => {
 		platform?.ctx.waitUntil(incrementDownloadCount(slug, reference, platform));
 	}
 
-	const token = await getGhcrToken(imagePath);
+	let token: string;
+	try {
+		token = await getGhcrToken(imagePath);
+	} catch {
+		return new Response('{"errors":[{"code":"NAME_UNKNOWN","message":"repository not found"}]}', {
+			status: 404,
+			headers: { 'Content-Type': 'application/json' }
+		});
+	}
+
 	const upstream = await fetch(`https://ghcr.io/v2/${imagePath}/manifests/${reference}`, {
 		headers: {
 			Accept: request.headers.get('Accept') ?? '*/*',

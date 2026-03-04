@@ -5,7 +5,7 @@
 	const base = $derived(page.data.providerRegistryBase);
 
 	const singleExtension = $derived(`FROM quay.io/keycloak/keycloak AS builder
-COPY --from=${base}/keycloak-home-idp-discovery:v26.1.1 /providers/ /opt/keycloak/providers/
+COPY --from=${base}/home-idp-discovery:v26.1.0 /providers/ /opt/keycloak/providers/
 RUN /opt/keycloak/bin/kc.sh build
 
 FROM quay.io/keycloak/keycloak
@@ -14,7 +14,7 @@ ENTRYPOINT ["/opt/keycloak/bin/kc.sh"]
 CMD ["start", "--optimized"]`);
 
 	const multipleExtensions = $derived(`FROM quay.io/keycloak/keycloak AS builder
-COPY --from=${base}/keycloak-home-idp-discovery:v26.1.1 /providers/ /opt/keycloak/providers/
+COPY --from=${base}/home-idp-discovery:v26.1.0 /providers/ /opt/keycloak/providers/
 COPY --from=${base}/keycloak-magic-link:v2.0.0 /providers/ /opt/keycloak/providers/
 RUN /opt/keycloak/bin/kc.sh build
 

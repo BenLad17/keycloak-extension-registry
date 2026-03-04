@@ -5,7 +5,7 @@
 	const base = $derived(page.data.providerRegistryBase);
 
 	const dockerfileExample = $derived(`FROM quay.io/keycloak/keycloak AS builder
-COPY --from=${base}/keycloak-home-idp-discovery:v26.1.1 /providers/ /opt/keycloak/providers/
+COPY --from=${base}/home-idp-discovery:v26.1.0 /providers/ /opt/keycloak/providers/
 RUN /opt/keycloak/bin/kc.sh build
 
 FROM quay.io/keycloak/keycloak
