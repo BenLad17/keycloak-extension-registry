@@ -17,7 +17,7 @@ const handler: RequestHandler = async ({ platform, params, request }) => {
 		platform?.ctx.waitUntil(incrementDownloadCount(slug, reference, platform));
 	}
 
-	return upstreamResponse;
+	return new Response(upstreamResponse.body, upstreamResponse);
 };
 
 export const GET = handler;
