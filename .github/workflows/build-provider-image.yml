@@ -24,10 +24,10 @@ jobs:
     permissions:
       packages: write
 
-    env:
-      IMAGE: ghcr.io/${{ github.repository }}/providers/${{ inputs.slug }}
-
     steps:
+      - name: Compute lowercase image name
+        run: echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY@L}/providers/${{ inputs.slug }}" >> "$GITHUB_ENV"
+
       - name: Download JAR
         env:
           DOWNLOAD_URL: ${{ inputs.download_url }}
