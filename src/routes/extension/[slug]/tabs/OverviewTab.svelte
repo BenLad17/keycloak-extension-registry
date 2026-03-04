@@ -15,7 +15,8 @@
 		githubSource,
 		maxDownloads,
 		readmeHtml,
-		providerRegistryBase
+		providerRegistryBase,
+		canManage
 	}: {
 		extension: Extension;
 		versions: ExtensionVersion[];
@@ -25,6 +26,7 @@
 		maxDownloads: number;
 		readmeHtml: string | null;
 		providerRegistryBase: string;
+		canManage: boolean;
 	} = $props();
 
 	const DOWNLOADS_COLLAPSED_COUNT = 5;
@@ -168,7 +170,7 @@
 					<p class="text-text-secondary">{timeAgo(ext.lastSyncedAt)}</p>
 				</div>
 			{/if}
-			{#if ext.lastSyncError}
+			{#if ext.lastSyncError && canManage}
 				<div class="px-4 py-3">
 					<p class="meta-label text-danger">Sync error</p>
 					<p class="font-mono text-xs break-all text-danger">{ext.lastSyncError}</p>

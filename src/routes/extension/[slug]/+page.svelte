@@ -178,6 +178,7 @@
 				{maxDownloads}
 				{readmeHtml}
 				{providerRegistryBase}
+				{canManage}
 			/>
 		{:else if activeTab === 'versions'}
 			<VersionsTab {versions} {latestVersion} {maxDownloads} extensionSlug={ext.slug} />

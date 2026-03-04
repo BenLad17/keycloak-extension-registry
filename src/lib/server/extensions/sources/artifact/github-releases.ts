@@ -12,6 +12,16 @@ import { parseKeycloakVersion } from '$lib/server/extensions/pom';
 import { and, eq } from 'drizzle-orm';
 import type { ArtifactSourceAdapter, NewVersion, VersionDownloadCount } from '../types';
 
+// D1 allows max 100 bound parameters per query. With 3 params per file row
+// (versionId, path, content), we can fit at most 33 rows safely.
+const FILE_INSERT_CHUNK_SIZE = 30;
+
+function chunkArray<T>(arr: T[], size: number): T[][] {
+	const chunks: T[][] = [];
+	for (let i = 0; i < arr.length; i += size) chunks.push(arr.slice(i, i + size));
+	return chunks;
+}
+
 export class GithubReleasesArtifactAdapter implements ArtifactSourceAdapter {
 	constructor(private readonly githubToken?: string) {}
 
@@ -132,9 +142,10 @@ export class GithubReleasesArtifactAdapter implements ArtifactSourceAdapter {
 
 				if (allFiles.length > 0) {
 					console.log(`Backfilling files for ${release.tag_name} of extension ${extensionId}`);
-					await db.insert(extensionVersionFile).values(
-						allFiles.map((f) => ({ versionId: existing.id, path: f.path, content: f.content }))
-					);
+					const rows = allFiles.map((f) => ({ versionId: existing.id, path: f.path, content: f.content }));
+					for (const chunk of chunkArray(rows, FILE_INSERT_CHUNK_SIZE)) {
+						await db.insert(extensionVersionFile).values(chunk);
+					}
 				}
 				continue;
 			}
@@ -160,9 +171,10 @@ export class GithubReleasesArtifactAdapter implements ArtifactSourceAdapter {
 				.returning({ id: extensionVersion.id });
 
 			if (allFiles.length > 0) {
-				await db.insert(extensionVersionFile).values(
-					allFiles.map((f) => ({ versionId: inserted.id, path: f.path, content: f.content }))
-				);
+				const rows = allFiles.map((f) => ({ versionId: inserted.id, path: f.path, content: f.content }));
+				for (const chunk of chunkArray(rows, FILE_INSERT_CHUNK_SIZE)) {
+					await db.insert(extensionVersionFile).values(chunk);
+				}
 			}
 
 			newVersions.push({ version: release.tag_name, downloadUrl: asset.browser_download_url, digest });

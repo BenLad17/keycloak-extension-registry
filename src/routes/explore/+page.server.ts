@@ -18,7 +18,7 @@ export const load: PageServerLoad = async ({ url, platform }) => {
 
 	if (query) {
 		conditions.push(
-			sql`(${extension.name} ILIKE ${`%${query}%`} OR ${extension.description} ILIKE ${`%${query}%`})`
+			sql`(${extension.name} LIKE ${`%${query}%`} OR ${extension.description} LIKE ${`%${query}%`})`
 		);
 	}
 
