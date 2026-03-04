@@ -38,6 +38,7 @@
 	],
 	"vars": {
 		"REGISTRY_GITHUB_REPO": "BenLad17/keycloak-extension-registry",
+		"GITHUB_APP_ID": "2861241",
 		"REGISTRY_URL": "https://kcer.dev"
 	},
 	"observability": {
