@@ -105,6 +105,6 @@ export const actions: Actions = {
 		const db = getDatabase(platform);
 		await db.delete(extension).where(eq(extension.id, ext.id));
 
-		redirect(302, '/dashboard');
+		redirect(302, '/account');
 	}
 };

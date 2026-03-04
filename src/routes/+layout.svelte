@@ -92,7 +92,7 @@
 				<div class="hidden items-center gap-1.5 md:flex">
 					{#if data?.user}
 						<a
-							href="/dashboard"
+							href="/account"
 							class="group flex items-center gap-2 rounded-md px-2.5 py-1.5 text-text no-underline transition-colors hover:bg-surface-muted"
 						>
 							<img
@@ -149,8 +149,8 @@
 
 				{#if data?.user}
 					<a
-						href="/dashboard"
-						class={mobileNavClass('/dashboard')}
+						href="/account"
+						class={mobileNavClass('/account')}
 						onclick={() => (mobileMenuOpen = false)}
 					>
 						<div class="flex items-center gap-2">
