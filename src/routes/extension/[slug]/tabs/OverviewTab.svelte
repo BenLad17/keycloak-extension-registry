@@ -123,13 +123,14 @@
 
 			<!-- Install card -->
 			<div class="overflow-hidden rounded-xl border border-border bg-surface">
-				<div class="border-b border-border px-4 py-3">
-					<p class="text-xs font-semibold text-text">Install</p>
+				<div class="flex items-baseline justify-between border-b border-border px-4 py-3">
+					<p class="text-xs font-semibold text-text">Docker install</p>
+					<span class="text-xs text-text-secondary/50">via OCI image</span>
 				</div>
 				<div class="px-4 pt-4 pb-5">
 					<CodeBlock code={copyLine} lang="dockerfile" />
 					<p class="mt-3 text-xs text-text-secondary/60">
-						Add this line to your Dockerfile before the build step. <a href="/docs/quickstart" class="text-brand hover:text-brand/80">Full Dockerfile →</a>
+						Add this line to your Dockerfile before the build step. <a href="/docs/quickstart" class="text-brand hover:text-brand/80">Full guide →</a>
 					</p>
 				</div>
 			</div>

@@ -22,64 +22,90 @@ CMD ["start", "--optimized"]`);
 	<div>
 		<h1 class="mb-3 text-2xl font-semibold tracking-tight">Quick start</h1>
 		<p class="text-base leading-relaxed text-text-secondary">
-			From finding an extension to a running custom Keycloak image in three steps.
+			There are two ways to install an extension. Pick whichever fits your setup.
 		</p>
 	</div>
 
-	<ol class="space-y-8">
-		<li class="flex gap-4">
-			<span
-				class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand/20 font-mono text-xs text-brand"
-				>1</span
-			>
-			<div class="min-w-0 flex-1">
-				<p class="font-medium text-text">Find an extension</p>
-				<p class="mt-1 text-sm text-text-secondary">
-					Browse the <a href="/explore" class="text-brand hover:text-brand/80">registry</a>. On each
-					extension's Overview tab, the Install section shows the exact Dockerfile to copy, with
-					the correct image reference and version already filled in.
-				</p>
-			</div>
-		</li>
+	<!-- Option A: Manual -->
+	<section class="space-y-5">
+		<h2 class="text-base font-semibold text-text">Option A — Manual install</h2>
+		<ol class="space-y-6">
+			<li class="flex gap-4">
+				<span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand/20 font-mono text-xs text-brand">1</span>
+				<div class="min-w-0 flex-1">
+					<p class="font-medium text-text">Find an extension</p>
+					<p class="mt-1 text-sm text-text-secondary">
+						Browse the <a href="/explore" class="text-brand hover:text-brand/80">registry</a> and open the extension you want. On the Versions tab, each release has a Download button and its SHA-256 digest for verification.
+					</p>
+				</div>
+			</li>
+			<li class="flex gap-4">
+				<span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand/20 font-mono text-xs text-brand">2</span>
+				<div class="min-w-0 flex-1">
+					<p class="font-medium text-text">Drop the JAR in and build</p>
+					<p class="mt-1 text-sm text-text-secondary">
+						Place the downloaded JAR in
+						<code class="font-mono text-xs text-text">/opt/keycloak/providers/</code>
+						and run
+						<code class="font-mono text-xs text-text">kc.sh build</code>.
+						That's it — no registry connection at runtime.
+					</p>
+				</div>
+			</li>
+		</ol>
+	</section>
 
-		<li class="flex gap-4">
-			<span
-				class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand/20 font-mono text-xs text-brand"
-				>2</span
-			>
-			<div class="min-w-0 flex-1">
-				<p class="font-medium text-text">Paste into your Dockerfile</p>
-				<p class="mt-1 mb-4 text-sm text-text-secondary">
-					Copy the snippet from the extension page and use it as your Dockerfile. To add more
-					extensions, duplicate the
-					<code class="font-mono text-xs text-text">COPY --from=</code> line, one per extension,
-					before the <code class="font-mono text-xs text-text">RUN kc.sh build</code> step.
-				</p>
-				<CodeBlock code={dockerfileSnippet} lang="dockerfile" />
-			</div>
-		</li>
+	<div class="border-t border-border"></div>
 
-		<li class="flex gap-4">
-			<span
-				class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand/20 font-mono text-xs text-brand"
-				>3</span
-			>
-			<div class="min-w-0 flex-1">
-				<p class="font-medium text-text">Build and run</p>
-				<p class="mt-1 text-sm text-text-secondary">
-					Run <code class="font-mono text-xs text-text">docker build .</code>. Extensions are baked
-					in at build time. Your running container has no dependency on the registry. To upgrade an
-					extension, change the image tag in the
-					<code class="font-mono text-xs text-text">COPY --from=</code> line and rebuild.
-				</p>
-			</div>
-		</li>
-	</ol>
+	<!-- Option B: Docker -->
+	<section class="space-y-5">
+		<h2 class="text-base font-semibold text-text">Option B — Docker integration</h2>
+		<p class="text-sm text-text-secondary">
+			For containerised setups. The registry publishes a minimal OCI image for every extension version,
+			so you can pull the JAR straight into your Dockerfile without downloading anything manually.
+		</p>
+		<ol class="space-y-8">
+			<li class="flex gap-4">
+				<span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand/20 font-mono text-xs text-brand">1</span>
+				<div class="min-w-0 flex-1">
+					<p class="font-medium text-text">Find an extension</p>
+					<p class="mt-1 text-sm text-text-secondary">
+						Browse the <a href="/explore" class="text-brand hover:text-brand/80">registry</a>. On each
+						extension's Overview tab, the Install section shows the exact Dockerfile snippet to copy, with
+						the correct image reference and version already filled in.
+					</p>
+				</div>
+			</li>
+			<li class="flex gap-4">
+				<span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand/20 font-mono text-xs text-brand">2</span>
+				<div class="min-w-0 flex-1">
+					<p class="font-medium text-text">Paste into your Dockerfile</p>
+					<p class="mt-1 mb-4 text-sm text-text-secondary">
+						Copy the snippet from the extension page and use it as your Dockerfile. To add more
+						extensions, duplicate the
+						<code class="font-mono text-xs text-text">COPY --from=</code> line, one per extension,
+						before the <code class="font-mono text-xs text-text">RUN kc.sh build</code> step.
+					</p>
+					<CodeBlock code={dockerfileSnippet} lang="dockerfile" />
+				</div>
+			</li>
+			<li class="flex gap-4">
+				<span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand/20 font-mono text-xs text-brand">3</span>
+				<div class="min-w-0 flex-1">
+					<p class="font-medium text-text">Build and run</p>
+					<p class="mt-1 text-sm text-text-secondary">
+						Run <code class="font-mono text-xs text-text">docker build .</code>. Extensions are baked
+						in at build time. Your running container has no dependency on the registry. To upgrade an
+						extension, change the image tag in the
+						<code class="font-mono text-xs text-text">COPY --from=</code> line and rebuild.
+					</p>
+				</div>
+			</li>
+		</ol>
+	</section>
 
 	<div class="flex items-center justify-between border-t border-border pt-6">
 		<a href="/docs" class="text-sm text-brand no-underline hover:text-brand/80">← Introduction</a>
-		<a href="/docs/configuration" class="text-sm text-brand no-underline hover:text-brand/80"
-			>Dockerfile reference →</a
-		>
+		<a href="/docs/configuration" class="text-sm text-brand no-underline hover:text-brand/80">Dockerfile reference →</a>
 	</div>
 </div>

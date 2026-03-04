@@ -1,12 +1,13 @@
 import type { PageServerLoad } from './$types';
 import { getDatabase, extension, githubCodeSource, ExtensionCategoryLabel, type ExtensionCategory } from '$lib/server/db';
-import { eq, sql, and, desc } from 'drizzle-orm';
+import { eq, sql, and, asc, desc } from 'drizzle-orm';
 
 const VALID_CATEGORIES = new Set(Object.keys(ExtensionCategoryLabel));
 
 export const load: PageServerLoad = async ({ url, platform }) => {
 	const query = url.searchParams.get('q') ?? '';
 	const category = url.searchParams.get('category') ?? '';
+	const sort = url.searchParams.get('sort') ?? 'downloads';
 	const page = Math.max(1, parseInt(url.searchParams.get('page') ?? '1'));
 	const limit = 20;
 	const offset = (page - 1) * limit;
@@ -39,7 +40,11 @@ export const load: PageServerLoad = async ({ url, platform }) => {
 			.from(extension)
 			.leftJoin(githubCodeSource, eq(githubCodeSource.extensionId, extension.id))
 			.where(whereClause)
-			.orderBy(desc(extension.downloadCount))
+			.orderBy(
+				sort === 'name' ? asc(extension.name) :
+				sort === 'updated' ? desc(extension.lastSyncedAt) :
+				desc(extension.downloadCount)
+			)
 			.limit(limit)
 			.offset(offset),
 
@@ -55,6 +60,7 @@ export const load: PageServerLoad = async ({ url, platform }) => {
 		extensions: results,
 		query,
 		category,
+		sort,
 		page,
 		total,
 		totalPages: Math.ceil(total / limit)
