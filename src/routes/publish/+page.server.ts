@@ -18,17 +18,35 @@ import { z } from 'zod';
 
 const validCategories = Object.keys(ExtensionCategoryLabel) as [string, ...string[]];
 
+const githubOwnerSchema = z
+	.string()
+	.min(1, 'GitHub owner is required.')
+	.max(39, 'GitHub owner is too long.')
+	.regex(/^[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?$/, 'Invalid GitHub owner name.');
+
+const githubRepoSchema = z
+	.string()
+	.min(1, 'GitHub repository is required.')
+	.max(100, 'GitHub repository name is too long.')
+	.regex(/^[a-zA-Z0-9._-]+$/, 'Invalid GitHub repository name.');
+
+const mavenCoordSchema = (field: string) =>
+	z
+		.string()
+		.max(200, `${field} is too long.`)
+		.regex(/^[a-zA-Z0-9._-]*$/, `Invalid ${field}.`);
+
 const PublishSchema = z
 	.object({
 		category: z.enum(validCategories, { error: 'Invalid category.' }),
-		githubOwner: z.string().min(1, 'GitHub owner is required.'),
-		githubRepo: z.string().min(1, 'GitHub repository is required.'),
+		githubOwner: githubOwnerSchema,
+		githubRepo: githubRepoSchema,
 		useGithubReleases: z.literal('on').optional(),
 		useMavenCentral: z.literal('on').optional(),
-		artifactOwner: z.string().default(''),
-		artifactRepo: z.string().default(''),
-		mavenGroupId: z.string().default(''),
-		mavenArtifactId: z.string().default('')
+		artifactOwner: githubOwnerSchema.or(z.literal('')).default(''),
+		artifactRepo: githubRepoSchema.or(z.literal('')).default(''),
+		mavenGroupId: mavenCoordSchema('Maven groupId').default(''),
+		mavenArtifactId: mavenCoordSchema('Maven artifactId').default('')
 	})
 	.superRefine((data, ctx) => {
 		if (!data.useGithubReleases && !data.useMavenCentral) {

@@ -90,7 +90,7 @@ export async function processOAuthCallback(url: URL, cookies: Cookies, platform:
 	// Validate redirect path
 	const redirectTo = cookies.get('oauth_redirect_to') || '/';
 	cookies.delete('oauth_redirect_to', { path: '/' });
-	if (!redirectTo.startsWith('/')) {
+	if (!redirectTo.startsWith('/') || redirectTo.startsWith('//')) {
 		error(400, 'Invalid redirect path');
 	}
 

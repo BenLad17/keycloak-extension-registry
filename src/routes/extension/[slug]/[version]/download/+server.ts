@@ -6,7 +6,7 @@ import { incrementDownloadCount } from '$lib/server/extensions/downloads';
 export const GET: RequestHandler = async ({ platform, params }) => {
 	const slug = params.slug;
 	const version = params.version;
-	if (!slug || !version) {
+	if (!slug || !version || slug.length > 100 || version.length > 50) {
 		return new Response(null, { status: 400 });
 	}
 

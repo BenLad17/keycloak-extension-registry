@@ -10,8 +10,8 @@ import { z } from 'zod';
 const validCategories = Object.keys(ExtensionCategoryLabel) as [string, ...string[]];
 
 const EditSchema = z.object({
-	name: z.string().min(1, 'Name is required.'),
-	description: z.string().transform((s) => s || null),
+	name: z.string().min(1, 'Name is required.').max(100, 'Name is too long.'),
+	description: z.string().max(500, 'Description is too long.').transform((s) => s || null),
 	category: z.enum(validCategories, { error: 'Invalid category.' }),
 	status: z.enum(['active', 'archived'], { error: 'Invalid status.' })
 });

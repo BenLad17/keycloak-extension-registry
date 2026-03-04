@@ -5,7 +5,7 @@ import { error } from '@sveltejs/kit';
 
 export const GET: RequestHandler = async ({ platform, params }) => {
 	const { slug, version } = params;
-	if (!slug || !version) {
+	if (!slug || !version || slug.length > 100 || version.length > 50) {
 		throw error(400);
 	}
 

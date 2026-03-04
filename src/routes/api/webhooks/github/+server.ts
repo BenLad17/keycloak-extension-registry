@@ -8,6 +8,10 @@ const PROVIDER_IMAGE_WORKFLOW = 'build-provider-image.yml';
 export const POST: RequestHandler = async ({ request, platform }) => {
 	const env = getEnv(platform);
 
+	if (!env.GITHUB_WEBHOOK_SECRET) {
+		return new Response('Webhook not configured', { status: 500 });
+	}
+
 	const rawBody = await request.text();
 
 	const signature = request.headers.get('x-hub-signature-256');
