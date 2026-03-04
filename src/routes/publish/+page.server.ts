@@ -66,12 +66,16 @@ const PublishSchema = z
 		}
 	});
 
+function stripKeycloakPrefix(name: string): string {
+	return name.replace(/^keycloak[-_]?/i, '') || name;
+}
+
 function toDisplayName(repoName: string): string {
-	return repoName.replace(/[-_]+/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+	return stripKeycloakPrefix(repoName).replace(/[-_]+/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 function toSlug(s: string): string {
-	return s
+	return stripKeycloakPrefix(s)
 		.toLowerCase()
 		.replace(/[^a-z0-9]+/g, '-')
 		.replace(/^-|-$/g, '');

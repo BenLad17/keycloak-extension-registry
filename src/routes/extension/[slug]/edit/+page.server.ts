@@ -92,7 +92,7 @@ export const actions: Actions = {
 		if (!allowed) throw error(403);
 
 		const token = locals.session?.githubToken;
-		await syncExtension(ext, platform!, token ?? undefined);
+		platform!.ctx.waitUntil(syncExtension(ext, platform!, token ?? undefined));
 		return { synced: true };
 	},
 
