@@ -36,7 +36,7 @@ CMD ["start", "--optimized"]`);
 				<p class="font-medium text-text">Find an extension</p>
 				<p class="mt-1 text-sm text-text-secondary">
 					Browse the <a href="/explore" class="text-brand hover:text-brand/80">registry</a>. On each
-					extension's Overview tab, the Install section shows the exact Dockerfile to copy — with
+					extension's Overview tab, the Install section shows the exact Dockerfile to copy, with
 					the correct image reference and version already filled in.
 				</p>
 			</div>
@@ -52,7 +52,7 @@ CMD ["start", "--optimized"]`);
 				<p class="mt-1 mb-4 text-sm text-text-secondary">
 					Copy the snippet from the extension page and use it as your Dockerfile. To add more
 					extensions, duplicate the
-					<code class="font-mono text-xs text-text">COPY --from=</code> line — one per extension,
+					<code class="font-mono text-xs text-text">COPY --from=</code> line, one per extension,
 					before the <code class="font-mono text-xs text-text">RUN kc.sh build</code> step.
 				</p>
 				<CodeBlock code={dockerfileSnippet} lang="dockerfile" />
@@ -68,7 +68,7 @@ CMD ["start", "--optimized"]`);
 				<p class="font-medium text-text">Build and run</p>
 				<p class="mt-1 text-sm text-text-secondary">
 					Run <code class="font-mono text-xs text-text">docker build .</code>. Extensions are baked
-					in at build time — your running container has no dependency on the registry. To upgrade an
+					in at build time. Your running container has no dependency on the registry. To upgrade an
 					extension, change the image tag in the
 					<code class="font-mono text-xs text-text">COPY --from=</code> line and rebuild.
 				</p>

@@ -13,8 +13,8 @@
 		Community extensions<br />for Keycloak.
 	</h1>
 	<p class="mb-8 max-w-xl text-base leading-relaxed text-text-secondary">
-		Browse and install Keycloak extensions from the community. Nothing to install — extensions are
-		pulled directly into your Docker build, no extra tools required.
+		A central index of community Keycloak extensions. Browse releases, download JARs directly, or
+		pull them straight into your Docker build.
 	</p>
 
 	<div class="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
@@ -54,21 +54,21 @@
 <section class="mx-auto max-w-5xl pb-20">
 	<div class="grid grid-cols-1 gap-4 sm:gap-6 sm:grid-cols-3">
 		<div class="rounded-xl border border-border bg-surface p-6">
-			<p class="card-title mb-2">No tooling</p>
+			<p class="card-title mb-2">One place to find extensions</p>
 			<p class="text-sm leading-relaxed text-text-secondary">
-				Extensions are distributed as standard OCI images. If you can run <code class="rounded bg-surface-muted px-1 py-0.5 text-xs text-text">docker build</code>, you're set.
+				Browse community extensions by category, see version history and changelogs, and find direct download links all in one place.
+			</p>
+		</div>
+		<div class="rounded-xl border border-border bg-surface p-6">
+			<p class="card-title mb-2">Install your way</p>
+			<p class="text-sm leading-relaxed text-text-secondary">
+				Download JARs and drop them into your providers folder manually, or use the Docker integration to copy them straight into your image.
 			</p>
 		</div>
 		<div class="rounded-xl border border-border bg-surface p-6">
 			<p class="card-title mb-2">Pinned versions</p>
 			<p class="text-sm leading-relaxed text-text-secondary">
-				Every extension version gets its own immutable image tag, verified against its SHA-256 digest. Reproducible builds guaranteed.
-			</p>
-		</div>
-		<div class="rounded-xl border border-border bg-surface p-6">
-			<p class="card-title mb-2">No runtime dependency</p>
-			<p class="text-sm leading-relaxed text-text-secondary">
-				Extensions are baked into your image at build time. Your running container has no connection to this registry.
+				Every release is tracked with its SHA-256 digest, so you always know exactly what you're installing.
 			</p>
 		</div>
 	</div>

@@ -73,7 +73,7 @@ CMD ["start", "--optimized"]`);
 						>/opt/keycloak/providers/</code
 					>.
 					<code class="rounded bg-bg px-1 py-0.5 font-mono text-xs text-text">kc.sh build</code>
-					then augments and optimises Keycloak's classpath for the installed providers — this is required
+					then augments and optimises Keycloak's classpath for the installed providers, which is required
 					for the <code class="rounded bg-bg px-1 py-0.5 font-mono text-xs text-text">--optimized</code> start flag.
 				</p>
 			</div>
