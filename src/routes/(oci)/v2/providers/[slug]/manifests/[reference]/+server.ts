@@ -6,14 +6,16 @@ const handler: RequestHandler = async ({ platform, params, request }) => {
 	const { slug, reference } = params as { slug: string; reference: string };
 
 	const env = getEnv(platform);
-	const [owner, repo] = env.REGISTRY_GITHUB_REPO.split('/');
-	const imagePath = `${owner}/${repo}/providers/${slug}`.toLowerCase();
+	const imagePath = `${env.REGISTRY_GITHUB_REPO}/providers/${slug}`.toLowerCase();
 
 	if (request.method === 'GET' && !reference.startsWith('sha256:')) {
 		platform?.ctx.waitUntil(incrementDownloadCount(slug, reference, platform));
 	}
 
-	return Response.redirect(`https://ghcr.io/v2/${imagePath}/manifests/${reference}`, 307);
+	return new Response(null, {
+		status: 307,
+		headers: { Location: `https://ghcr.io/v2/${imagePath}/manifests/${reference}` }
+	});
 };
 
 export const GET = handler;
