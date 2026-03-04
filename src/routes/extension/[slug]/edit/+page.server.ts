@@ -52,7 +52,7 @@ export const load: PageServerLoad = async ({ platform, params, locals, url, cook
 };
 
 export const actions: Actions = {
-	default: async ({ request, platform, params, locals, url, cookies }) => {
+	save: async ({ request, platform, params, locals, url, cookies }) => {
 		await requireAuth(url, cookies, platform!, locals);
 
 		const { ext, allowed } = await canEdit(params.slug, platform!, locals);

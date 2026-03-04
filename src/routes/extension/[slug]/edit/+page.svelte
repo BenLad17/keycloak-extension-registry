@@ -42,7 +42,7 @@
 		</div>
 	{/if}
 
-	<form method="POST" use:enhance class="flex flex-col gap-6">
+	<form method="POST" action="?/save" use:enhance class="flex flex-col gap-6">
 		<div class="rounded-xl border border-border bg-surface p-4 sm:p-6">
 			<h2 class="card-title">Details</h2>
 
