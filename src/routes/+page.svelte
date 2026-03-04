@@ -4,6 +4,11 @@
 	let { data } = $props();
 </script>
 
+<svelte:head>
+	<link rel="canonical" href="https://kcer.dev/" />
+	<meta property="og:url" content="https://kcer.dev/" />
+</svelte:head>
+
 <!-- Hero -->
 <section class="mx-auto max-w-5xl pb-10 pt-10 sm:pb-16 lg:pb-16 lg:pt-20">
 	<span class="mb-6 inline-flex items-center gap-1.5 rounded-full bg-brand/10 px-3 py-1 text-xs font-medium text-brand">

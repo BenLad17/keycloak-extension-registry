@@ -33,6 +33,8 @@
 	const maxDownloads = $derived(Math.max(...versions.map((v) => v.downloadCount ?? 0), 1));
 	const readmeHtml = $derived(ext.readme ? renderMarkdown(ext.readme) : null);
 
+	const canonicalUrl = $derived(`${page.url.origin}/extension/${ext.slug}`);
+
 	let activeTab = $state<'overview' | 'versions' | 'changelog' | 'code'>('overview');
 	let tabBarEl = $state<HTMLElement | null>(null);
 
@@ -53,9 +55,12 @@
 <svelte:head>
 	<title>{ext.name} - Keycloak Extension Registry</title>
 	<meta name="description" content={ext.description ?? `${ext.name} - a community Keycloak extension.`} />
+	<link rel="canonical" href={canonicalUrl} />
 	<meta property="og:type" content="article" />
+	<meta property="og:url" content={canonicalUrl} />
 	<meta property="og:title" content="{ext.name} - Keycloak Extension Registry" />
 	<meta property="og:description" content={ext.description ?? `${ext.name} - a community Keycloak extension.`} />
+	<meta name="twitter:card" content="summary" />
 	<meta name="twitter:title" content="{ext.name} - Keycloak Extension Registry" />
 	<meta name="twitter:description" content={ext.description ?? `${ext.name} - a community Keycloak extension.`} />
 </svelte:head>
