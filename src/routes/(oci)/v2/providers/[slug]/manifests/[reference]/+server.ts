@@ -7,17 +7,13 @@ const handler: RequestHandler = async ({ platform, params, request }) => {
 
 	const env = getEnv(platform);
 	const [owner, repo] = env.REGISTRY_GITHUB_REPO.split('/');
+	const imagePath = `${owner}/${repo}/providers/${slug}`.toLowerCase();
 
-	const upstreamResponse = await fetch(
-		`https://ghcr.io/v2/${owner}/${repo}/providers/${slug}/manifests/${reference}`,
-		{ headers: { Accept: request.headers.get('Accept') ?? '*/*' } }
-	);
-
-	if (upstreamResponse.ok && request.method === 'GET' && !reference.startsWith('sha256:')) {
+	if (request.method === 'GET' && !reference.startsWith('sha256:')) {
 		platform?.ctx.waitUntil(incrementDownloadCount(slug, reference, platform));
 	}
 
-	return new Response(upstreamResponse.body, upstreamResponse);
+	return Response.redirect(`https://ghcr.io/v2/${imagePath}/manifests/${reference}`, 307);
 };
 
 export const GET = handler;

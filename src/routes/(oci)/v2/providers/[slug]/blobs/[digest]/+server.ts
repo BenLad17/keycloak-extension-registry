@@ -6,6 +6,7 @@ export const GET: RequestHandler = async ({ platform, params }) => {
 
 	const env = getEnv(platform);
 	const [owner, repo] = env.REGISTRY_GITHUB_REPO.split('/');
+	const imagePath = `${owner}/${repo}/providers/${slug}`.toLowerCase();
 
-	return fetch(`https://ghcr.io/v2/${owner}/${repo}/providers/${slug}/blobs/${digest}`);
+	return Response.redirect(`https://ghcr.io/v2/${imagePath}/blobs/${digest}`, 307);
 };
