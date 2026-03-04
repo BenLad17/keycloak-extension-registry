@@ -46,8 +46,11 @@ export async function syncExtension(
 		for (const adapter of adapters) {
 			const newVersions = await adapter.discoverVersions(ext.id, platform);
 
+			const recentCutoff = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
 			for (const v of newVersions) {
-				await triggerProviderImageBuild(ext.slug, v, platform);
+				if (v.publishedAt >= recentCutoff) {
+					await triggerProviderImageBuild(ext.slug, v, platform);
+				}
 			}
 
 			// Retry versions whose image build may have failed. Only consider versions
@@ -81,7 +84,7 @@ export async function syncExtension(
 				for (const { versionId, count } of counts) {
 					await db
 						.update(extensionVersion)
-						.set({ downloadCount: count })
+						.set({ downloadCount: sql`MAX(${extensionVersion.downloadCount}, ${count})` })
 						.where(eq(extensionVersion.id, versionId));
 				}
 

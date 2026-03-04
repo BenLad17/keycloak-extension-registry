@@ -20,6 +20,7 @@ export interface NewVersion {
 	version: string;
 	downloadUrl: string;
 	digest: string;
+	publishedAt: Date;
 }
 
 export interface ArtifactSourceAdapter {

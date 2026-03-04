@@ -16,6 +16,10 @@ import type { ArtifactSourceAdapter, NewVersion, VersionDownloadCount } from '..
 // (versionId, path, content), we can fit at most 33 rows safely.
 const FILE_INSERT_CHUNK_SIZE = 30;
 
+// Cap how many releases require heavy work (JAR download + file extraction)
+// per sync run to stay within Worker CPU time limits.
+const MAX_HEAVY_VERSIONS_PER_SYNC = 5;
+
 function chunkArray<T>(arr: T[], size: number): T[][] {
 	const chunks: T[][] = [];
 	for (let i = 0; i < arr.length; i += size) chunks.push(arr.slice(i, i + size));
@@ -75,8 +79,10 @@ export class GithubReleasesArtifactAdapter implements ArtifactSourceAdapter {
 		});
 
 		const newVersions: NewVersion[] = [];
+		let heavyVersionsProcessed = 0;
 
 		for (const release of releases) {
+			if (heavyVersionsProcessed >= MAX_HEAVY_VERSIONS_PER_SYNC) break;
 			const [existing] = await db
 				.select()
 				.from(extensionVersion)
@@ -113,6 +119,7 @@ export class GithubReleasesArtifactAdapter implements ArtifactSourceAdapter {
 			}
 
 			// Download binary JAR for resource files + keycloak version detection.
+			heavyVersionsProcessed++;
 			const jarResponse = await fetch(asset.browser_download_url);
 			if (!jarResponse.ok) {
 				console.error(
@@ -177,7 +184,7 @@ export class GithubReleasesArtifactAdapter implements ArtifactSourceAdapter {
 				}
 			}
 
-			newVersions.push({ version: release.tag_name, downloadUrl: asset.browser_download_url, digest });
+			newVersions.push({ version: release.tag_name, downloadUrl: asset.browser_download_url, digest, publishedAt: release.published_at ? new Date(release.published_at) : new Date() });
 		}
 
 		return newVersions;
