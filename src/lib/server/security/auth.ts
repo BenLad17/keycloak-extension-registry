@@ -122,7 +122,7 @@ export function getGitHubOAuthURL(clientId: string, redirectUri: string, state: 
 		client_id: clientId,
 		redirect_uri: redirectUri,
 		state: state,
-		scope: 'read:user user:email'
+		scope: 'read:user'
 	});
 	return `https://github.com/login/oauth/authorize?${params}`;
 }
