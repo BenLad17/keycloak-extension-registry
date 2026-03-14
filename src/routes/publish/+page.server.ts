@@ -10,7 +10,7 @@ import {
 	type ExtensionCategory
 } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
-import { Octokit } from 'octokit';
+import { getUserOctokit } from '$lib/server/github';
 import {
 	requireAuth,
 	hasRepoWriteAccess,
@@ -138,7 +138,7 @@ async function fetchUserRepos(token: string, platform: App.Platform): Promise<Us
 	const registered = await db.select({ repoId: githubCodeSource.repoId }).from(githubCodeSource);
 	const registeredIds = new Set(registered.map((r) => r.repoId));
 
-	const octokit = new Octokit({ auth: token });
+	const octokit = getUserOctokit(token);
 	try {
 		const { data } = await octokit.request('GET /user/repos', {
 			affiliation: 'owner,collaborator,organization_member',
@@ -212,7 +212,7 @@ export const actions: Actions = {
 			mavenArtifactId
 		} = parsed.data;
 
-		const octokit = new Octokit({ auth: token });
+		const octokit = getUserOctokit(token);
 
 		let repoData: { id: number; name: string; description: string | null };
 		try {

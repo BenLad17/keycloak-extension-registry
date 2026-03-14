@@ -21,6 +21,10 @@ interface GitHubApiUser {
 	name: string | null;
 }
 
+export function getUserOctokit(token: string): Octokit {
+	return new Octokit({ auth: token });
+}
+
 export function getOctokitInstance(platform: App.Platform): Octokit {
 	if (!octokitInstance) {
 		const env = getEnv(platform);

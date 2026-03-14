@@ -6,6 +6,7 @@ import { Octokit } from 'octokit';
 import { getEnv } from '$lib/server/env';
 import { eq } from 'drizzle-orm';
 import { createSession, destroySession } from '$lib/server/security/session';
+import { getUserOctokit } from '$lib/server/github';
 
 export class GitHubTokenExpiredError extends Error {
 	constructor() {
@@ -165,7 +166,7 @@ export async function exchangeCodeForToken(
 }
 
 export async function getGitHubUser(accessToken: string) {
-	const octokit = new Octokit({ auth: accessToken });
+	const octokit = getUserOctokit(accessToken);
 	const response = await octokit.rest.users.getAuthenticated();
 	if (!response || !response.data) {
 		error(500, 'Failed to fetch GitHub user');
@@ -179,7 +180,7 @@ export async function hasRepoWriteAccess(
 	repo: string
 ): Promise<boolean> {
 	try {
-		const octokit = new Octokit({ auth: token });
+		const octokit = getUserOctokit(token);
 		const { data } = await octokit.request('GET /repos/{owner}/{repo}', { owner, repo });
 		return data.permissions?.push === true;
 	} catch (e) {

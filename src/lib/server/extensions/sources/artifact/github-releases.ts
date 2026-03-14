@@ -4,8 +4,7 @@ import {
 	githubArtifactSource,
 	getDatabase
 } from '$lib/server/db';
-import { Octokit } from 'octokit';
-import { getOctokitInstance } from '$lib/server/github';
+import { getOctokitInstance, getUserOctokit } from '$lib/server/github';
 import {
 	extractResourceFiles,
 	extractPomXml,
@@ -36,7 +35,7 @@ export class GithubReleasesArtifactAdapter implements ArtifactSourceAdapter {
 
 	private getOctokit(platform: App.Platform): Octokit {
 		return this.githubToken
-			? new Octokit({ auth: this.githubToken })
+			? getUserOctokit(this.githubToken)
 			: getOctokitInstance(platform);
 	}
 
