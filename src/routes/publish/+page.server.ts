@@ -133,17 +133,20 @@ export interface UserRepo {
 	description: string | null;
 }
 
-async function fetchUserRepos(token: string): Promise<UserRepo[]> {
+async function fetchUserRepos(token: string, platform: App.Platform): Promise<UserRepo[]> {
+	const db = getDatabase(platform);
+	const registered = await db.select({ repoId: githubCodeSource.repoId }).from(githubCodeSource);
+	const registeredIds = new Set(registered.map((r) => r.repoId));
+
 	const octokit = new Octokit({ auth: token });
 	try {
 		const { data } = await octokit.request('GET /user/repos', {
 			affiliation: 'owner,collaborator,organization_member',
-			type: 'public',
 			sort: 'updated',
 			per_page: 100
 		});
 		return data
-			.filter((r) => r.permissions?.push)
+			.filter((r) => r.visibility === 'public' && r.permissions?.push && !registeredIds.has(r.id))
 			.map((r) => ({
 				owner: r.owner.login,
 				name: r.name,
@@ -169,7 +172,7 @@ export const load: PageServerLoad = async ({ platform, locals, url, cookies }) =
 
 	try {
 		return {
-			repos: token ? fetchUserRepos(token) : ([] as UserRepo[])
+			repos: token ? fetchUserRepos(token, platform!) : ([] as UserRepo[])
 		};
 	} catch (e) {
 		if (e instanceof GitHubTokenExpiredError)
