@@ -4,8 +4,7 @@ import { extension, githubCodeSource, getDatabase, type ExtensionCategory } from
 import { eq } from 'drizzle-orm';
 import {
 	requireAuth,
-	hasRepoWriteAccess,
-	isRegistryAdmin,
+	canManageExtension,
 	GitHubTokenExpiredError,
 	handleExpiredToken
 } from '$lib/server/security/auth';
@@ -25,37 +24,24 @@ const EditSchema = z.object({
 	status: z.enum(['active', 'archived'], { error: 'Invalid status.' })
 });
 
-async function canEdit(
-	slug: string,
-	platform: App.Platform,
-	locals: App.Locals
-): Promise<{ ext: typeof extension.$inferSelect; allowed: boolean }> {
-	if (!locals.session) return { ext: null as never, allowed: false };
-
+async function loadExt(slug: string, platform: App.Platform) {
 	const db = getDatabase(platform);
 	const [ext] = await db.select().from(extension).where(eq(extension.slug, slug)).limit(1);
 	if (!ext) throw error(404);
-
 	const [source] = await db
 		.select()
 		.from(githubCodeSource)
 		.where(eq(githubCodeSource.extensionId, ext.id))
 		.limit(1);
-
-	if (!source) return { ext, allowed: false };
-
-	const token = locals.session.githubToken;
-	const repoAccess = token ? await hasRepoWriteAccess(token, source.owner, source.repo) : false;
-	const adminAccess = await isRegistryAdmin(locals, platform);
-	return { ext, allowed: repoAccess || adminAccess };
+	return { ext, source: source ?? null };
 }
 
 export const load: PageServerLoad = async ({ platform, params, locals, url, cookies }) => {
 	await requireAuth(url, cookies, platform!, locals);
 
 	try {
-		const { ext, allowed } = await canEdit(params.slug, platform!, locals);
-		if (!allowed)
+		const { ext, source } = await loadExt(params.slug, platform!);
+		if (!(await canManageExtension(source, locals, platform!)))
 			throw error(403, 'You need write access to this repository to edit this extension.');
 		return { extension: ext };
 	} catch (e) {
@@ -69,11 +55,11 @@ export const actions: Actions = {
 	save: async ({ request, platform, params, locals, url, cookies }) => {
 		await requireAuth(url, cookies, platform!, locals);
 
-		let ext: Awaited<ReturnType<typeof canEdit>>['ext'];
+		let ext: Awaited<ReturnType<typeof loadExt>>['ext'];
 		try {
-			const result = await canEdit(params.slug, platform!, locals);
-			if (!result.allowed) throw error(403);
-			ext = result.ext;
+			const loaded = await loadExt(params.slug, platform!);
+			if (!(await canManageExtension(loaded.source, locals, platform!))) throw error(403);
+			ext = loaded.ext;
 		} catch (e) {
 			if (e instanceof GitHubTokenExpiredError)
 				await handleExpiredToken(platform!, locals, cookies, url);
@@ -111,10 +97,9 @@ export const actions: Actions = {
 		await requireAuth(url, cookies, platform!, locals);
 
 		try {
-			const { ext, allowed } = await canEdit(params.slug, platform!, locals);
-			if (!allowed) throw error(403);
-			const token = locals.session?.githubToken;
-			platform!.ctx.waitUntil(syncExtension(ext, platform!, token ?? undefined));
+			const { ext, source } = await loadExt(params.slug, platform!);
+			if (!(await canManageExtension(source, locals, platform!))) throw error(403);
+			platform!.ctx.waitUntil(syncExtension(ext, platform!, locals.session?.githubToken));
 		} catch (e) {
 			if (e instanceof GitHubTokenExpiredError)
 				await handleExpiredToken(platform!, locals, cookies, url);
@@ -126,11 +111,11 @@ export const actions: Actions = {
 	delete: async ({ platform, params, locals, url, cookies }) => {
 		await requireAuth(url, cookies, platform!, locals);
 
-		let ext: Awaited<ReturnType<typeof canEdit>>['ext'];
+		let ext: Awaited<ReturnType<typeof loadExt>>['ext'];
 		try {
-			const result = await canEdit(params.slug, platform!, locals);
-			if (!result.allowed) throw error(403);
-			ext = result.ext;
+			const loaded = await loadExt(params.slug, platform!);
+			if (!(await canManageExtension(loaded.source, locals, platform!))) throw error(403);
+			ext = loaded.ext;
 		} catch (e) {
 			if (e instanceof GitHubTokenExpiredError)
 				await handleExpiredToken(platform!, locals, cookies, url);

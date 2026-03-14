@@ -137,7 +137,8 @@ async function fetchUserRepos(token: string): Promise<UserRepo[]> {
 	const octokit = new Octokit({ auth: token });
 	try {
 		const { data } = await octokit.request('GET /user/repos', {
-			affiliation: 'owner,organization_member',
+			affiliation: 'owner,collaborator,organization_member',
+			type: 'public',
 			sort: 'updated',
 			per_page: 100
 		});

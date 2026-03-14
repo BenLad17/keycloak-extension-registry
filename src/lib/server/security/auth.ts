@@ -194,13 +194,26 @@ function isGitHubUnauthorized(e: unknown): boolean {
 	);
 }
 
-// Checks admin status by comparing the current user's GitHub login against the
-// owner extracted from REGISTRY_GITHUB_REPO. Uses the GitHub App for the lookup
-// so no user token or repo existence is required.
-export async function isRegistryAdmin(
+/**
+ * Returns true if the current user can manage the given extension.
+ * Throws GitHubTokenExpiredError if the stored token is revoked/expired.
+ */
+export async function canManageExtension(
+	githubSource: { owner: string; repo: string } | null,
 	locals: App.Locals,
 	platform: App.Platform
 ): Promise<boolean> {
+	if (!locals.session) return false;
+	if (isRegistryAdmin(locals, platform)) return true;
+	const token = locals.session.githubToken;
+	if (!token || !githubSource) return false;
+	return hasRepoWriteAccess(token, githubSource.owner, githubSource.repo);
+}
+
+// Checks admin status by comparing the current user's GitHub login against the
+// owner extracted from REGISTRY_GITHUB_REPO. Uses the GitHub App for the lookup
+// so no user token or repo existence is required.
+export function isRegistryAdmin(locals: App.Locals, platform: App.Platform): Promise<boolean> {
 	if (!locals.session?.githubLogin) return false;
 	const registryRepo = getEnv(platform).REGISTRY_GITHUB_REPO;
 	if (!registryRepo) return false;

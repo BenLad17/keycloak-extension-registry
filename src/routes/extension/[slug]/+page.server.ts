@@ -2,7 +2,7 @@ import type { PageServerLoad } from './$types';
 import { extension, extensionVersion, githubCodeSource, getDatabase } from '$lib/server/db';
 import { desc, eq } from 'drizzle-orm';
 import { error, redirect } from '@sveltejs/kit';
-import { isRegistryAdmin } from '$lib/server/security/auth';
+import { canManageExtension, GitHubTokenExpiredError } from '$lib/server/security/auth';
 
 export const load: PageServerLoad = async ({ platform, params, locals }) => {
 	const slug = params.slug;
@@ -29,8 +29,11 @@ export const load: PageServerLoad = async ({ platform, params, locals }) => {
 		.orderBy(desc(extensionVersion.publishedAt));
 
 	let canManage = false;
-	if (locals.session) {
-		canManage = ext.ownerId === locals.session.userId || (await isRegistryAdmin(locals, platform!));
+	try {
+		canManage = await canManageExtension(githubSource ?? null, locals, platform!);
+	} catch (e) {
+		if (!(e instanceof GitHubTokenExpiredError)) throw e;
+		// Stale token — hide management UI rather than forcing re-auth on a read page
 	}
 
 	return {
