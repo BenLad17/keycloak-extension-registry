@@ -36,7 +36,9 @@
 	);
 
 	const copyLine = $derived(
-		latestVersion ? generateCopyLine(providerImageRef(providerRegistryBase, ext.slug, latestVersion.version)) : ''
+		latestVersion
+			? generateCopyLine(providerImageRef(providerRegistryBase, ext.slug, latestVersion.version))
+			: ''
 	);
 
 	function proxyDownloadUrl(version: string): string {
@@ -44,13 +46,11 @@
 	}
 </script>
 
-<div class="grid grid-cols-1 gap-4 lg:gap-8 lg:grid-cols-[1fr_340px]">
+<div class="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_340px] lg:gap-8">
 	<!-- Left column: README -->
 	<div>
 		{#if readmeHtml}
-			<div
-				class="prose max-w-none rounded-xl border border-border bg-surface p-4 sm:p-6 md:p-8"
-			>
+			<div class="prose max-w-none rounded-xl border border-border bg-surface p-4 sm:p-6 md:p-8">
 				{@html readmeHtml}
 			</div>
 		{:else}
@@ -72,9 +72,13 @@
 					<span class="text-sm text-text-secondary">{formatSize(latestVersion.downloadSize)}</span>
 				</div>
 				{#if latestVersion.keycloakVersion}
-					<p class="mb-1 text-xs text-brand">Built against Keycloak {latestVersion.keycloakVersion}</p>
+					<p class="mb-1 text-xs text-brand">
+						Built against Keycloak {latestVersion.keycloakVersion}
+					</p>
 				{/if}
-				<p class="mb-4 text-xs text-text-secondary/60">Published {formatDate(latestVersion.publishedAt)}</p>
+				<p class="mb-4 text-xs text-text-secondary/60">
+					Published {formatDate(latestVersion.publishedAt)}
+				</p>
 				<a
 					href={proxyDownloadUrl(latestVersion.version)}
 					class="flex w-full items-center justify-center gap-2 rounded-lg bg-brand px-4 py-2.5 text-sm font-medium text-white no-underline transition-colors hover:bg-brand/85"
@@ -112,12 +116,12 @@
 					</div>
 					{#if versions.length > DOWNLOADS_COLLAPSED_COUNT}
 						<button
-								onclick={() => (downloadsExpanded = !downloadsExpanded)}
-								class="mt-3 w-full text-center text-xs text-text-secondary/60 transition-colors hover:text-text-secondary"
+							onclick={() => (downloadsExpanded = !downloadsExpanded)}
+							class="mt-3 w-full text-center text-xs text-text-secondary/60 transition-colors hover:text-text-secondary"
 						>
 							{downloadsExpanded
-									? 'Show less'
-									: `Show ${versions.length - DOWNLOADS_COLLAPSED_COUNT} more…`}
+								? 'Show less'
+								: `Show ${versions.length - DOWNLOADS_COLLAPSED_COUNT} more…`}
 						</button>
 					{/if}
 				</Card>
@@ -132,7 +136,10 @@
 				<div class="px-4 pt-4 pb-5">
 					<CodeBlock code={copyLine} lang="dockerfile" />
 					<p class="mt-3 text-xs text-text-secondary/60">
-						Add this line to your Dockerfile before the build step. <a href="/docs/quickstart" class="text-brand hover:text-brand/80">Full guide →</a>
+						Add this line to your Dockerfile before the build step. <a
+							href="/docs/quickstart"
+							class="text-brand hover:text-brand/80">Full guide →</a
+						>
 					</p>
 				</div>
 			</div>
@@ -177,6 +184,5 @@
 				</div>
 			{/if}
 		</Card>
-
 	</aside>
 </div>

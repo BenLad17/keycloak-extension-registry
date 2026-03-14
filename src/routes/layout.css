@@ -208,7 +208,11 @@
 	}
 
 	body {
-		font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+		font-family:
+			'Space Grotesk',
+			-apple-system,
+			BlinkMacSystemFont,
+			sans-serif;
 		font-size: 0.9375rem;
 		line-height: 1.6;
 		letter-spacing: -0.015em;
@@ -231,7 +235,9 @@
 	pre,
 	samp {
 		font-family: 'JetBrains Mono', ui-monospace, 'Cascadia Code', 'Source Code Pro', monospace;
-		font-feature-settings: 'liga' 1, 'calt' 1;
+		font-feature-settings:
+			'liga' 1,
+			'calt' 1;
 	}
 
 	a {

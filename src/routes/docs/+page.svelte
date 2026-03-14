@@ -28,9 +28,9 @@ CMD ["start", "--optimized"]`);
 					>/opt/keycloak/providers/</code
 				>
 				before running
-				<code class="rounded bg-surface px-1.5 py-0.5 font-mono text-xs text-text"
-					>kc.sh build</code
-				>. Finding and keeping track of community extensions across GitHub and Maven Central is tedious.
+				<code class="rounded bg-surface px-1.5 py-0.5 font-mono text-xs text-text">kc.sh build</code
+				>. Finding and keeping track of community extensions across GitHub and Maven Central is
+				tedious.
 			</p>
 			<p>
 				This registry is a central index of community extensions. You can browse by category, read
@@ -53,8 +53,11 @@ CMD ["start", "--optimized"]`);
 				</div>
 				<p class="text-sm leading-relaxed text-text-secondary">
 					Go to any extension's Versions tab and click Download to get the JAR. Drop it into your
-					<code class="rounded bg-bg px-1 py-0.5 font-mono text-xs text-text">/opt/keycloak/providers/</code>
-					folder and run <code class="rounded bg-bg px-1 py-0.5 font-mono text-xs text-text">kc.sh build</code>.
+					<code class="rounded bg-bg px-1 py-0.5 font-mono text-xs text-text"
+						>/opt/keycloak/providers/</code
+					>
+					folder and run
+					<code class="rounded bg-bg px-1 py-0.5 font-mono text-xs text-text">kc.sh build</code>.
 					Each version shows its SHA-256 digest so you can verify the file before use.
 				</p>
 			</div>
@@ -71,8 +74,8 @@ CMD ["start", "--optimized"]`);
 					For every extension version indexed, the registry publishes a minimal OCI image containing
 					just the JAR. Reference it with
 					<code class="rounded bg-bg px-1 py-0.5 font-mono text-xs text-text">COPY --from=</code>
-					in your Dockerfile. Docker pulls the image at build time, no extra tools needed. Adding
-					another extension is one more line. The pattern never changes.
+					in your Dockerfile. Docker pulls the image at build time, no extra tools needed. Adding another
+					extension is one more line. The pattern never changes.
 				</p>
 				<CodeBlock code={dockerfileExample} lang="dockerfile" />
 			</div>

@@ -6,7 +6,12 @@ import {
 } from '$lib/server/db';
 import { Octokit } from 'octokit';
 import { getOctokitInstance } from '$lib/server/github';
-import { extractResourceFiles, extractPomXml, MAX_JAR_BYTES, sha256Hex } from '$lib/server/extensions/jar';
+import {
+	extractResourceFiles,
+	extractPomXml,
+	MAX_JAR_BYTES,
+	sha256Hex
+} from '$lib/server/extensions/jar';
 import { extractSourceFiles } from '$lib/server/extensions/source';
 import { parseKeycloakVersion } from '$lib/server/extensions/pom';
 import { and, eq } from 'drizzle-orm';
@@ -149,7 +154,11 @@ export class GithubReleasesArtifactAdapter implements ArtifactSourceAdapter {
 
 				if (allFiles.length > 0) {
 					console.log(`Backfilling files for ${release.tag_name} of extension ${extensionId}`);
-					const rows = allFiles.map((f) => ({ versionId: existing.id, path: f.path, content: f.content }));
+					const rows = allFiles.map((f) => ({
+						versionId: existing.id,
+						path: f.path,
+						content: f.content
+					}));
 					for (const chunk of chunkArray(rows, FILE_INSERT_CHUNK_SIZE)) {
 						await db.insert(extensionVersionFile).values(chunk);
 					}
@@ -178,13 +187,22 @@ export class GithubReleasesArtifactAdapter implements ArtifactSourceAdapter {
 				.returning({ id: extensionVersion.id });
 
 			if (allFiles.length > 0) {
-				const rows = allFiles.map((f) => ({ versionId: inserted.id, path: f.path, content: f.content }));
+				const rows = allFiles.map((f) => ({
+					versionId: inserted.id,
+					path: f.path,
+					content: f.content
+				}));
 				for (const chunk of chunkArray(rows, FILE_INSERT_CHUNK_SIZE)) {
 					await db.insert(extensionVersionFile).values(chunk);
 				}
 			}
 
-			newVersions.push({ version: release.tag_name, downloadUrl: asset.browser_download_url, digest, publishedAt: release.published_at ? new Date(release.published_at) : new Date() });
+			newVersions.push({
+				version: release.tag_name,
+				downloadUrl: asset.browser_download_url,
+				digest,
+				publishedAt: release.published_at ? new Date(release.published_at) : new Date()
+			});
 		}
 
 		return newVersions;

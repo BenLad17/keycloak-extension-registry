@@ -144,12 +144,16 @@
 	>
 		<FileCode2 class="h-10 w-10 text-text-secondary/40" />
 		<p class="text-sm font-medium text-text-secondary">No files available</p>
-		<p class="text-xs text-text-secondary/60">Source files will appear here once versions are synced.</p>
+		<p class="text-xs text-text-secondary/60">
+			Source files will appear here once versions are synced.
+		</p>
 	</div>
 {:else}
 	<div class="overflow-hidden rounded-xl border border-border bg-surface">
 		<!-- Controls bar -->
-		<div class="flex flex-wrap items-center gap-2 border-b border-border px-3 py-3 sm:gap-3 sm:px-5">
+		<div
+			class="flex flex-wrap items-center gap-2 border-b border-border px-3 py-3 sm:gap-3 sm:px-5"
+		>
 			<!-- Mobile tree toggle -->
 			<button
 				onclick={() => (showTree = !showTree)}
@@ -191,7 +195,9 @@
 
 		<!-- Browser -->
 		{#if filesLoading}
-			<div class="flex items-center justify-center py-20 text-sm text-text-secondary/60">Loading files…</div>
+			<div class="flex items-center justify-center py-20 text-sm text-text-secondary/60">
+				Loading files…
+			</div>
 		{:else if versionFiles === null}
 			<div class="py-20 text-center text-sm text-text-secondary/60">
 				Files not available for this version.
@@ -203,7 +209,11 @@
 		{:else}
 			<div class="flex" style="height: clamp(400px, 70vh, 700px)">
 				<!-- File tree -->
-				<div class="{showTree ? 'flex' : 'hidden'} w-64 shrink-0 flex-col overflow-auto border-r border-border sm:w-72 md:flex">
+				<div
+					class="{showTree
+						? 'flex'
+						: 'hidden'} w-64 shrink-0 flex-col overflow-auto border-r border-border sm:w-72 md:flex"
+				>
 					{#if activeTree.length === 0 && fileSearch}
 						<p class="px-3 py-4 text-xs text-text-secondary/60">No files match.</p>
 					{:else}
@@ -249,7 +259,9 @@
 				<!-- Content pane -->
 				<div class="flex min-w-0 flex-1 flex-col overflow-hidden">
 					{#if !selectedFile}
-						<div class="flex flex-1 flex-col items-center justify-center gap-2 text-text-secondary/40">
+						<div
+							class="flex flex-1 flex-col items-center justify-center gap-2 text-text-secondary/40"
+						>
 							<FileText class="h-8 w-8 opacity-20" />
 							<p class="text-sm">Select a file to view its contents</p>
 						</div>

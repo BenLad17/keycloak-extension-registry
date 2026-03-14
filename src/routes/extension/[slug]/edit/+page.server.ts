@@ -2,7 +2,13 @@ import { error, fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import { extension, githubCodeSource, getDatabase, type ExtensionCategory } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
-import { requireAuth, hasRepoWriteAccess, isRegistryAdmin } from '$lib/server/security/auth';
+import {
+	requireAuth,
+	hasRepoWriteAccess,
+	isRegistryAdmin,
+	GitHubTokenExpiredError,
+	handleExpiredToken
+} from '$lib/server/security/auth';
 import { syncExtension } from '$lib/server/extensions/sync';
 import { ExtensionCategoryLabel } from '$lib/common/extension-category';
 import { z } from 'zod';
@@ -11,7 +17,10 @@ const validCategories = Object.keys(ExtensionCategoryLabel) as [string, ...strin
 
 const EditSchema = z.object({
 	name: z.string().min(1, 'Name is required.').max(100, 'Name is too long.'),
-	description: z.string().max(500, 'Description is too long.').transform((s) => s || null),
+	description: z
+		.string()
+		.max(500, 'Description is too long.')
+		.transform((s) => s || null),
 	category: z.enum(validCategories, { error: 'Invalid category.' }),
 	status: z.enum(['active', 'archived'], { error: 'Invalid status.' })
 });
@@ -44,19 +53,32 @@ async function canEdit(
 export const load: PageServerLoad = async ({ platform, params, locals, url, cookies }) => {
 	await requireAuth(url, cookies, platform!, locals);
 
-	const { ext, allowed } = await canEdit(params.slug, platform!, locals);
-	if (!allowed)
-		throw error(403, 'You need write access to this repository to edit this extension.');
-
-	return { extension: ext };
+	try {
+		const { ext, allowed } = await canEdit(params.slug, platform!, locals);
+		if (!allowed)
+			throw error(403, 'You need write access to this repository to edit this extension.');
+		return { extension: ext };
+	} catch (e) {
+		if (e instanceof GitHubTokenExpiredError)
+			await handleExpiredToken(platform!, locals, cookies, url);
+		throw e;
+	}
 };
 
 export const actions: Actions = {
 	save: async ({ request, platform, params, locals, url, cookies }) => {
 		await requireAuth(url, cookies, platform!, locals);
 
-		const { ext, allowed } = await canEdit(params.slug, platform!, locals);
-		if (!allowed) throw error(403);
+		let ext: Awaited<ReturnType<typeof canEdit>>['ext'];
+		try {
+			const result = await canEdit(params.slug, platform!, locals);
+			if (!result.allowed) throw error(403);
+			ext = result.ext;
+		} catch (e) {
+			if (e instanceof GitHubTokenExpiredError)
+				await handleExpiredToken(platform!, locals, cookies, url);
+			throw e;
+		}
 
 		const formData = await request.formData();
 		const raw: Record<string, unknown> = {};
@@ -88,19 +110,32 @@ export const actions: Actions = {
 	sync: async ({ platform, params, locals, url, cookies }) => {
 		await requireAuth(url, cookies, platform!, locals);
 
-		const { ext, allowed } = await canEdit(params.slug, platform!, locals);
-		if (!allowed) throw error(403);
-
-		const token = locals.session?.githubToken;
-		platform!.ctx.waitUntil(syncExtension(ext, platform!, token ?? undefined));
+		try {
+			const { ext, allowed } = await canEdit(params.slug, platform!, locals);
+			if (!allowed) throw error(403);
+			const token = locals.session?.githubToken;
+			platform!.ctx.waitUntil(syncExtension(ext, platform!, token ?? undefined));
+		} catch (e) {
+			if (e instanceof GitHubTokenExpiredError)
+				await handleExpiredToken(platform!, locals, cookies, url);
+			throw e;
+		}
 		return { synced: true };
 	},
 
 	delete: async ({ platform, params, locals, url, cookies }) => {
 		await requireAuth(url, cookies, platform!, locals);
 
-		const { ext, allowed } = await canEdit(params.slug, platform!, locals);
-		if (!allowed) throw error(403);
+		let ext: Awaited<ReturnType<typeof canEdit>>['ext'];
+		try {
+			const result = await canEdit(params.slug, platform!, locals);
+			if (!result.allowed) throw error(403);
+			ext = result.ext;
+		} catch (e) {
+			if (e instanceof GitHubTokenExpiredError)
+				await handleExpiredToken(platform!, locals, cookies, url);
+			throw e;
+		}
 
 		const db = getDatabase(platform);
 		await db.delete(extension).where(eq(extension.id, ext.id));

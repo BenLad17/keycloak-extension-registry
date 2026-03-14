@@ -26,8 +26,8 @@
 <div class="group relative {extraClass}">
 	<pre
 		class="hljs overflow-x-auto rounded-lg border border-border px-4 py-3 font-mono text-xs leading-relaxed"><code
-		>{@html highlighted}</code
-	></pre>
+			>{@html highlighted}</code
+		></pre>
 	<button
 		onclick={copy}
 		class="absolute top-2 right-2 flex items-center gap-1.5 rounded-md border border-border bg-surface px-2 py-1 text-xs text-text-secondary opacity-0 transition-all group-hover:opacity-100 hover:border-brand/50 hover:text-text"

@@ -4,7 +4,12 @@ import {
 	mavenArtifactSource,
 	getDatabase
 } from '$lib/server/db';
-import { extractResourceFiles, extractPomXml, MAX_JAR_BYTES, sha256Hex } from '$lib/server/extensions/jar';
+import {
+	extractResourceFiles,
+	extractPomXml,
+	MAX_JAR_BYTES,
+	sha256Hex
+} from '$lib/server/extensions/jar';
 import { extractSourceFiles } from '$lib/server/extensions/source';
 import { parseKeycloakVersion } from '$lib/server/extensions/pom';
 import { and, eq } from 'drizzle-orm';

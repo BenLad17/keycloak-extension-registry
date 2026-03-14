@@ -47,14 +47,23 @@
 
 <svelte:head>
 	<title>Keycloak Extension Registry</title>
-	<meta name="description" content="Browse, install, and publish community extensions for Keycloak. Releases tracked from GitHub and Maven Central, versioned and reproducible." />
+	<meta
+		name="description"
+		content="Browse, install, and publish community extensions for Keycloak. Releases tracked from GitHub and Maven Central, versioned and reproducible."
+	/>
 	<meta property="og:site_name" content="Keycloak Extension Registry" />
 	<meta property="og:type" content="website" />
 	<meta property="og:title" content="Keycloak Extension Registry" />
-	<meta property="og:description" content="Browse, install, and publish community extensions for Keycloak. Releases tracked from GitHub and Maven Central, versioned and reproducible." />
+	<meta
+		property="og:description"
+		content="Browse, install, and publish community extensions for Keycloak. Releases tracked from GitHub and Maven Central, versioned and reproducible."
+	/>
 	<meta name="twitter:card" content="summary" />
 	<meta name="twitter:title" content="Keycloak Extension Registry" />
-	<meta name="twitter:description" content="Browse, install, and publish community extensions for Keycloak." />
+	<meta
+		name="twitter:description"
+		content="Browse, install, and publish community extensions for Keycloak."
+	/>
 </svelte:head>
 
 <div class="flex min-h-screen flex-col bg-bg">
@@ -141,9 +150,19 @@
 	{#if mobileMenuOpen}
 		<div class="fixed inset-0 z-40 flex flex-col bg-bg pt-14 md:hidden">
 			<div class="flex flex-1 flex-col gap-1 overflow-y-auto px-4 py-4">
-				<a href="/explore" class={mobileNavClass('/explore')} onclick={() => (mobileMenuOpen = false)}>Explore</a>
-				<a href="/publish" class={mobileNavClass('/publish')} onclick={() => (mobileMenuOpen = false)}>Publish</a>
-				<a href="/docs" class={mobileNavClass('/docs')} onclick={() => (mobileMenuOpen = false)}>Docs</a>
+				<a
+					href="/explore"
+					class={mobileNavClass('/explore')}
+					onclick={() => (mobileMenuOpen = false)}>Explore</a
+				>
+				<a
+					href="/publish"
+					class={mobileNavClass('/publish')}
+					onclick={() => (mobileMenuOpen = false)}>Publish</a
+				>
+				<a href="/docs" class={mobileNavClass('/docs')} onclick={() => (mobileMenuOpen = false)}
+					>Docs</a
+				>
 
 				<div class="my-3 border-t border-border"></div>
 
@@ -154,7 +173,11 @@
 						onclick={() => (mobileMenuOpen = false)}
 					>
 						<div class="flex items-center gap-2">
-							<img src={data.user.avatarUrl} alt="" class="h-6 w-6 rounded-full ring-1 ring-border" />
+							<img
+								src={data.user.avatarUrl}
+								alt=""
+								class="h-6 w-6 rounded-full ring-1 ring-border"
+							/>
 							<span>{data.user.login}</span>
 						</div>
 					</a>
@@ -193,7 +216,11 @@
 		<div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-6 sm:px-6">
 			<p class="text-xs text-text-secondary/60">Keycloak Extension Registry</p>
 			<div class="flex items-center gap-5 text-xs">
-				<a href="/docs" class="text-text-secondary/60 no-underline transition-colors hover:text-text-secondary">Docs</a>
+				<a
+					href="/docs"
+					class="text-text-secondary/60 no-underline transition-colors hover:text-text-secondary"
+					>Docs</a
+				>
 				<a
 					href="https://github.com/BenLad17/keycloak-extension-registry"
 					target="_blank"

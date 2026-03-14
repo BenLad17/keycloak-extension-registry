@@ -124,21 +124,18 @@ async function triggerProviderImageBuild(
 		const env = getEnv(platform);
 		const [owner, repo] = env.REGISTRY_GITHUB_REPO.split('/');
 		const octokit = getOctokitInstance(platform);
-		await octokit.request(
-			'POST /repos/{owner}/{repo}/actions/workflows/{workflow_id}/dispatches',
-			{
-				owner,
-				repo,
-				workflow_id: 'build-provider-image.yml',
-				ref: 'master',
-				inputs: {
-					slug,
-					version: v.version,
-					download_url: v.downloadUrl,
-					digest: v.digest
-				}
+		await octokit.request('POST /repos/{owner}/{repo}/actions/workflows/{workflow_id}/dispatches', {
+			owner,
+			repo,
+			workflow_id: 'build-provider-image.yml',
+			ref: 'master',
+			inputs: {
+				slug,
+				version: v.version,
+				download_url: v.downloadUrl,
+				digest: v.digest
 			}
-		);
+		});
 		console.log(`Triggered provider image build for ${slug}@${v.version}`);
 	} catch (err) {
 		console.error(`Failed to trigger provider image build for ${slug}@${v.version}:`, err);

@@ -52,8 +52,7 @@ CMD ["start", "--optimized"]`);
 			Add one
 			<code class="rounded bg-surface px-1 py-0.5 font-mono text-xs text-text">COPY --from=</code>
 			line per extension, before the
-			<code class="rounded bg-surface px-1 py-0.5 font-mono text-xs text-text"
-				>RUN kc.sh build</code
+			<code class="rounded bg-surface px-1 py-0.5 font-mono text-xs text-text">RUN kc.sh build</code
 			> step. The pattern is identical regardless of how many extensions you include.
 		</p>
 		<CodeBlock code={multipleExtensions} lang="dockerfile" />
@@ -74,7 +73,9 @@ CMD ["start", "--optimized"]`);
 					>.
 					<code class="rounded bg-bg px-1 py-0.5 font-mono text-xs text-text">kc.sh build</code>
 					then augments and optimises Keycloak's classpath for the installed providers, which is required
-					for the <code class="rounded bg-bg px-1 py-0.5 font-mono text-xs text-text">--optimized</code> start flag.
+					for the
+					<code class="rounded bg-bg px-1 py-0.5 font-mono text-xs text-text">--optimized</code> start
+					flag.
 				</p>
 			</div>
 			<div class="rounded-xl border border-border bg-surface/40 px-5 py-4">

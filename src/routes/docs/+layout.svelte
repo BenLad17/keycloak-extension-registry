@@ -14,7 +14,9 @@
 <div class="flex gap-12">
 	<!-- Sidebar (desktop) -->
 	<nav class="hidden w-44 shrink-0 lg:block">
-		<p class="mb-3 text-xs font-semibold tracking-widest text-text-secondary/60 uppercase">Documentation</p>
+		<p class="mb-3 text-xs font-semibold tracking-widest text-text-secondary/60 uppercase">
+			Documentation
+		</p>
 		<ul class="space-y-0.5">
 			{#each nav as item}
 				<li>

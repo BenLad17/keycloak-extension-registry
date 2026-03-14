@@ -15,8 +15,8 @@
 			<p class="mb-1.5 font-medium text-text">Where does the provider image come from?</p>
 			<p class="text-sm text-text-secondary">
 				When the registry syncs a new extension version it automatically builds a minimal OCI image
-				containing only the JAR and publishes it. This happens within minutes of a new release
-				being detected. The image is public and free to pull.
+				containing only the JAR and publishes it. This happens within minutes of a new release being
+				detected. The image is public and free to pull.
 			</p>
 		</div>
 
@@ -41,7 +41,9 @@
 		</div>
 
 		<div class="rounded-xl border border-border bg-surface/40 px-5 py-4">
-			<p class="mb-1.5 font-medium text-text">What does <code class="font-mono text-xs">kc.sh build</code> do?</p>
+			<p class="mb-1.5 font-medium text-text">
+				What does <code class="font-mono text-xs">kc.sh build</code> do?
+			</p>
 			<p class="text-sm text-text-secondary">
 				It augments Keycloak's classpath for the installed providers using Quarkus's build-time
 				optimisation. The result is a faster, leaner startup. It is required if you start Keycloak

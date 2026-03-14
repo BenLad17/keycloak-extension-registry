@@ -54,15 +54,24 @@
 
 <svelte:head>
 	<title>{ext.name} - Keycloak Extension Registry</title>
-	<meta name="description" content={ext.description ?? `${ext.name} - a community Keycloak extension.`} />
+	<meta
+		name="description"
+		content={ext.description ?? `${ext.name} - a community Keycloak extension.`}
+	/>
 	<link rel="canonical" href={canonicalUrl} />
 	<meta property="og:type" content="article" />
 	<meta property="og:url" content={canonicalUrl} />
 	<meta property="og:title" content="{ext.name} - Keycloak Extension Registry" />
-	<meta property="og:description" content={ext.description ?? `${ext.name} - a community Keycloak extension.`} />
+	<meta
+		property="og:description"
+		content={ext.description ?? `${ext.name} - a community Keycloak extension.`}
+	/>
 	<meta name="twitter:card" content="summary" />
 	<meta name="twitter:title" content="{ext.name} - Keycloak Extension Registry" />
-	<meta name="twitter:description" content={ext.description ?? `${ext.name} - a community Keycloak extension.`} />
+	<meta
+		name="twitter:description"
+		content={ext.description ?? `${ext.name} - a community Keycloak extension.`}
+	/>
 </svelte:head>
 
 <div class="mx-auto max-w-6xl px-4 py-6 sm:py-10">

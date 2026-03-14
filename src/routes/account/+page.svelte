@@ -83,7 +83,9 @@
 									</span>
 								{/if}
 								{#if ext.githubOwner && ext.githubRepo}
-									<span class="font-mono text-text-secondary/60">{ext.githubOwner}/{ext.githubRepo}</span>
+									<span class="font-mono text-text-secondary/60"
+										>{ext.githubOwner}/{ext.githubRepo}</span
+									>
 								{/if}
 							</div>
 						</div>

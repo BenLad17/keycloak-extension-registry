@@ -9,4 +9,3 @@ export function providerImageRef(base: string, slug: string, version: string): s
 export function generateCopyLine(imageRef: string): string {
 	return `COPY --from=${imageRef} /providers/ /opt/keycloak/providers/`;
 }
-

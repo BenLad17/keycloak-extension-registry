@@ -37,7 +37,9 @@
 	>
 		<Package class="h-10 w-10 text-text-secondary/40" />
 		<p class="text-sm font-medium text-text-secondary">No versions yet</p>
-		<p class="text-xs text-text-secondary/60">Releases will appear here once this extension is synced.</p>
+		<p class="text-xs text-text-secondary/60">
+			Releases will appear here once this extension is synced.
+		</p>
 	</div>
 {:else}
 	<div class="space-y-3">
@@ -127,7 +129,10 @@
 						</div>
 						<div class="mt-4 flex items-center gap-2 border-t border-border pt-4">
 							<Hash class="h-3.5 w-3.5 shrink-0 text-text-secondary/60" />
-							<span class="flex-1 truncate font-mono text-xs text-text-secondary/60" title={v.digest}>
+							<span
+								class="flex-1 truncate font-mono text-xs text-text-secondary/60"
+								title={v.digest}
+							>
 								SHA-256: {v.digest}
 							</span>
 							<button

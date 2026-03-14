@@ -13,9 +13,15 @@
 	let selectedSort = $state(untrack(() => data.sort));
 
 	// Keep local state in sync when data changes (e.g. browser back/forward).
-	$effect(() => { searchQuery = data.query; });
-	$effect(() => { selectedCategory = data.category; });
-	$effect(() => { selectedSort = data.sort; });
+	$effect(() => {
+		searchQuery = data.query;
+	});
+	$effect(() => {
+		selectedCategory = data.category;
+	});
+	$effect(() => {
+		selectedSort = data.sort;
+	});
 
 	function navigate() {
 		goto(`/explore?q=${searchQuery}&category=${selectedCategory}&sort=${selectedSort}`);
@@ -72,7 +78,9 @@
 			{#if data.query}
 				Results for <span class="text-text">"{data.query}"</span>
 			{:else if data.category}
-				<span class="text-text">{ExtensionCategoryLabel[data.category as keyof typeof ExtensionCategoryLabel]}</span>
+				<span class="text-text"
+					>{ExtensionCategoryLabel[data.category as keyof typeof ExtensionCategoryLabel]}</span
+				>
 			{:else}
 				All extensions
 			{/if}
@@ -93,7 +101,9 @@
 				<p class="text-sm text-text-secondary/60">Try a different search term or category</p>
 			{:else}
 				<p class="text-sm text-text-secondary/60">
-					Be the first to <a href="/publish" class="text-brand hover:underline">publish an extension</a>.
+					Be the first to <a href="/publish" class="text-brand hover:underline"
+						>publish an extension</a
+					>.
 				</p>
 			{/if}
 		</div>
@@ -105,7 +115,7 @@
 					class="group flex flex-col rounded-xl border border-border bg-surface px-5 py-4 text-text no-underline transition-all hover:border-brand/30 hover:bg-surface-muted"
 				>
 					<div class="mb-2 flex items-start justify-between gap-3">
-						<h3 class="text-sm font-semibold leading-snug transition-colors group-hover:text-brand">
+						<h3 class="text-sm leading-snug font-semibold transition-colors group-hover:text-brand">
 							{ext.name}
 						</h3>
 						<Badge class="shrink-0">{ExtensionCategoryLabel[ext.category]}</Badge>
@@ -119,7 +129,9 @@
 							{formatNumber(ext.downloadCount ?? 0)}
 						</span>
 						{#if githubOwner && githubRepo}
-							<span class="min-w-0 truncate font-mono text-[0.7rem]">{githubOwner}/{githubRepo}</span>
+							<span class="min-w-0 truncate font-mono text-[0.7rem]"
+								>{githubOwner}/{githubRepo}</span
+							>
 						{/if}
 					</div>
 				</a>
@@ -131,7 +143,8 @@
 				{#each Array(data.totalPages) as _, i}
 					<a
 						href={`/explore?page=${i + 1}&q=${data.query}&category=${data.category}&sort=${data.sort}`}
-						class="flex h-8 w-8 items-center justify-center rounded-md text-xs text-text-secondary no-underline transition-colors hover:bg-surface-muted {data.page === i + 1
+						class="flex h-8 w-8 items-center justify-center rounded-md text-xs text-text-secondary no-underline transition-colors hover:bg-surface-muted {data.page ===
+						i + 1
 							? 'bg-brand/10 font-medium text-brand'
 							: ''}"
 					>

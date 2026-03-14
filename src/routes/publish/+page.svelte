@@ -26,9 +26,7 @@
 	<p class="mb-8 text-text-secondary">Register a new Keycloak extension in the registry.</p>
 
 	{#if form?.error}
-		<div
-			class="mb-6 rounded-xl border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger"
-		>
+		<div class="mb-6 rounded-xl border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger">
 			{form.error}
 		</div>
 	{/if}
@@ -58,7 +56,9 @@
 		<!-- Code source repo picker -->
 		<div class="rounded-xl border border-border bg-surface p-4 sm:p-6">
 			<h2 class="mb-1 text-sm font-semibold text-text">Code Source</h2>
-			<p class="mb-4 text-sm text-text-secondary">The GitHub repository where the source code lives.</p>
+			<p class="mb-4 text-sm text-text-secondary">
+				The GitHub repository where the source code lives.
+			</p>
 
 			{#if selectedFullName}
 				<!-- Selected state -->
@@ -82,13 +82,28 @@
 				{#await data.repos}
 					<div class="flex items-center gap-2 text-sm text-text-secondary">
 						<svg class="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
-							<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-							<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8h4z" />
+							<circle
+								class="opacity-25"
+								cx="12"
+								cy="12"
+								r="10"
+								stroke="currentColor"
+								stroke-width="4"
+							/>
+							<path
+								class="opacity-75"
+								fill="currentColor"
+								d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8h4z"
+							/>
 						</svg>
 						Loading your repositories…
 					</div>
 				{:then repos}
-					{@const filteredRepos = repoSearch ? repos.filter((r) => `${r.owner}/${r.name}`.toLowerCase().includes(repoSearch.toLowerCase())) : repos}
+					{@const filteredRepos = repoSearch
+						? repos.filter((r) =>
+								`${r.owner}/${r.name}`.toLowerCase().includes(repoSearch.toLowerCase())
+							)
+						: repos}
 					{#if repos.length > 0}
 						<div class="flex flex-col gap-2">
 							{#if repos.length > 6}

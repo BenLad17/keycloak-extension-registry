@@ -33,9 +33,7 @@ export const GET: RequestHandler = async ({ platform, url }) => {
 		.where(eq(extension.status, 'active'));
 
 	const entries = [
-		...STATIC_PATHS.map(({ path, changefreq }) =>
-			urlEntry(`${origin}${path}`, { changefreq })
-		),
+		...STATIC_PATHS.map(({ path, changefreq }) => urlEntry(`${origin}${path}`, { changefreq })),
 		...extensions.map((ext) =>
 			urlEntry(`${origin}/extension/${ext.slug}`, {
 				changefreq: 'daily',

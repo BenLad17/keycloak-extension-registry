@@ -1,5 +1,11 @@
 import type { PageServerLoad } from './$types';
-import { getDatabase, extension, githubCodeSource, ExtensionCategoryLabel, type ExtensionCategory } from '$lib/server/db';
+import {
+	getDatabase,
+	extension,
+	githubCodeSource,
+	ExtensionCategoryLabel,
+	type ExtensionCategory
+} from '$lib/server/db';
 import { eq, sql, and, asc, desc } from 'drizzle-orm';
 
 const VALID_CATEGORIES = new Set(Object.keys(ExtensionCategoryLabel));
@@ -41,9 +47,11 @@ export const load: PageServerLoad = async ({ url, platform }) => {
 			.leftJoin(githubCodeSource, eq(githubCodeSource.extensionId, extension.id))
 			.where(whereClause)
 			.orderBy(
-				sort === 'name' ? asc(extension.name) :
-				sort === 'updated' ? desc(extension.lastSyncedAt) :
-				desc(extension.downloadCount)
+				sort === 'name'
+					? asc(extension.name)
+					: sort === 'updated'
+						? desc(extension.lastSyncedAt)
+						: desc(extension.downloadCount)
 			)
 			.limit(limit)
 			.offset(offset),

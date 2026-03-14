@@ -11,7 +11,12 @@ import {
 } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
 import { Octokit } from 'octokit';
-import { requireAuth, hasRepoWriteAccess } from '$lib/server/security/auth';
+import {
+	requireAuth,
+	hasRepoWriteAccess,
+	GitHubTokenExpiredError,
+	handleExpiredToken
+} from '$lib/server/security/auth';
 import { syncExtension } from '$lib/server/extensions/sync';
 import { ExtensionCategoryLabel } from '$lib/common/extension-category';
 import { z } from 'zod';
@@ -50,19 +55,38 @@ const PublishSchema = z
 	})
 	.superRefine((data, ctx) => {
 		if (!data.useGithubReleases && !data.useMavenCentral) {
-			ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'At least one artifact source is required.' });
+			ctx.addIssue({
+				code: z.ZodIssueCode.custom,
+				message: 'At least one artifact source is required.'
+			});
 		}
 		if (data.useGithubReleases) {
 			if (!data.artifactOwner)
-				ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['artifactOwner'], message: 'GitHub artifact owner is required.' });
+				ctx.addIssue({
+					code: z.ZodIssueCode.custom,
+					path: ['artifactOwner'],
+					message: 'GitHub artifact owner is required.'
+				});
 			if (!data.artifactRepo)
-				ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['artifactRepo'], message: 'GitHub artifact repo is required.' });
+				ctx.addIssue({
+					code: z.ZodIssueCode.custom,
+					path: ['artifactRepo'],
+					message: 'GitHub artifact repo is required.'
+				});
 		}
 		if (data.useMavenCentral) {
 			if (!data.mavenGroupId)
-				ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['mavenGroupId'], message: 'Maven groupId is required.' });
+				ctx.addIssue({
+					code: z.ZodIssueCode.custom,
+					path: ['mavenGroupId'],
+					message: 'Maven groupId is required.'
+				});
 			if (!data.mavenArtifactId)
-				ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['mavenArtifactId'], message: 'Maven artifactId is required.' });
+				ctx.addIssue({
+					code: z.ZodIssueCode.custom,
+					path: ['mavenArtifactId'],
+					message: 'Maven artifactId is required.'
+				});
 		}
 	});
 
@@ -71,7 +95,9 @@ function stripKeycloakPrefix(name: string): string {
 }
 
 function toDisplayName(repoName: string): string {
-	return stripKeycloakPrefix(repoName).replace(/[-_]+/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+	return stripKeycloakPrefix(repoName)
+		.replace(/[-_]+/g, ' ')
+		.replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 function toSlug(s: string): string {
@@ -108,8 +134,8 @@ export interface UserRepo {
 }
 
 async function fetchUserRepos(token: string): Promise<UserRepo[]> {
+	const octokit = new Octokit({ auth: token });
 	try {
-		const octokit = new Octokit({ auth: token });
 		const { data } = await octokit.request('GET /user/repos', {
 			affiliation: 'owner,organization_member',
 			sort: 'updated',
@@ -122,7 +148,15 @@ async function fetchUserRepos(token: string): Promise<UserRepo[]> {
 				name: r.name,
 				description: r.description ?? null
 			}));
-	} catch {
+	} catch (e) {
+		if (
+			typeof e === 'object' &&
+			e !== null &&
+			'status' in e &&
+			(e as { status: number }).status === 401
+		) {
+			throw new GitHubTokenExpiredError();
+		}
 		return [];
 	}
 }
@@ -132,9 +166,15 @@ export const load: PageServerLoad = async ({ platform, locals, url, cookies }) =
 
 	const token = locals.session!.githubToken;
 
-	return {
-		repos: token ? fetchUserRepos(token) : ([] as UserRepo[])
-	};
+	try {
+		return {
+			repos: token ? fetchUserRepos(token) : ([] as UserRepo[])
+		};
+	} catch (e) {
+		if (e instanceof GitHubTokenExpiredError)
+			await handleExpiredToken(platform!, locals, cookies, url);
+		throw e;
+	}
 };
 
 export const actions: Actions = {
@@ -187,7 +227,14 @@ export const actions: Actions = {
 			});
 		}
 
-		const canWrite = await hasRepoWriteAccess(token, githubOwner, githubRepo);
+		let canWrite: boolean;
+		try {
+			canWrite = await hasRepoWriteAccess(token, githubOwner, githubRepo);
+		} catch (e) {
+			if (e instanceof GitHubTokenExpiredError)
+				await handleExpiredToken(platform!, locals, cookies, url);
+			throw e;
+		}
 		if (!canWrite) {
 			return fail(403, {
 				error: `You need write access to ${githubOwner}/${githubRepo} to publish it.`

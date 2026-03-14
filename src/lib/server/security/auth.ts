@@ -5,8 +5,26 @@ import { getDatabase, type User, user } from '$lib/server/db';
 import { Octokit } from 'octokit';
 import { getEnv } from '$lib/server/env';
 import { eq } from 'drizzle-orm';
-import { createSession } from '$lib/server/security/session';
+import { createSession, destroySession } from '$lib/server/security/session';
 
+export class GitHubTokenExpiredError extends Error {
+	constructor() {
+		super('GitHub token expired or revoked');
+		this.name = 'GitHubTokenExpiredError';
+	}
+}
+
+/** Destroys the current session and redirects the user through GitHub OAuth again. */
+export async function handleExpiredToken(
+	platform: App.Platform,
+	locals: App.Locals,
+	cookies: Cookies,
+	url: URL
+): Promise<never> {
+	await destroySession(platform, locals, cookies);
+	await initializeAuth(url, cookies, platform, url.pathname);
+	throw new Error('unreachable');
+}
 
 export async function getAuthenticatedUser(
 	locals: App.Locals,
@@ -164,9 +182,16 @@ export async function hasRepoWriteAccess(
 		const octokit = new Octokit({ auth: token });
 		const { data } = await octokit.request('GET /repos/{owner}/{repo}', { owner, repo });
 		return data.permissions?.push === true;
-	} catch {
+	} catch (e) {
+		if (isGitHubUnauthorized(e)) throw new GitHubTokenExpiredError();
 		return false;
 	}
+}
+
+function isGitHubUnauthorized(e: unknown): boolean {
+	return (
+		typeof e === 'object' && e !== null && 'status' in e && (e as { status: number }).status === 401
+	);
 }
 
 // Checks admin status by comparing the current user's GitHub login against the

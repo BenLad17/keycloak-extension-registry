@@ -19,7 +19,9 @@
 	>
 		<History class="h-10 w-10 text-text-secondary/40" />
 		<p class="text-sm font-medium text-text-secondary">No changelog entries</p>
-		<p class="text-xs text-text-secondary/60">Release notes will appear here once versions are synced.</p>
+		<p class="text-xs text-text-secondary/60">
+			Release notes will appear here once versions are synced.
+		</p>
 	</div>
 {:else}
 	<div>

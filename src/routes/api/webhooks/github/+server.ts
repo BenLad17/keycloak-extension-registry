@@ -69,9 +69,7 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 	await db
 		.update(extensionVersion)
 		.set({ providerImageBuilt: true })
-		.where(
-			and(eq(extensionVersion.extensionId, ext.id), eq(extensionVersion.version, version))
-		);
+		.where(and(eq(extensionVersion.extensionId, ext.id), eq(extensionVersion.version, version)));
 
 	return Response.json({ ok: true });
 };

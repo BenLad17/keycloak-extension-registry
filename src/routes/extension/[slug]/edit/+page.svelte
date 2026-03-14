@@ -27,9 +27,7 @@
 	</p>
 
 	{#if form?.error}
-		<div
-			class="mb-6 rounded-xl border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger"
-		>
+		<div class="mb-6 rounded-xl border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger">
 			{form.error}
 		</div>
 	{/if}
