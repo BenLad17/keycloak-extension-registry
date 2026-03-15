@@ -4,8 +4,8 @@ import { eq, desc, inArray } from 'drizzle-orm';
 import {
 	requireAuth,
 	isRegistryAdmin,
-	GitHubTokenExpiredError,
-	handleExpiredToken
+	withReauth,
+	isGitHub401
 } from '$lib/server/security/auth';
 import { getUserOctokit } from '$lib/server/github';
 
@@ -18,9 +18,7 @@ async function getUserPushRepoIds(token: string): Promise<Set<number>> {
 		});
 		return new Set(data.filter((r) => r.permissions?.push).map((r) => r.id));
 	} catch (e) {
-		if (typeof e === 'object' && e !== null && 'status' in e && (e as { status: number }).status === 401) {
-			throw new GitHubTokenExpiredError();
-		}
+		if (isGitHub401(e)) throw e;
 		return new Set();
 	}
 }
@@ -57,7 +55,7 @@ export const load: PageServerLoad = async ({ platform, locals, url, cookies }) =
 	const token = locals.session!.githubToken;
 	if (!token) return { extensions: [] };
 
-	try {
+	return await withReauth(platform!, locals, cookies, url, async () => {
 		const pushRepoIds = await getUserPushRepoIds(token);
 		if (pushRepoIds.size === 0) return { extensions: [] };
 
@@ -68,8 +66,5 @@ export const load: PageServerLoad = async ({ platform, locals, url, cookies }) =
 			.where(inArray(githubCodeSource.repoId, [...pushRepoIds]))
 			.orderBy(desc(extension.updatedAt));
 		return { extensions };
-	} catch (e) {
-		if (e instanceof GitHubTokenExpiredError) await handleExpiredToken(platform!, locals, cookies, url);
-		throw e;
-	}
+	});
 };

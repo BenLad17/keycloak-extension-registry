@@ -8,23 +8,31 @@ import { eq } from 'drizzle-orm';
 import { createSession, destroySession } from '$lib/server/security/session';
 import { getUserOctokit } from '$lib/server/github';
 
-export class GitHubTokenExpiredError extends Error {
-	constructor() {
-		super('GitHub token expired or revoked');
-		this.name = 'GitHubTokenExpiredError';
-	}
+export function isGitHub401(e: unknown): boolean {
+	return typeof e === 'object' && e !== null && 'status' in e && (e as { status: number }).status === 401;
 }
 
-/** Destroys the current session and redirects the user through GitHub OAuth again. */
-export async function handleExpiredToken(
+/**
+ * Runs `fn` and, if GitHub responds with 401 (token expired/revoked),
+ * destroys the current session and redirects the user back through OAuth.
+ */
+export async function withReauth<T>(
 	platform: App.Platform,
 	locals: App.Locals,
 	cookies: Cookies,
-	url: URL
-): Promise<never> {
-	await destroySession(platform, locals, cookies);
-	await initializeAuth(url, cookies, platform, url.pathname);
-	throw new Error('unreachable');
+	url: URL,
+	fn: () => Promise<T>
+): Promise<T> {
+	try {
+		return await fn();
+	} catch (e) {
+		if (isGitHub401(e)) {
+			await destroySession(platform, locals, cookies);
+			await initializeAuth(url, cookies, platform, url.pathname);
+			throw new Error('unreachable');
+		}
+		throw e;
+	}
 }
 
 export async function getAuthenticatedUser(
@@ -184,20 +192,15 @@ export async function hasRepoWriteAccess(
 		const { data } = await octokit.request('GET /repos/{owner}/{repo}', { owner, repo });
 		return data.permissions?.push === true;
 	} catch (e) {
-		if (isGitHubUnauthorized(e)) throw new GitHubTokenExpiredError();
+		if (isGitHub401(e)) throw e;
 		return false;
 	}
 }
 
-function isGitHubUnauthorized(e: unknown): boolean {
-	return (
-		typeof e === 'object' && e !== null && 'status' in e && (e as { status: number }).status === 401
-	);
-}
-
 /**
  * Returns true if the current user can manage the given extension.
- * Throws GitHubTokenExpiredError if the stored token is revoked/expired.
+ * Throws the raw GitHub 401 error if the token is revoked/expired — callers should
+ * wrap with `withReauth` to trigger re-login, or catch `isGitHub401(e)` to degrade gracefully.
  */
 export async function canManageExtension(
 	githubSource: { owner: string; repo: string } | null,

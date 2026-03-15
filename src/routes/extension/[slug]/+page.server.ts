@@ -2,7 +2,7 @@ import type { PageServerLoad } from './$types';
 import { extension, extensionVersion, githubCodeSource, getDatabase } from '$lib/server/db';
 import { desc, eq } from 'drizzle-orm';
 import { error, redirect } from '@sveltejs/kit';
-import { canManageExtension, GitHubTokenExpiredError } from '$lib/server/security/auth';
+import { canManageExtension, isGitHub401 } from '$lib/server/security/auth';
 
 export const load: PageServerLoad = async ({ platform, params, locals }) => {
 	const slug = params.slug;
@@ -32,7 +32,7 @@ export const load: PageServerLoad = async ({ platform, params, locals }) => {
 	try {
 		canManage = await canManageExtension(githubSource ?? null, locals, platform!);
 	} catch (e) {
-		if (!(e instanceof GitHubTokenExpiredError)) throw e;
+		if (!isGitHub401(e)) throw e;
 		// Stale token — hide management UI rather than forcing re-auth on a read page
 	}
 

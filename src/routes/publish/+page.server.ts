@@ -14,8 +14,8 @@ import { getUserOctokit } from '$lib/server/github';
 import {
 	requireAuth,
 	hasRepoWriteAccess,
-	GitHubTokenExpiredError,
-	handleExpiredToken
+	withReauth,
+	isGitHub401
 } from '$lib/server/security/auth';
 import { syncExtension } from '$lib/server/extensions/sync';
 import { ExtensionCategoryLabel } from '$lib/common/extension-category';
@@ -153,14 +153,7 @@ async function fetchUserRepos(token: string, platform: App.Platform): Promise<Us
 				description: r.description ?? null
 			}));
 	} catch (e) {
-		if (
-			typeof e === 'object' &&
-			e !== null &&
-			'status' in e &&
-			(e as { status: number }).status === 401
-		) {
-			throw new GitHubTokenExpiredError();
-		}
+		if (isGitHub401(e)) throw e;
 		return [];
 	}
 }
@@ -170,15 +163,11 @@ export const load: PageServerLoad = async ({ platform, locals, url, cookies }) =
 
 	const token = locals.session!.githubToken;
 
-	try {
-		return {
-			repos: token ? fetchUserRepos(token, platform!) : ([] as UserRepo[])
-		};
-	} catch (e) {
-		if (e instanceof GitHubTokenExpiredError)
-			await handleExpiredToken(platform!, locals, cookies, url);
-		throw e;
-	}
+	return {
+		repos: token
+			? await withReauth(platform!, locals, cookies, url, () => fetchUserRepos(token, platform!))
+			: ([] as UserRepo[])
+	};
 };
 
 export const actions: Actions = {
@@ -231,18 +220,33 @@ export const actions: Actions = {
 			});
 		}
 
-		let canWrite: boolean;
-		try {
-			canWrite = await hasRepoWriteAccess(token, githubOwner, githubRepo);
-		} catch (e) {
-			if (e instanceof GitHubTokenExpiredError)
-				await handleExpiredToken(platform!, locals, cookies, url);
-			throw e;
-		}
+		const canWrite = await withReauth(platform!, locals, cookies, url, () =>
+			hasRepoWriteAccess(token, githubOwner, githubRepo)
+		);
 		if (!canWrite) {
 			return fail(403, {
 				error: `You need write access to ${githubOwner}/${githubRepo} to publish it.`
 			});
+		}
+
+		// Resolve artifact repo ID before entering the transaction (no API calls inside tx).
+		let artifactRepoId: number | undefined;
+		if (useGithubReleases) {
+			if (artifactOwner === githubOwner && artifactRepo === githubRepo) {
+				artifactRepoId = repoData.id;
+			} else {
+				try {
+					const { data } = await octokit.request('GET /repos/{owner}/{repo}', {
+						owner: artifactOwner,
+						repo: artifactRepo
+					});
+					artifactRepoId = data.id;
+				} catch {
+					return fail(400, {
+						error: `GitHub artifact repo ${artifactOwner}/${artifactRepo} not found or inaccessible.`
+					});
+				}
+			}
 		}
 
 		const db = getDatabase(platform);
@@ -268,23 +272,7 @@ export const actions: Actions = {
 			repo: githubRepo
 		});
 
-		if (useGithubReleases) {
-			let artifactRepoId: number;
-			if (artifactOwner === githubOwner && artifactRepo === githubRepo) {
-				artifactRepoId = repoData.id;
-			} else {
-				try {
-					const { data } = await octokit.request('GET /repos/{owner}/{repo}', {
-						owner: artifactOwner,
-						repo: artifactRepo
-					});
-					artifactRepoId = data.id;
-				} catch {
-					return fail(400, {
-						error: `GitHub artifact repo ${artifactOwner}/${artifactRepo} not found or inaccessible.`
-					});
-				}
-			}
+		if (artifactRepoId !== undefined) {
 			await db.insert(githubArtifactSource).values({
 				extensionId: inserted.id,
 				repoId: artifactRepoId,

@@ -1,13 +1,17 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
-import { extension, githubCodeSource, getDatabase, type ExtensionCategory } from '$lib/server/db';
-import { eq } from 'drizzle-orm';
 import {
-	requireAuth,
-	canManageExtension,
-	GitHubTokenExpiredError,
-	handleExpiredToken
-} from '$lib/server/security/auth';
+	extension,
+	githubCodeSource,
+	githubArtifactSource,
+	mavenArtifactSource,
+	extensionVersion,
+	extensionVersionFile,
+	getDatabase,
+	type ExtensionCategory
+} from '$lib/server/db';
+import { eq, inArray } from 'drizzle-orm';
+import { requireAuth, canManageExtension, withReauth } from '$lib/server/security/auth';
 import { syncExtension } from '$lib/server/extensions/sync';
 import { ExtensionCategoryLabel } from '$lib/common/extension-category';
 import { z } from 'zod';
@@ -39,32 +43,23 @@ async function loadExt(slug: string, platform: App.Platform) {
 export const load: PageServerLoad = async ({ platform, params, locals, url, cookies }) => {
 	await requireAuth(url, cookies, platform!, locals);
 
-	try {
+	return withReauth(platform!, locals, cookies, url, async () => {
 		const { ext, source } = await loadExt(params.slug, platform!);
 		if (!(await canManageExtension(source, locals, platform!)))
 			throw error(403, 'You need write access to this repository to edit this extension.');
 		return { extension: ext };
-	} catch (e) {
-		if (e instanceof GitHubTokenExpiredError)
-			await handleExpiredToken(platform!, locals, cookies, url);
-		throw e;
-	}
+	});
 };
 
 export const actions: Actions = {
 	save: async ({ request, platform, params, locals, url, cookies }) => {
 		await requireAuth(url, cookies, platform!, locals);
 
-		let ext: Awaited<ReturnType<typeof loadExt>>['ext'];
-		try {
+		const ext = await withReauth(platform!, locals, cookies, url, async () => {
 			const loaded = await loadExt(params.slug, platform!);
 			if (!(await canManageExtension(loaded.source, locals, platform!))) throw error(403);
-			ext = loaded.ext;
-		} catch (e) {
-			if (e instanceof GitHubTokenExpiredError)
-				await handleExpiredToken(platform!, locals, cookies, url);
-			throw e;
-		}
+			return loaded.ext;
+		});
 
 		const formData = await request.formData();
 		const raw: Record<string, unknown> = {};
@@ -96,33 +91,39 @@ export const actions: Actions = {
 	sync: async ({ platform, params, locals, url, cookies }) => {
 		await requireAuth(url, cookies, platform!, locals);
 
-		try {
+		await withReauth(platform!, locals, cookies, url, async () => {
 			const { ext, source } = await loadExt(params.slug, platform!);
 			if (!(await canManageExtension(source, locals, platform!))) throw error(403);
 			platform!.ctx.waitUntil(syncExtension(ext, platform!, locals.session?.githubToken));
-		} catch (e) {
-			if (e instanceof GitHubTokenExpiredError)
-				await handleExpiredToken(platform!, locals, cookies, url);
-			throw e;
-		}
+		});
 		return { synced: true };
 	},
 
 	delete: async ({ platform, params, locals, url, cookies }) => {
 		await requireAuth(url, cookies, platform!, locals);
 
-		let ext: Awaited<ReturnType<typeof loadExt>>['ext'];
-		try {
+		const ext = await withReauth(platform!, locals, cookies, url, async () => {
 			const loaded = await loadExt(params.slug, platform!);
 			if (!(await canManageExtension(loaded.source, locals, platform!))) throw error(403);
-			ext = loaded.ext;
-		} catch (e) {
-			if (e instanceof GitHubTokenExpiredError)
-				await handleExpiredToken(platform!, locals, cookies, url);
-			throw e;
-		}
+			return loaded.ext;
+		});
 
 		const db = getDatabase(platform);
+
+		// D1 doesn't enforce FK cascade deletes, so we delete child rows explicitly.
+		const versions = await db
+			.select({ id: extensionVersion.id })
+			.from(extensionVersion)
+			.where(eq(extensionVersion.extensionId, ext.id));
+		if (versions.length > 0) {
+			await db
+				.delete(extensionVersionFile)
+				.where(inArray(extensionVersionFile.versionId, versions.map((v) => v.id)));
+		}
+		await db.delete(extensionVersion).where(eq(extensionVersion.extensionId, ext.id));
+		await db.delete(githubArtifactSource).where(eq(githubArtifactSource.extensionId, ext.id));
+		await db.delete(mavenArtifactSource).where(eq(mavenArtifactSource.extensionId, ext.id));
+		await db.delete(githubCodeSource).where(eq(githubCodeSource.extensionId, ext.id));
 		await db.delete(extension).where(eq(extension.id, ext.id));
 
 		redirect(302, '/account');
