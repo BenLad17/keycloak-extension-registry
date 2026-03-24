@@ -34,9 +34,7 @@ export class GithubReleasesArtifactAdapter implements ArtifactSourceAdapter {
 	constructor(private readonly githubToken?: string) {}
 
 	private getOctokit(platform: App.Platform): Octokit {
-		return this.githubToken
-			? getUserOctokit(this.githubToken)
-			: getOctokitInstance(platform);
+		return this.githubToken ? getUserOctokit(this.githubToken) : getOctokitInstance(platform);
 	}
 
 	async discoverVersions(extensionId: number, platform: App.Platform): Promise<NewVersion[]> {

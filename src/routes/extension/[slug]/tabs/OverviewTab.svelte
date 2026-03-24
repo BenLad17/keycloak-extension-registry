@@ -3,9 +3,18 @@
 	import { ExtensionCategoryLabel } from '$lib/common/extension-category';
 	import Card from '$lib/components/Card.svelte';
 	import { formatCount, formatSize, formatDate, timeAgo } from '$lib/utils/format';
-	import type { Extension, ExtensionVersion, GithubCodeSource } from '$lib/server/db';
-	import { providerImageRef, generateCopyLine } from '$lib/types/providers-config';
+	import type {
+		Extension,
+		ExtensionVersion,
+		GithubCodeSource,
+		MavenArtifactSource
+	} from '$lib/server/db';
 	import CodeBlock from '$lib/components/CodeBlock.svelte';
+	import {
+		mavenDependencySnippet,
+		yamlManifestSnippet,
+		initContainerSnippet
+	} from '$lib/types/install-snippets';
 
 	let {
 		extension: ext,
@@ -13,9 +22,9 @@
 		latestVersion,
 		firstVersion,
 		githubSource,
+		mavenSource,
 		maxDownloads,
 		readmeHtml,
-		providerRegistryBase,
 		canManage
 	}: {
 		extension: Extension;
@@ -23,27 +32,26 @@
 		latestVersion: ExtensionVersion | null;
 		firstVersion: ExtensionVersion | null;
 		githubSource: GithubCodeSource | null;
+		mavenSource: MavenArtifactSource | null;
 		maxDownloads: number;
 		readmeHtml: string | null;
-		providerRegistryBase: string;
 		canManage: boolean;
 	} = $props();
 
 	const DOWNLOADS_COLLAPSED_COUNT = 5;
+	const DOWNLOADER_IMAGE = 'ghcr.io/benlad17/keycloak-extension-registry/downloader:latest';
 	let downloadsExpanded = $state(false);
 	const visibleDownloadVersions = $derived(
 		downloadsExpanded ? versions : versions.slice(0, DOWNLOADS_COLLAPSED_COUNT)
 	);
 
-	const copyLine = $derived(
-		latestVersion
-			? generateCopyLine(providerImageRef(providerRegistryBase, ext.slug, latestVersion.version))
-			: ''
-	);
-
 	function proxyDownloadUrl(version: string): string {
 		return `/extension/${ext.slug}/${version}/download`;
 	}
+
+	const pomDevelopers = $derived<
+		{ name: string | null; email: string | null; org: string | null; orgUrl: string | null }[]
+	>(ext.pomDevelopers ? JSON.parse(ext.pomDevelopers) : []);
 </script>
 
 <div class="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_340px] lg:gap-8">
@@ -127,22 +135,78 @@
 				</Card>
 			{/if}
 
-			<!-- Install card -->
-			<div class="overflow-hidden rounded-xl border border-border bg-surface">
-				<div class="flex items-baseline justify-between border-b border-border px-4 py-3">
-					<p class="text-xs font-semibold text-text">Docker install</p>
-					<span class="text-xs text-text-secondary/50">via OCI image</span>
+			<!-- Maven install card -->
+			{#if mavenSource && latestVersion}
+				<div class="overflow-hidden rounded-xl border border-border bg-surface">
+					<div class="flex items-baseline justify-between border-b border-border px-4 py-3">
+						<p class="text-xs font-semibold text-text">Maven install</p>
+						<span class="text-xs text-text-secondary/50">via Maven Central</span>
+					</div>
+					<div class="px-4 pt-4 pb-5">
+						<CodeBlock
+							code={mavenDependencySnippet(
+								mavenSource.groupId,
+								mavenSource.artifactId,
+								latestVersion.version
+							)}
+							lang="xml"
+						/>
+						<p class="mt-3 text-xs text-text-secondary/60">
+							Add this to your <code>pom.xml</code> dependencies block.
+						</p>
+					</div>
 				</div>
-				<div class="px-4 pt-4 pb-5">
-					<CodeBlock code={copyLine} lang="dockerfile" />
-					<p class="mt-3 text-xs text-text-secondary/60">
-						Add this line to your Dockerfile before the build step. <a
-							href="/docs/quickstart"
-							class="text-brand hover:text-brand/80">Full guide →</a
-						>
-					</p>
+			{/if}
+
+			<!-- YAML manifest card -->
+			{#if mavenSource && latestVersion}
+				<div class="overflow-hidden rounded-xl border border-border bg-surface">
+					<div class="flex items-baseline justify-between border-b border-border px-4 py-3">
+						<p class="text-xs font-semibold text-text">YAML manifest</p>
+						<span class="text-xs text-text-secondary/50">via keycloak-extensions.yaml</span>
+					</div>
+					<div class="px-4 pt-4 pb-5">
+						<CodeBlock
+							code={yamlManifestSnippet(
+								mavenSource.groupId,
+								mavenSource.artifactId,
+								latestVersion.version
+							)}
+							lang="yaml"
+						/>
+						<p class="mt-3 text-xs text-text-secondary/60">
+							Create a <code>keycloak-extensions.yaml</code> file with an
+							<code>extensions:</code> header and add this entry.
+						</p>
+					</div>
 				</div>
-			</div>
+			{/if}
+
+			<!-- Init container card -->
+			{#if mavenSource && latestVersion}
+				<div class="overflow-hidden rounded-xl border border-border bg-surface">
+					<div class="flex items-baseline justify-between border-b border-border px-4 py-3">
+						<p class="text-xs font-semibold text-text">Init container</p>
+						<span class="text-xs text-text-secondary/50">via K8s init container</span>
+					</div>
+					<div class="px-4 pt-4 pb-5">
+						<CodeBlock
+							code={initContainerSnippet(
+								mavenSource.groupId,
+								mavenSource.artifactId,
+								latestVersion.version,
+								DOWNLOADER_IMAGE
+							)}
+							lang="yaml"
+						/>
+						<p class="mt-3 text-xs text-text-secondary/60">
+							Add this to your pod spec's <code>initContainers</code> list. Create a ConfigMap from
+							your <code>keycloak-extensions.yaml</code> and mount it as
+							<code>extensions-manifest</code>.
+						</p>
+					</div>
+				</div>
+			{/if}
 		{/if}
 
 		<!-- Metadata -->
@@ -165,6 +229,46 @@
 				<p class="meta-label">Category</p>
 				<p class="text-text">{ExtensionCategoryLabel[ext.category]}</p>
 			</div>
+			{#if ext.pomLicenseName}
+				<div class="px-4 py-3">
+					<p class="meta-label">License</p>
+					{#if ext.pomLicenseUrl}
+						<a
+							href={ext.pomLicenseUrl}
+							target="_blank"
+							rel="noopener noreferrer"
+							class="text-brand no-underline hover:text-brand/80">{ext.pomLicenseName}</a
+						>
+					{:else}
+						<p class="text-text">{ext.pomLicenseName}</p>
+					{/if}
+				</div>
+			{/if}
+			{#if ext.pomUrl}
+				<div class="px-4 py-3">
+					<p class="meta-label">Project</p>
+					<a
+						href={ext.pomUrl}
+						target="_blank"
+						rel="noopener noreferrer"
+						class="break-all text-brand no-underline hover:text-brand/80">{ext.pomUrl}</a
+					>
+				</div>
+			{/if}
+			{#if pomDevelopers.length > 0}
+				<div class="px-4 py-3">
+					<p class="meta-label">Developers</p>
+					<div class="space-y-1">
+						{#each pomDevelopers as dev}
+							<p class="text-xs text-text">
+								{dev.name ?? 'Unknown'}{#if dev.org}&nbsp;<span class="text-text-secondary"
+										>({dev.org})</span
+									>{/if}
+							</p>
+						{/each}
+					</div>
+				</div>
+			{/if}
 			{#if firstVersion && versions.length > 1}
 				<div class="px-4 py-3">
 					<p class="meta-label">First release</p>

@@ -17,7 +17,8 @@
 		"db:generate": "drizzle-kit generate",
 		"db:migrate": "wrangler d1 migrations apply keycloak-extension-registry --remote",
 		"db:migrate:local": "wrangler d1 migrations apply keycloak-extension-registry --local",
-		"db:studio": "drizzle-kit studio"
+		"db:studio": "drizzle-kit studio",
+		"test": "svelte-kit sync && vitest run"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-cloudflare": "^7.2.6",
@@ -37,6 +38,7 @@
 		"tailwindcss": "^4.1.18",
 		"typescript": "^5.9.3",
 		"vite": "^7.3.1",
+		"vitest": "^4.1.1",
 		"wrangler": "^4.63.0"
 	},
 	"dependencies": {

@@ -132,7 +132,9 @@
 							</div>
 						</div>
 					{:else}
-						<p class="text-sm text-text-secondary">No public repositories with write access found.</p>
+						<p class="text-sm text-text-secondary">
+							No public repositories with write access found.
+						</p>
 					{/if}
 				{/await}
 			{/if}

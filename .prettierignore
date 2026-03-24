@@ -8,3 +8,7 @@ bun.lockb
 # Miscellaneous
 /static/
 /drizzle/
+
+# Agent infrastructure — not project source, formatting not enforced
+.gsd/
+.bg-shell/

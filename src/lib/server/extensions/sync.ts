@@ -4,19 +4,12 @@ import {
 	getDatabase,
 	type Extension
 } from '$lib/server/db';
-import { and, eq, lt, sql } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { getCodeSourceAdapter } from './sources/types';
 import { GithubReleasesArtifactAdapter } from './sources/artifact/github-releases';
 import { MavenCentralArtifactAdapter } from './sources/artifact/maven-central';
-import type { ArtifactSourceAdapter, NewVersion } from './sources/types';
+import type { ArtifactSourceAdapter } from './sources/types';
 import { githubArtifactSource, mavenArtifactSource } from '$lib/server/db';
-import { getOctokitInstance } from '$lib/server/github';
-import { getEnv } from '$lib/server/env';
-
-// Versions whose build might still be in-flight are ignored until this window passes.
-const BUILD_RETRY_DELAY_MS = 15 * 60 * 1000; // 15 minutes
-// Max unbuilt versions to retry per extension per sync, to avoid flooding CI.
-const MAX_RETRY_PER_SYNC = 2;
 
 export async function syncExtension(
 	ext: Extension,
@@ -44,37 +37,7 @@ export async function syncExtension(
 		if (mavenSource) adapters.push(new MavenCentralArtifactAdapter());
 
 		for (const adapter of adapters) {
-			const newVersions = await adapter.discoverVersions(ext.id, platform);
-
-			const recentCutoff = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
-			for (const v of newVersions) {
-				if (v.publishedAt >= recentCutoff) {
-					await triggerProviderImageBuild(ext.slug, v, platform);
-				}
-			}
-
-			// Retry versions whose image build may have failed. Only consider versions
-			// old enough that any in-flight build has had time to complete or fail.
-			const retryDeadline = new Date(Date.now() - BUILD_RETRY_DELAY_MS);
-			const unbuilt = await db
-				.select({
-					version: extensionVersion.version,
-					downloadUrl: extensionVersion.downloadUrl,
-					digest: extensionVersion.digest
-				})
-				.from(extensionVersion)
-				.where(
-					and(
-						eq(extensionVersion.extensionId, ext.id),
-						eq(extensionVersion.providerImageBuilt, false),
-						lt(extensionVersion.publishedAt, retryDeadline)
-					)
-				)
-				.limit(MAX_RETRY_PER_SYNC);
-
-			for (const v of unbuilt) {
-				await triggerProviderImageBuild(ext.slug, v, platform);
-			}
+			await adapter.discoverVersions(ext.id, platform);
 
 			if (adapter.fetchDownloadCounts) {
 				const counts = await adapter.fetchDownloadCounts(ext.id, platform);
@@ -112,32 +75,5 @@ export async function syncExtension(
 			.update(extensionTable)
 			.set({ lastSyncedAt: new Date(), lastSyncError: message })
 			.where(eq(extensionTable.id, ext.id));
-	}
-}
-
-async function triggerProviderImageBuild(
-	slug: string,
-	v: NewVersion,
-	platform: App.Platform
-): Promise<void> {
-	try {
-		const env = getEnv(platform);
-		const [owner, repo] = env.REGISTRY_GITHUB_REPO.split('/');
-		const octokit = getOctokitInstance(platform);
-		await octokit.request('POST /repos/{owner}/{repo}/actions/workflows/{workflow_id}/dispatches', {
-			owner,
-			repo,
-			workflow_id: 'build-provider-image.yml',
-			ref: 'master',
-			inputs: {
-				slug,
-				version: v.version,
-				download_url: v.downloadUrl,
-				digest: v.digest
-			}
-		});
-		console.log(`Triggered provider image build for ${slug}@${v.version}`);
-	} catch (err) {
-		console.error(`Failed to trigger provider image build for ${slug}@${v.version}:`, err);
 	}
 }

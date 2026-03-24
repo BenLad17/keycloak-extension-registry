@@ -6,7 +6,7 @@
 	const nav = [
 		{ href: '/docs', label: 'Introduction' },
 		{ href: '/docs/quickstart', label: 'Quick start' },
-		{ href: '/docs/configuration', label: 'Dockerfile reference' },
+		{ href: '/docs/configuration', label: 'Maven install reference' },
 		{ href: '/docs/faq', label: 'FAQ' }
 	];
 </script>

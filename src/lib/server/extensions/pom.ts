@@ -1,3 +1,93 @@
+export interface PomMetadata {
+	name: string | null;
+	description: string | null;
+	url: string | null;
+	licenseName: string | null;
+	licenseUrl: string | null;
+	scmUrl: string | null;
+	developers: {
+		name: string | null;
+		email: string | null;
+		org: string | null;
+		orgUrl: string | null;
+	}[];
+}
+
+/**
+ * Parse metadata fields from a Maven pom.xml string.
+ *
+ * Extracts: name, description, project URL, license (name + URL), SCM URL, and developers.
+ * All fields are optional — absent fields return null (or [] for developers).
+ * Uses the same hand-rolled regex approach as parseKeycloakVersion().
+ */
+export function parsePomMetadata(xml: string): PomMetadata {
+	const properties = parseProperties(xml);
+
+	// --- name ---
+	const nameMatch = xml.match(/<name>([^<]+)<\/name>/);
+	const rawName = nameMatch ? nameMatch[1].trim() : null;
+	const name = rawName ? (resolveProperty(rawName, properties) ?? rawName) : null;
+
+	// --- description ---
+	const descMatch = xml.match(/<description>([^<]+)<\/description>/);
+	const description = descMatch ? descMatch[1].trim() : null;
+
+	// --- license (from first <license> block inside <licenses>) ---
+	let licenseName: string | null = null;
+	let licenseUrl: string | null = null;
+	const licensesBlockMatch = xml.match(/<licenses>([\s\S]*?)<\/licenses>/);
+	if (licensesBlockMatch) {
+		const licenseBlock = licensesBlockMatch[1].match(/<license>([\s\S]*?)<\/license>/);
+		if (licenseBlock) {
+			const lnMatch = licenseBlock[1].match(/<name>([^<]+)<\/name>/);
+			licenseName = lnMatch ? lnMatch[1].trim() : null;
+			const luMatch = licenseBlock[1].match(/<url>([^<]+)<\/url>/);
+			licenseUrl = luMatch ? luMatch[1].trim() : null;
+		}
+	}
+
+	// --- scm url ---
+	let scmUrl: string | null = null;
+	const scmBlockMatch = xml.match(/<scm>([\s\S]*?)<\/scm>/);
+	if (scmBlockMatch) {
+		// Prefer human-readable <url> over <connection> (which has scm:git://... prefix)
+		const scmUrlMatch = scmBlockMatch[1].match(/<url>([^<]+)<\/url>/);
+		scmUrl = scmUrlMatch ? scmUrlMatch[1].trim() : null;
+		if (!scmUrl) {
+			const connMatch = scmBlockMatch[1].match(/<connection>([^<]+)<\/connection>/);
+			scmUrl = connMatch ? connMatch[1].trim() : null;
+		}
+	}
+
+	// --- top-level project url ---
+	// Strip nested blocks that may contain their own <url> tags before matching,
+	// to avoid picking up URLs from <scm>, <licenses>, <distributionManagement>, or <repositories>.
+	const stripped = xml
+		.replace(/<scm>[\s\S]*?<\/scm>/g, '')
+		.replace(/<licenses>[\s\S]*?<\/licenses>/g, '')
+		.replace(/<distributionManagement>[\s\S]*?<\/distributionManagement>/g, '')
+		.replace(/<repositories>[\s\S]*?<\/repositories>/g, '')
+		.replace(/<pluginRepositories>[\s\S]*?<\/pluginRepositories>/g, '');
+	const urlMatch = stripped.match(/<url>([^<]+)<\/url>/);
+	const rawUrl = urlMatch ? urlMatch[1].trim() : null;
+	const url = rawUrl ? (resolveProperty(rawUrl, properties) ?? rawUrl) : null;
+
+	// --- developers ---
+	const developers: PomMetadata['developers'] = [];
+	const devBlockRe = /<developer>([\s\S]*?)<\/developer>/g;
+	let dm: RegExpExecArray | null;
+	while ((dm = devBlockRe.exec(xml)) !== null) {
+		const block = dm[1];
+		const devName = block.match(/<name>([^<]+)<\/name>/)?.[1]?.trim() ?? null;
+		const email = block.match(/<email>([^<]+)<\/email>/)?.[1]?.trim() ?? null;
+		const org = block.match(/<organization>([^<]+)<\/organization>/)?.[1]?.trim() ?? null;
+		const orgUrl = block.match(/<organizationUrl>([^<]+)<\/organizationUrl>/)?.[1]?.trim() ?? null;
+		developers.push({ name: devName, email, org, orgUrl });
+	}
+
+	return { name, description, url, licenseName, licenseUrl, scmUrl, developers };
+}
+
 /**
  * Parse the Keycloak version from a Maven pom.xml.
  *

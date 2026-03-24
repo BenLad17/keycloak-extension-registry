@@ -1,19 +1,3 @@
-<script lang="ts">
-	import { page } from '$app/state';
-	import CodeBlock from '$lib/components/CodeBlock.svelte';
-
-	const base = $derived(page.data.providerRegistryBase);
-
-	const dockerfileSnippet = $derived(`FROM quay.io/keycloak/keycloak AS builder
-COPY --from=${base}/home-idp-discovery:v26.1.0 /providers/ /opt/keycloak/providers/
-RUN /opt/keycloak/bin/kc.sh build
-
-FROM quay.io/keycloak/keycloak
-COPY --from=builder /opt/keycloak/ /opt/keycloak/
-ENTRYPOINT ["/opt/keycloak/bin/kc.sh"]
-CMD ["start", "--optimized"]`);
-</script>
-
 <svelte:head>
 	<title>Quick start - Keycloak Extension Registry Docs</title>
 </svelte:head>
@@ -22,7 +6,7 @@ CMD ["start", "--optimized"]`);
 	<div>
 		<h1 class="mb-3 text-2xl font-semibold tracking-tight">Quick start</h1>
 		<p class="text-base leading-relaxed text-text-secondary">
-			There are two ways to install an extension. Pick whichever fits your setup.
+			There are four ways to install extensions. Pick whichever fits your setup.
 		</p>
 	</div>
 
@@ -65,26 +49,27 @@ CMD ["start", "--optimized"]`);
 
 	<div class="border-t border-border"></div>
 
-	<!-- Option B: Docker -->
+	<!-- Option B: Maven dependency -->
 	<section class="space-y-5">
-		<h2 class="text-base font-semibold text-text">Option B — Docker integration</h2>
+		<h2 class="text-base font-semibold text-text">Option B — Maven dependency</h2>
 		<p class="text-sm text-text-secondary">
-			For containerised setups. The registry publishes a minimal OCI image for every extension
-			version, so you can pull the JAR straight into your Dockerfile without downloading anything
-			manually.
+			For Maven build projects. Extensions published to Maven Central can be declared as
+			dependencies in your <code class="font-mono text-xs text-text">pom.xml</code> and resolved at build
+			time alongside your other dependencies.
 		</p>
-		<ol class="space-y-8">
+		<ol class="space-y-6">
 			<li class="flex gap-4">
 				<span
 					class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand/20 font-mono text-xs text-brand"
 					>1</span
 				>
 				<div class="min-w-0 flex-1">
-					<p class="font-medium text-text">Find an extension</p>
+					<p class="font-medium text-text">Copy the Maven snippet</p>
 					<p class="mt-1 text-sm text-text-secondary">
-						Browse the <a href="/explore" class="text-brand hover:text-brand/80">registry</a>. On
-						each extension's Overview tab, the Install section shows the exact Dockerfile snippet to
-						copy, with the correct image reference and version already filled in.
+						Open any extension in the <a href="/explore" class="text-brand hover:text-brand/80"
+							>registry</a
+						>. On the Overview tab, find the <strong>Maven install</strong> card and copy the
+						<code class="font-mono text-xs text-text">&lt;dependency&gt;</code> snippet.
 					</p>
 				</div>
 			</li>
@@ -94,28 +79,107 @@ CMD ["start", "--optimized"]`);
 					>2</span
 				>
 				<div class="min-w-0 flex-1">
-					<p class="font-medium text-text">Paste into your Dockerfile</p>
-					<p class="mt-1 mb-4 text-sm text-text-secondary">
-						Copy the snippet from the extension page and use it as your Dockerfile. To add more
-						extensions, duplicate the
-						<code class="font-mono text-xs text-text">COPY --from=</code> line, one per extension,
-						before the <code class="font-mono text-xs text-text">RUN kc.sh build</code> step.
+					<p class="font-medium text-text">Add it to your pom.xml</p>
+					<p class="mt-1 text-sm text-text-secondary">
+						Paste the snippet into the
+						<code class="font-mono text-xs text-text">&lt;dependencies&gt;</code> block of your
+						<code class="font-mono text-xs text-text">pom.xml</code>. Maven resolves the JAR from
+						Maven Central. Add one snippet per extension.
 					</p>
-					<CodeBlock code={dockerfileSnippet} lang="dockerfile" />
+				</div>
+			</li>
+		</ol>
+	</section>
+
+	<div class="border-t border-border"></div>
+
+	<!-- Option C: YAML manifest -->
+	<section class="space-y-5">
+		<h2 class="text-base font-semibold text-text">Option C — YAML manifest + downloader script</h2>
+		<p class="text-sm text-text-secondary">
+			For containerised setups without a Maven build. Declare extensions in a
+			<code class="font-mono text-xs text-text">keycloak-extensions.yaml</code> manifest and run the included
+			downloader script to fetch all JARs from Maven Central in one step.
+		</p>
+		<ol class="space-y-6">
+			<li class="flex gap-4">
+				<span
+					class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand/20 font-mono text-xs text-brand"
+					>1</span
+				>
+				<div class="min-w-0 flex-1">
+					<p class="font-medium text-text">Copy the YAML snippet</p>
+					<p class="mt-1 text-sm text-text-secondary">
+						Open any extension in the <a href="/explore" class="text-brand hover:text-brand/80"
+							>registry</a
+						>. On the Overview tab, find the <strong>YAML manifest</strong> card and copy the entry.
+						Create a
+						<code class="font-mono text-xs text-text">keycloak-extensions.yaml</code> file with an
+						<code class="font-mono text-xs text-text">extensions:</code> header and add the entry. Repeat
+						for each extension you need.
+					</p>
 				</div>
 			</li>
 			<li class="flex gap-4">
 				<span
 					class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand/20 font-mono text-xs text-brand"
-					>3</span
+					>2</span
 				>
 				<div class="min-w-0 flex-1">
-					<p class="font-medium text-text">Build and run</p>
+					<p class="font-medium text-text">Run the downloader script</p>
 					<p class="mt-1 text-sm text-text-secondary">
-						Run <code class="font-mono text-xs text-text">docker build .</code>. Extensions are
-						baked in at build time. Your running container has no dependency on the registry. To
-						upgrade an extension, change the image tag in the
-						<code class="font-mono text-xs text-text">COPY --from=</code> line and rebuild.
+						Run <code class="font-mono text-xs text-text">scripts/download-extensions.sh</code> with
+						<code class="font-mono text-xs text-text">--manifest</code> pointing to your YAML file
+						and <code class="font-mono text-xs text-text">--target</code> pointing to your providers directory.
+						The script uses a temporary Maven POM to resolve each extension and its transitive dependencies
+						from Maven Central.
+					</p>
+				</div>
+			</li>
+		</ol>
+	</section>
+
+	<div class="border-t border-border"></div>
+
+	<!-- Option D: Kubernetes init container -->
+	<section class="space-y-5">
+		<h2 class="text-base font-semibold text-text">Option D — Kubernetes init container</h2>
+		<p class="text-sm text-text-secondary">
+			For Kubernetes deployments. An init container runs the downloader script at pod startup,
+			fetching all declared extensions from Maven Central into a shared
+			<code class="font-mono text-xs text-text">providers</code> volume before Keycloak starts.
+		</p>
+		<ol class="space-y-6">
+			<li class="flex gap-4">
+				<span
+					class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand/20 font-mono text-xs text-brand"
+					>1</span
+				>
+				<div class="min-w-0 flex-1">
+					<p class="font-medium text-text">Create your extensions ConfigMap</p>
+					<p class="mt-1 text-sm text-text-secondary">
+						Build a
+						<code class="font-mono text-xs text-text">keycloak-extensions.yaml</code> file using the YAML
+						manifest snippets from each extension's Overview tab, then create a Kubernetes ConfigMap from
+						it.
+					</p>
+				</div>
+			</li>
+			<li class="flex gap-4">
+				<span
+					class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand/20 font-mono text-xs text-brand"
+					>2</span
+				>
+				<div class="min-w-0 flex-1">
+					<p class="font-medium text-text">Add the init container to your pod spec</p>
+					<p class="mt-1 text-sm text-text-secondary">
+						Copy the <strong>Init container</strong> snippet from any extension's Overview tab and
+						add it to your pod spec's
+						<code class="font-mono text-xs text-text">initContainers</code> list. Mount the
+						ConfigMap as the <code class="font-mono text-xs text-text">extensions-manifest</code>
+						volume and a shared
+						<code class="font-mono text-xs text-text">providers</code> emptyDir into both the init container
+						and the Keycloak container.
 					</p>
 				</div>
 			</li>
@@ -125,7 +189,7 @@ CMD ["start", "--optimized"]`);
 	<div class="flex items-center justify-between border-t border-border pt-6">
 		<a href="/docs" class="text-sm text-brand no-underline hover:text-brand/80">← Introduction</a>
 		<a href="/docs/configuration" class="text-sm text-brand no-underline hover:text-brand/80"
-			>Dockerfile reference →</a
+			>Maven install reference →</a
 		>
 	</div>
 </div>

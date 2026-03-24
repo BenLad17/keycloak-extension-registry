@@ -9,7 +9,9 @@ import { createSession, destroySession } from '$lib/server/security/session';
 import { getUserOctokit } from '$lib/server/github';
 
 export function isGitHub401(e: unknown): boolean {
-	return typeof e === 'object' && e !== null && 'status' in e && (e as { status: number }).status === 401;
+	return (
+		typeof e === 'object' && e !== null && 'status' in e && (e as { status: number }).status === 401
+	);
 }
 
 /**

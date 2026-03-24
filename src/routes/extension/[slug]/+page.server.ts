@@ -1,5 +1,11 @@
 import type { PageServerLoad } from './$types';
-import { extension, extensionVersion, githubCodeSource, getDatabase } from '$lib/server/db';
+import {
+	extension,
+	extensionVersion,
+	githubCodeSource,
+	mavenArtifactSource,
+	getDatabase
+} from '$lib/server/db';
 import { desc, eq } from 'drizzle-orm';
 import { error, redirect } from '@sveltejs/kit';
 import { canManageExtension, isGitHub401 } from '$lib/server/security/auth';
@@ -22,6 +28,12 @@ export const load: PageServerLoad = async ({ platform, params, locals }) => {
 		.where(eq(githubCodeSource.extensionId, ext.id))
 		.limit(1);
 
+	const [mavenSource] = await db
+		.select()
+		.from(mavenArtifactSource)
+		.where(eq(mavenArtifactSource.extensionId, ext.id))
+		.limit(1);
+
 	const versions = await db
 		.select()
 		.from(extensionVersion)
@@ -40,6 +52,7 @@ export const load: PageServerLoad = async ({ platform, params, locals }) => {
 		extension: ext,
 		versions,
 		githubSource: githubSource ?? null,
+		mavenSource: mavenSource ?? null,
 		canManage
 	};
 };

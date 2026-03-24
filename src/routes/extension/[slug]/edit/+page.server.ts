@@ -116,9 +116,12 @@ export const actions: Actions = {
 			.from(extensionVersion)
 			.where(eq(extensionVersion.extensionId, ext.id));
 		if (versions.length > 0) {
-			await db
-				.delete(extensionVersionFile)
-				.where(inArray(extensionVersionFile.versionId, versions.map((v) => v.id)));
+			await db.delete(extensionVersionFile).where(
+				inArray(
+					extensionVersionFile.versionId,
+					versions.map((v) => v.id)
+				)
+			);
 		}
 		await db.delete(extensionVersion).where(eq(extensionVersion.extensionId, ext.id));
 		await db.delete(githubArtifactSource).where(eq(githubArtifactSource.extensionId, ext.id));

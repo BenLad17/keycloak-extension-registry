@@ -1,0 +1,1 @@
+ALTER TABLE `extension_version` DROP COLUMN `provider_image_built`;

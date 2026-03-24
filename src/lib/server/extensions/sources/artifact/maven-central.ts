@@ -1,4 +1,5 @@
 import {
+	extension,
 	extensionVersion,
 	extensionVersionFile,
 	mavenArtifactSource,
@@ -11,7 +12,7 @@ import {
 	sha256Hex
 } from '$lib/server/extensions/jar';
 import { extractSourceFiles } from '$lib/server/extensions/source';
-import { parseKeycloakVersion } from '$lib/server/extensions/pom';
+import { parseKeycloakVersion, parsePomMetadata } from '$lib/server/extensions/pom';
 import { and, eq } from 'drizzle-orm';
 import type { ArtifactSourceAdapter, NewVersion } from '../types';
 
@@ -43,6 +44,7 @@ export class MavenCentralArtifactAdapter implements ArtifactSourceAdapter {
 
 		const versions = parseVersions(await metadataResponse.text());
 		const newVersions: NewVersion[] = [];
+		let cachedPomXml: string | null = null;
 
 		for (const version of versions) {
 			const [existing] = await db
@@ -84,7 +86,11 @@ export class MavenCentralArtifactAdapter implements ArtifactSourceAdapter {
 				continue;
 			}
 			const jarBytes = new Uint8Array(await jarResponse.arrayBuffer());
-			const keycloakVersion = parseKeycloakVersion(extractPomXml(jarBytes) ?? '') ?? undefined;
+			const pomXml = extractPomXml(jarBytes) ?? '';
+			if (cachedPomXml === null && pomXml) {
+				cachedPomXml = pomXml;
+			}
+			const keycloakVersion = parseKeycloakVersion(pomXml) ?? undefined;
 
 			// Download sources JAR (Sonatype requires this for Central publication)
 			const sourcesResponse = await fetch(`${base}-sources.jar`);
@@ -142,6 +148,32 @@ export class MavenCentralArtifactAdapter implements ArtifactSourceAdapter {
 			}
 
 			newVersions.push({ version, downloadUrl, digest });
+		}
+
+		// Enrich extension with POM metadata on first sync (gated: skip if already populated)
+		if (cachedPomXml) {
+			const [existing] = await db
+				.select({ pomName: extension.pomName })
+				.from(extension)
+				.where(eq(extension.id, extensionId))
+				.limit(1);
+			if (!existing?.pomName) {
+				const meta = parsePomMetadata(cachedPomXml);
+				if (meta.name) {
+					await db
+						.update(extension)
+						.set({
+							pomName: meta.name,
+							pomDescription: meta.description,
+							pomUrl: meta.url,
+							pomLicenseName: meta.licenseName,
+							pomLicenseUrl: meta.licenseUrl,
+							pomScmUrl: meta.scmUrl,
+							pomDevelopers: meta.developers.length > 0 ? JSON.stringify(meta.developers) : null
+						})
+						.where(eq(extension.id, extensionId));
+				}
+			}
 		}
 
 		return newVersions;

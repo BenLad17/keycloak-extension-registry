@@ -41,7 +41,15 @@ export const extension = sqliteTable(
 		lastSyncError: text('last_sync_error'),
 		status: text('status', { enum: ['pending', 'active', 'archived'] }).default('active'),
 
-		downloadCount: integer('download_count').default(0)
+		downloadCount: integer('download_count').default(0),
+
+		pomName: text('pom_name'),
+		pomDescription: text('pom_description'),
+		pomUrl: text('pom_url'),
+		pomLicenseName: text('pom_license_name'),
+		pomLicenseUrl: text('pom_license_url'),
+		pomScmUrl: text('pom_scm_url'),
+		pomDevelopers: text('pom_developers') // JSON text: serialized PomDeveloper[]
 	},
 	(table) => [index('owner_idx').on(table.ownerId)]
 );
@@ -89,10 +97,7 @@ export const extensionVersion = sqliteTable(
 		publishedAt: integer('published_at', { mode: 'timestamp' })
 			.notNull()
 			.$defaultFn(() => new Date()),
-		digest: text('digest').notNull(),
-		providerImageBuilt: integer('provider_image_built', { mode: 'boolean' })
-			.notNull()
-			.default(false)
+		digest: text('digest').notNull()
 	},
 	(table) => [
 		uniqueIndex('version_idx').on(table.extensionId, table.version),

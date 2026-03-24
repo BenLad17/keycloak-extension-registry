@@ -15,6 +15,20 @@
 			"when": 1772626891954,
 			"tag": "0001_github_repo_rename_resilience",
 			"breakpoints": true
+		},
+		{
+			"idx": 2,
+			"version": "6",
+			"when": 1774380854684,
+			"tag": "0002_pom_metadata",
+			"breakpoints": true
+		},
+		{
+			"idx": 3,
+			"version": "6",
+			"when": 1774385281939,
+			"tag": "0003_remove_provider_image_built",
+			"breakpoints": true
 		}
 	]
 }

@@ -1,0 +1,4 @@
+FROM maven:3.9-eclipse-temurin-21
+COPY scripts/download-extensions.sh /usr/local/bin/download-extensions.sh
+RUN chmod +x /usr/local/bin/download-extensions.sh
+ENTRYPOINT ["/usr/local/bin/download-extensions.sh"]

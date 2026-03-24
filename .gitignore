@@ -26,3 +26,38 @@ vite.config.ts.timestamp-*
 
 # Wrangler local secrets
 .dev.vars
+
+# ── GSD baseline (auto-generated) ──
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+*.code-workspace
+node_modules/
+.next/
+dist/
+build/
+__pycache__/
+*.pyc
+.venv/
+venv/
+target/
+vendor/
+*.log
+coverage/
+.cache/
+tmp/
+
+# ── GSD runtime artifacts (must not be committed) ──
+# SQLite WAL/SHM files and agent infrastructure that are machine-local
+.gsd/gsd.db-shm
+.gsd/gsd.db-wal
+.gsd/doctor-history.jsonl
+.gsd/journal/
+.gsd/STATE.md
+.gsd/activity/
+.gsd/completed-units.json
+.gsd/metrics.json
+.gsd/runtime/
+.bg-shell/

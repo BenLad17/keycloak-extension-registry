@@ -1,12 +1,7 @@
 import type { PageServerLoad } from './$types';
 import { extension, githubCodeSource, getDatabase } from '$lib/server/db';
 import { eq, desc, inArray } from 'drizzle-orm';
-import {
-	requireAuth,
-	isRegistryAdmin,
-	withReauth,
-	isGitHub401
-} from '$lib/server/security/auth';
+import { requireAuth, isRegistryAdmin, withReauth, isGitHub401 } from '$lib/server/security/auth';
 import { getUserOctokit } from '$lib/server/github';
 
 async function getUserPushRepoIds(token: string): Promise<Set<number>> {

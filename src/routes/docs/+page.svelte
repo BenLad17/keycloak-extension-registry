@@ -1,19 +1,3 @@
-<script lang="ts">
-	import { page } from '$app/state';
-	import CodeBlock from '$lib/components/CodeBlock.svelte';
-
-	const base = $derived(page.data.providerRegistryBase);
-
-	const dockerfileExample = $derived(`FROM quay.io/keycloak/keycloak AS builder
-COPY --from=${base}/home-idp-discovery:v26.1.0 /providers/ /opt/keycloak/providers/
-RUN /opt/keycloak/bin/kc.sh build
-
-FROM quay.io/keycloak/keycloak
-COPY --from=builder /opt/keycloak/ /opt/keycloak/
-ENTRYPOINT ["/opt/keycloak/bin/kc.sh"]
-CMD ["start", "--optimized"]`);
-</script>
-
 <svelte:head>
 	<title>Introduction - Keycloak Extension Registry Docs</title>
 </svelte:head>
@@ -34,8 +18,8 @@ CMD ["start", "--optimized"]`);
 			</p>
 			<p>
 				This registry is a central index of community extensions. You can browse by category, read
-				changelogs, download JARs directly from each extension's page, or use the Docker integration
-				to pull them straight into your image.
+				changelogs, download JARs directly from each extension's page, or use one of the three
+				Maven-native install patterns to automate extension management in your project.
 			</p>
 		</div>
 	</div>
@@ -66,18 +50,54 @@ CMD ["start", "--optimized"]`);
 				<div class="mb-3 flex items-center gap-3">
 					<span class="rounded-full bg-brand/20 px-2.5 py-0.5 font-mono text-xs text-brand">B</span>
 					<div>
-						<h3 class="font-semibold text-text">Docker integration</h3>
-						<p class="text-xs text-text-secondary">recommended for containerised setups</p>
+						<h3 class="font-semibold text-text">Maven dependency</h3>
+						<p class="text-xs text-text-secondary">for Maven build projects</p>
 					</div>
 				</div>
-				<p class="mb-4 text-sm leading-relaxed text-text-secondary">
-					For every extension version indexed, the registry publishes a minimal OCI image containing
-					just the JAR. Reference it with
-					<code class="rounded bg-bg px-1 py-0.5 font-mono text-xs text-text">COPY --from=</code>
-					in your Dockerfile. Docker pulls the image at build time, no extra tools needed. Adding another
-					extension is one more line. The pattern never changes.
+				<p class="text-sm leading-relaxed text-text-secondary">
+					Copy the Maven dependency snippet from any extension's Overview tab and add it to your
+					<code class="rounded bg-bg px-1 py-0.5 font-mono text-xs text-text">pom.xml</code>. Maven
+					resolves extensions from Maven Central at build time alongside your other dependencies.
 				</p>
-				<CodeBlock code={dockerfileExample} lang="dockerfile" />
+			</div>
+
+			<div class="rounded-xl border border-border bg-surface/40 px-6 py-5">
+				<div class="mb-3 flex items-center gap-3">
+					<span class="rounded-full bg-brand/20 px-2.5 py-0.5 font-mono text-xs text-brand">C</span>
+					<div>
+						<h3 class="font-semibold text-text">YAML manifest + downloader script</h3>
+						<p class="text-xs text-text-secondary">for containerised setups</p>
+					</div>
+				</div>
+				<p class="text-sm leading-relaxed text-text-secondary">
+					Declare your extensions in a
+					<code class="rounded bg-bg px-1 py-0.5 font-mono text-xs text-text"
+						>keycloak-extensions.yaml</code
+					>
+					file and run the included downloader script to fetch JARs from Maven Central into your providers
+					directory. Copy the YAML manifest snippet from any extension's Overview tab.
+				</p>
+			</div>
+
+			<div class="rounded-xl border border-border bg-surface/40 px-6 py-5">
+				<div class="mb-3 flex items-center gap-3">
+					<span class="rounded-full bg-brand/20 px-2.5 py-0.5 font-mono text-xs text-brand">D</span>
+					<div>
+						<h3 class="font-semibold text-text">Kubernetes init container</h3>
+						<p class="text-xs text-text-secondary">for Kubernetes deployments</p>
+					</div>
+				</div>
+				<p class="text-sm leading-relaxed text-text-secondary">
+					Mount a ConfigMap containing your
+					<code class="rounded bg-bg px-1 py-0.5 font-mono text-xs text-text"
+						>keycloak-extensions.yaml</code
+					>
+					and add the downloader init container to your pod spec. The init container downloads all extensions
+					from Maven Central into a shared
+					<code class="rounded bg-bg px-1 py-0.5 font-mono text-xs text-text">providers</code>
+					volume before Keycloak starts. Copy the init container snippet from any extension's Overview
+					tab.
+				</p>
 			</div>
 		</div>
 	</section>
